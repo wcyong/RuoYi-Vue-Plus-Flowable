@@ -1,6 +1,5 @@
 ## 平台简介
 [![码云Gitee](https://gitee.com/sgs98/RuoYi-Vue-Plus-Flowable/badge/star.svg?theme=blue)](https://gitee.com/sgs98/RuoYi-Vue-Plus-Flowable)
-[![GitHub](https://img.shields.io/github/stars/sgs98/RuoYi-Vue-Plus-Flowable.svg?style=social&label=Stars)](https://gitee.com/sgs98/RuoYi-Vue-Plus-Flowable)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://gitee.com/sgs98/RuoYi-Vue-Plus-Flowable/blob/master/LICENSE)
 [![使用IntelliJ IDEA开发维护](https://img.shields.io/badge/IntelliJ%20IDEA-提供支持-blue.svg)](https://www.jetbrains.com/?from=RuoYi-Vue-Plus)
 <br>
