@@ -52,6 +52,14 @@ public class ActDynamicFormServiceImpl implements IActDynamicFormService {
     }
 
     /**
+     * 查询动态表单
+     */
+    @Override
+    public List<ActDynamicFormVo> queryListByIds(List<Long> ids) {
+        return baseMapper.selectVoList(new LambdaQueryWrapper<ActDynamicForm>().eq(ActDynamicForm::getId,ids));
+    }
+
+    /**
      * 查询动态表单列表
      */
     @Override

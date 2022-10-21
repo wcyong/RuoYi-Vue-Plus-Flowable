@@ -3,9 +3,12 @@ package com.ruoyi.workflow.controller;
 import java.util.List;
 import java.util.Arrays;
 
+import com.ruoyi.system.service.ISysMenuService;
 import lombok.RequiredArgsConstructor;
+
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.*;
+
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.validation.annotation.Validated;
@@ -36,6 +39,8 @@ import com.ruoyi.common.core.page.TableDataInfo;
 public class ActDynamicFormController extends BaseController {
 
     private final IActDynamicFormService iActDynamicFormService;
+
+    private final ISysMenuService iSysMenuService;
 
     /**
      * 查询动态表单列表
@@ -71,7 +76,7 @@ public class ActDynamicFormController extends BaseController {
     @SaCheckPermission("workflow:dynamicForm:query")
     @GetMapping("/{id}")
     public R<ActDynamicFormVo> getInfo(@NotNull(message = "主键不能为空")
-                                     @PathVariable("id") Long id) {
+                                       @PathVariable("id") Long id) {
         return R.ok(iActDynamicFormService.queryById(id));
     }
 
@@ -115,6 +120,13 @@ public class ActDynamicFormController extends BaseController {
     @Log(title = "动态表单", businessType = BusinessType.DELETE)
     @DeleteMapping("/{ids}")
     public R<Void> remove(@NotEmpty(message = "主键不能为空") @PathVariable Long[] ids) {
+
+        List<ActDynamicFormVo> list = iActDynamicFormService.queryListByIds(Arrays.asList(ids));
+        for (ActDynamicFormVo actDynamicFormVo : list) {
+            if (actDynamicFormVo.getMenuId() != null && iSysMenuService.checkMenuExistRole(actDynamicFormVo.getMenuId())) {
+                return R.fail("表单已分配,不允许删除,请检查【业务表单】菜单下的表单权限");
+            }
+        }
         return toAjax(iActDynamicFormService.deleteWithValidByIds(Arrays.asList(ids)) ? 1 : 0);
     }
 }

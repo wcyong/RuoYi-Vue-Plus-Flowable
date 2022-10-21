@@ -22,6 +22,11 @@ public interface IActDynamicFormService {
     ActDynamicFormVo queryById(Long id);
 
     /**
+     * 查询流程单
+     */
+    List<ActDynamicFormVo> queryListByIds(List<Long> ids);
+
+    /**
      * 查询流程单列表
      */
     TableDataInfo<ActDynamicFormVo> queryPageList(ActDynamicFormBo bo, PageQuery pageQuery);
