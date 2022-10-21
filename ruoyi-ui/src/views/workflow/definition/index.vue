@@ -32,19 +32,18 @@
     </el-row>
     <!-- 表格数据 -->
     <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column fixed align="center" type="index" label="序号" width="50"></el-table-column>
-        <el-table-column fixed align="center" prop="name" label="模型名称" min-width="150" show-overflow-tooltip></el-table-column>
-        <el-table-column  align="center" prop="key" label="标识Key"  min-width="120"></el-table-column>
+        <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
+        <el-table-column align="center" prop="name" label="模型名称" width="150" :show-overflow-tooltip="true"></el-table-column>
+        <el-table-column align="center" prop="key" label="标识Key" width="120"></el-table-column>
         <el-table-column align="center" prop="version" label="版本号" width="90" >
           <template slot-scope="{row}"> v{{row.version}}.0</template>
         </el-table-column>
-        <el-table-column align="center" prop="resourceName" label="流程XML" min-width="100" show-overflow-tooltip>
+        <el-table-column align="center" prop="resourceName" label="流程XML" min-width="100" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <el-link type="primary" @click.native="clickExportXML(row.id)">{{ row.resourceName }}</el-link>
         </template>
         </el-table-column>
-        <el-table-column align="center" prop="diagramResourceName" label="流程图片" min-width="100" show-overflow-tooltip>
+        <el-table-column align="center" prop="diagramResourceName" label="流程图片" min-width="100" :show-overflow-tooltip="true">
         <template slot-scope="{row}">
           <el-link type="primary" @click="clickPreviewImg(row.id)">{{ row.diagramResourceName }}</el-link>
         </template>
@@ -62,7 +61,7 @@
             <el-tag type="primary" v-else-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===1">业务表单</el-tag>
           </template>
         </el-table-column>
-        <el-table-column  align="center" label="表单Key/组件名称" width="150">
+        <el-table-column  align="center" label="表单Key/组件名称" width="140">
           <template slot-scope="scope">
             <span v-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===0">{{scope.row.actProcessDefSettingVo.formKey}}</span>
             <span v-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===1">{{scope.row.actProcessDefSettingVo.componentName}}</span>
