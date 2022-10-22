@@ -390,8 +390,12 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 subTasks.forEach(e -> taskService.deleteTask(e.getId()));
             }
             runtimeService.deleteProcessInstance(processInstId, LoginHelper.getUserId() + "作废了当前流程申请");
+            ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(processInstId);
+            if (actBusinessStatus == null) {
+                throw new ServiceException("当前流程异常，未生成act_business_status对象");
+            }
             //2. 更新业务状态
-            return iActBusinessStatusService.updateState(processInstId, BusinessStatusEnum.INVALID);
+            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.INVALID);
         } catch (Exception e) {
             throw new ServiceException(e.getMessage());
         }
