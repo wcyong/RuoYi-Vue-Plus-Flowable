@@ -77,7 +77,7 @@
 
 ### 友情链接
 
-* RuoYi-Vue-Plus地址 [RuoYi-Vue-Plus](RuoYi-Vue-Plus](https://gitee.com/JavaLionLi/RuoYi-Vue-Plus)
+* RuoYi-Vue-Plus地址(https://gitee.com/JavaLionLi/RuoYi-Vue-Plus)
 * 动态表单地址 [formDesigner](https://gitee.com/wurong19870715/formDesigner)
 
 ## 业务功能
