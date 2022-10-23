@@ -273,7 +273,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                 BeanUtils.copyProperties(oldNodeAssignee, actNodeAssignee);
                 actNodeAssignee.setId("");
                 actNodeAssignee.setProcessDefinitionId(processDefinition.getId());
-                if (actNodeAssignee.getMultiple()) {
+                if (!actNodeAssignee.getMultiple()) {
                     actNodeAssignee.setMultipleColumn("");
                 }
                 actNodeAssigneeList.add(actNodeAssignee);
