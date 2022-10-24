@@ -1,6 +1,6 @@
 package com.ruoyi.workflow.controller;
 
-import com.ruoyi.common.annotation.Anonymous;
+import cn.dev33.satoken.annotation.SaIgnore;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.annotation.RepeatSubmit;
 import com.ruoyi.common.core.controller.BaseController;
@@ -74,7 +74,7 @@ public class ProcessInstanceController extends BaseController {
      * @author: gssong
      * @date: 2021/10/16
      */
-    @Anonymous
+    @SaIgnore
     @GetMapping("/getHistoryProcessImage")
     public void getHistoryProcessImage(@NotBlank(message = "流程实例id不能为空") @RequestParam String processInstanceId,
                                               HttpServletResponse response) {

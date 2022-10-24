@@ -3,7 +3,7 @@ package com.ruoyi.workflow.controller;
 import java.util.List;
 import java.util.Arrays;
 
-import com.ruoyi.common.annotation.Anonymous;
+import cn.dev33.satoken.annotation.SaIgnore;
 import lombok.RequiredArgsConstructor;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.*;
@@ -51,7 +51,7 @@ public class SysMessageController extends BaseController {
     /**
      * 查询消息通知列表
      */
-    @Anonymous
+    @SaIgnore
     @GetMapping("/waitingMessage")
     public TableDataInfo<SysMessageVo> message() {
         return iSysMessageService.queryPage();
