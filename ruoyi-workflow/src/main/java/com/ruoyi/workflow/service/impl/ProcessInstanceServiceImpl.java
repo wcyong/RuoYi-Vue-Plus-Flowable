@@ -28,6 +28,7 @@ import org.flowable.common.engine.impl.identity.Authentication;
 import org.flowable.engine.history.HistoricActivityInstance;
 import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.engine.history.HistoricProcessInstanceQuery;
+import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.engine.runtime.ProcessInstanceQuery;
 import org.flowable.engine.task.Attachment;
@@ -44,6 +45,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -566,6 +568,28 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             e.printStackTrace();
             throw new ServiceException("撤销失败:" + e.getMessage());
         }
+    }
+
+    /**
+     * @description: 获取xml
+     * @param: processInstanceId
+     * @return: java.lang.String
+     * @author: gssong
+     * @date: 2022/10/25 22:07
+     */
+    @Override
+    public String getXml(String processInstanceId) {
+        ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+        StringBuilder xml = new StringBuilder();
+        ProcessDefinition processDefinition = repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+        InputStream inputStream;
+        try {
+            inputStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(), processDefinition.getResourceName());
+            xml.append(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return xml.toString();
     }
 
     /**

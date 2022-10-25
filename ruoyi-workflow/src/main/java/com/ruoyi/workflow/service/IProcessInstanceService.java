@@ -95,4 +95,10 @@ public interface IProcessInstanceService {
      */
     boolean cancelProcessApply(String processInstId);
 
+    /**
+     * 获取xml
+     * @param processInstanceId
+     * @return
+     */
+    String getXml(String processInstanceId);
 }

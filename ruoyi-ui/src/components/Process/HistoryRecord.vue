@@ -1,5 +1,5 @@
 <template>
-    <el-table :data="list" style="width: 100%" max-height="570">
+    <el-table :data="list" style="width: 100%" max-height="570" v-loading="loading">
         <el-table-column label="流程审批历史记录" align="center">
             <el-table-column type="index" label="序号" align="center" width="50"></el-table-column>
             <el-table-column prop="name" label="任务名称" align="center" ></el-table-column>

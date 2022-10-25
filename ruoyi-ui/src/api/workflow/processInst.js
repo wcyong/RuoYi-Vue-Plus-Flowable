@@ -88,5 +88,13 @@ export default {
       method: 'get',
       params: query
     })
+  },
+  
+  // 获取xml
+  getXml(processInstanceId) {
+    return request({
+      url: `/workflow/processInstance/getXml/${processInstanceId}`,
+      method: 'get'
+    })
   }
 }

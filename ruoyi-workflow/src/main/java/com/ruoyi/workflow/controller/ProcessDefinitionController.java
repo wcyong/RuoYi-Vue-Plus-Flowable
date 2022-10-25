@@ -112,7 +112,7 @@ public class ProcessDefinitionController extends BaseController {
     /**
      * 查看xml文件
      * @param: definitionId
-     * @return: com.ruoyi.common.core.domain.R<java.lang.String>
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Object>
      * @author: gssong
      * @date: 2022/5/3 19:25
      */

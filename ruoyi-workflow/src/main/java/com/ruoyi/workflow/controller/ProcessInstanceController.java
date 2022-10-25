@@ -19,6 +19,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -34,7 +36,7 @@ import java.util.Map;
 @RequestMapping("/workflow/processInstance")
 public class ProcessInstanceController extends BaseController {
 
-    private final IProcessInstanceService processInstanceService;
+    private final IProcessInstanceService iProcessInstanceService;
 
     /**
      * 启动流程实例
@@ -47,7 +49,7 @@ public class ProcessInstanceController extends BaseController {
     @RepeatSubmit()
     @PostMapping("/startWorkFlow")
     public R<Map<String,Object>> startWorkFlow(@RequestBody StartProcessBo startProcessBo){
-        Map<String,Object> map = processInstanceService.startWorkFlow(startProcessBo);
+        Map<String,Object> map = iProcessInstanceService.startWorkFlow(startProcessBo);
         return R.ok("提交成功",map);
     }
 
@@ -62,7 +64,7 @@ public class ProcessInstanceController extends BaseController {
      */
     @GetMapping("/getHistoryInfoList/{processInstanceId}")
     public R<List<ActHistoryInfoVo>> getHistoryInfoList(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstanceId){
-        List<ActHistoryInfoVo> historyInfoList = processInstanceService.getHistoryInfoList(processInstanceId);
+        List<ActHistoryInfoVo> historyInfoList = iProcessInstanceService.getHistoryInfoList(processInstanceId);
         return R.ok(historyInfoList);
     }
 
@@ -78,7 +80,7 @@ public class ProcessInstanceController extends BaseController {
     @GetMapping("/getHistoryProcessImage")
     public void getHistoryProcessImage(@NotBlank(message = "流程实例id不能为空") @RequestParam String processInstanceId,
                                               HttpServletResponse response) {
-         processInstanceService.getHistoryProcessImage(processInstanceId, response);
+        iProcessInstanceService.getHistoryProcessImage(processInstanceId, response);
     }
 
     /**
@@ -90,7 +92,7 @@ public class ProcessInstanceController extends BaseController {
      */
     @GetMapping("/getProcessInstRunningByPage")
     public TableDataInfo<ProcessInstRunningVo> getProcessInstRunningByPage(ProcessInstRunningBo req){
-        return processInstanceService.getProcessInstRunningByPage(req);
+        return iProcessInstanceService.getProcessInstRunningByPage(req);
     }
 
     /**
@@ -103,7 +105,7 @@ public class ProcessInstanceController extends BaseController {
     @Log(title = "流程实例管理", businessType = BusinessType.UPDATE)
     @PutMapping("/state")
     public R<Void> updateProcInstState(@RequestBody Map<String,Object> data){
-        return toAjax(processInstanceService.updateProcInstState(data));
+        return toAjax(iProcessInstanceService.updateProcInstState(data));
     }
 
     /**
@@ -116,7 +118,7 @@ public class ProcessInstanceController extends BaseController {
     @Log(title = "流程实例管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/deleteRuntimeProcessInst/{processInstId}")
     public R<Void> deleteRuntimeProcessInst(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstId){
-        return toAjax(processInstanceService.deleteRuntimeProcessInst(processInstId));
+        return toAjax(iProcessInstanceService.deleteRuntimeProcessInst(processInstId));
     }
 
     /**
@@ -129,7 +131,7 @@ public class ProcessInstanceController extends BaseController {
     @Log(title = "流程实例管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/deleteRuntimeProcessAndHisInst/{processInstId}")
     public R<Void> deleteRuntimeProcessAndHisInst(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstId){
-        return toAjax(processInstanceService.deleteRuntimeProcessAndHisInst(processInstId));
+        return toAjax(iProcessInstanceService.deleteRuntimeProcessAndHisInst(processInstId));
     }
 
     /**
@@ -142,7 +144,7 @@ public class ProcessInstanceController extends BaseController {
     @Log(title = "流程实例管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/deleteFinishProcessAndHisInst/{processInstId}")
     public R<Void> deleteFinishProcessAndHisInst(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstId){
-        return toAjax(processInstanceService.deleteFinishProcessAndHisInst(processInstId));
+        return toAjax(iProcessInstanceService.deleteFinishProcessAndHisInst(processInstId));
     }
 
     /**
@@ -155,7 +157,7 @@ public class ProcessInstanceController extends BaseController {
     @Log(title = "流程实例管理", businessType = BusinessType.INSERT)
     @GetMapping("/cancelProcessApply/{processInstId}")
     public R<Void> cancelProcessApply(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstId){
-        return toAjax(processInstanceService.cancelProcessApply(processInstId));
+        return toAjax(iProcessInstanceService.cancelProcessApply(processInstId));
     }
 
     /**
@@ -167,7 +169,20 @@ public class ProcessInstanceController extends BaseController {
      */
     @GetMapping("/getProcessInstFinishByPage")
     public TableDataInfo<ProcessInstFinishVo> getProcessInstFinishByPage(ProcessInstFinishBo req) {
-        return processInstanceService.getProcessInstFinishByPage(req);
+        return iProcessInstanceService.getProcessInstFinishByPage(req);
+    }
+
+    /**
+     * @description: 获取xml
+     * @param: processInstanceId
+     * @return: com.ruoyi.common.core.domain.R<java.lang.String>
+     * @author: gssong
+     * @date: 2022/10/25 22:07
+     */
+    @GetMapping("/getXml/{processInstanceId}")
+    public R<String> getXml(@NotBlank(message = "流程定义id不能为空") @PathVariable String processInstanceId) {
+        String xmlStr = iProcessInstanceService.getXml(processInstanceId);
+        return R.ok("操作成功", xmlStr);
     }
 
 }

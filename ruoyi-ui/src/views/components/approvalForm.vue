@@ -17,6 +17,9 @@
         <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
             <HistoryImage :processInstanceId="processInstanceId"/>
         </el-tab-pane>
+        <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
+            <HistoryBpmn :processInstanceId="processInstanceId"/>
+        </el-tab-pane>
     </el-tabs>
 </template>
 
@@ -33,6 +36,9 @@ import HistoryRecord from "@/components/Process/HistoryRecord";
 components['HistoryRecord'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryRecord
 import HistoryImage from "@/components/Process/HistoryImage";
 components['HistoryImage'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryImage
+import HistoryBpmn from "@/components/Process/HistoryBpmn";
+components['HistoryBpmn'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryBpmn
+
 export default {
     props: {
       processInstanceId: String, // 流程实例id
