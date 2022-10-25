@@ -63,35 +63,26 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
 
     @Override
     public R<Long> checkProcessDefSetting(ActProcessDefSettingBo bo) {
-        //查询当前流程定义绑定是否为空
-        LambdaQueryWrapper<ActProcessDefSetting> wrapper = Wrappers.lambdaQuery();
-        wrapper.eq(ActProcessDefSetting::getProcessDefinitionId, bo.getProcessDefinitionId());
+        List<Task> taskList = taskService.createTaskQuery().processDefinitionId(bo.getProcessDefinitionId()).list();
+        if (CollUtil.isNotEmpty(taskList)) {
+            throw new ServiceException("当前表单有运行中的单据不可切换绑定！");
+        }
         //排除当前绑定流程定义
         LambdaQueryWrapper<ActProcessDefSetting> lqw = Wrappers.lambdaQuery();
-        lqw.ne(ActProcessDefSetting::getProcessDefinitionId, bo.getProcessDefinitionId());
+        lqw.ne(bo.getId() != null, ActProcessDefSetting::getId, bo.getId());
+        lqw.eq(ActProcessDefSetting::getProcessDefinitionId, bo.getProcessDefinitionId());
         if (0 == bo.getBusinessType()) {
-            //排除当前绑定流程定义
             lqw.eq(ActProcessDefSetting::getFormId, bo.getFormId());
             ActProcessDefSetting setting = baseMapper.selectOne(lqw);
-            //查询当前流程定义绑定是否为空
-            wrapper.eq(ActProcessDefSetting::getFormId, bo.getFormId());
-            if (ObjectUtil.isNotEmpty(setting) && ObjectUtil.isNotEmpty(baseMapper.selectOne(wrapper))) {
+            if (ObjectUtil.isNotEmpty(setting)) {
                 return R.ok("表单已被流程【" + setting.getProcessDefinitionName() + "】绑定，是否确认删除绑定，绑定当前选项？", setting.getId());
             }
         } else {
-            //排除当前绑定流程定义
             lqw.eq(ActProcessDefSetting::getComponentName, bo.getComponentName());
             ActProcessDefSetting setting = baseMapper.selectOne(lqw);
             if (ObjectUtil.isNotEmpty(setting)) {
-                List<Task> taskList = taskService.createTaskQuery().processDefinitionId(setting.getProcessDefinitionId()).list();
-                //查询当前流程定义绑定是否为空
-                wrapper.eq(ActProcessDefSetting::getComponentName, bo.getComponentName());
-                if (CollUtil.isNotEmpty(taskList) && ObjectUtil.isNotEmpty(baseMapper.selectOne(wrapper))) {
-                    throw new ServiceException("当前表单有运行中的单据不可切换绑定！");
-                }
-                if (ObjectUtil.isNotEmpty(baseMapper.selectOne(wrapper))) {
-                    return R.ok("组件已被流程【" + setting.getProcessDefinitionName() + "】绑定，是否确认删除绑定，绑定当前选项？", setting.getId());
-                }
+                return R.ok("组件已被流程【" + setting.getProcessDefinitionName() + "】绑定，是否确认删除绑定，绑定当前选项？", setting.getId());
+
             }
         }
         return R.ok();

@@ -120,7 +120,7 @@
                 size="mini"
                 type="text"
                 icon="el-icon-setting"
-                @click="handleSetting(scope.row)"
+                @click="handleUserSetting(scope.row)"
                 >人员设置</el-button>
             </el-col>
             <el-col :span="1.5">
@@ -128,7 +128,7 @@
                 size="mini"
                 type="text"
                 icon="el-icon-postcard"
-                @click="handleForm(scope.row)"
+                @click="handleFormSetting(scope.row)"
                 >设置</el-button>
             </el-col>
           </el-row>
@@ -209,7 +209,7 @@
                     size="mini"
                     type="text"
                     icon="el-icon-setting"
-                    @click="handleSetting(scope.row)"
+                    @click="handleUserSetting(scope.row)"
                   >人员设置</el-button>
                 </el-col>
                 <el-col :span="1.5">
@@ -446,14 +446,14 @@ export default {
           })
       },
       //打开设置
-      handleSetting(row){
+      handleUserSetting(row){
         this.$nextTick(() => {
           this.$refs.settingRef.visible = true
           this.$refs.settingRef.init(row.id)
         })
       },
       //打开表单
-      handleForm(row){
+      handleFormSetting(row){
         this.loading = true
         getProcessDefSettingByDefId(row.id).then(response => {
           this.formData = {}

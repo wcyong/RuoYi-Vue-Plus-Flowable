@@ -322,14 +322,16 @@ export default {
             param = {
                 processDefinitionId: this.formData.processDefinitionId,
                 businessType: 0,
-                formId: this.formData.formId
+                formId: this.formData.formId,
+                id: this.formData.id
             } 
         }else{
             param = {
                 processDefinitionId: this.formData.processDefinitionId,
                 businessType: 1,
                 componentName: this.formData.componentName,
-                tableName: this.formData.tableName
+                tableName: this.formData.tableName,
+                id: this.formData.id
             } 
         }
         checkProcessDefSetting(param).then(response => {
