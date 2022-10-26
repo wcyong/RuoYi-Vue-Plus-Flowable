@@ -15,7 +15,7 @@
           </div>
         </div>
      </el-header>
-     <div class="flow-containers">
+     <div class="flow-containers" v-loading="loading" element-loading-background="#fff">
         <el-container style="align-items: stretch">
             <el-main style="padding: 0;">
             <div ref="canvas" class="canvas" />
@@ -28,6 +28,7 @@
 <script>
 import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
 import processApi from "@/api/workflow/processInst";
+import getInitStr from '@/components/Bpmn/package/flowable/init'
 export default {
   name: 'WorkflowBpmnModeler',
   props: {
@@ -38,19 +39,50 @@ export default {
       modeler: null,
       taskList: [],
       zoom: 1,
+      xml:'',
+      loading: false
     }
   },
-  async mounted() {
+  watch: {
+    xml: {
+        handler(newVal,oldVal){
+          if(newVal) {
+            this.createNewDiagram(newVal)
+          }
+        },
+        immediate: true,
+        deep:true
+      }
+  },
+  mounted() {
     this.modeler = new BpmnViewer({
-      container: this.$refs.canvas
+      container: this.$refs.canvas,
+      height: 'calc(100vh - 200px)',
     })
     processApi.getXml(this.processInstanceId).then(response=>{        
-      this.modeler.importXML(response.data)
+      this.xml = response.data.xml
+      this.taskList = response.data.taskList
     }) 
+    // 新增流程定义
+    if (!this.xml) {
+      this.createNewDiagram(getInitStr())
+    } else {
+      this.createNewDiagram(this.xml)
+    }
   },
   methods: {
+    async createNewDiagram(data) {
+      try {
+        this.loading = true
+        await this.modeler.importXML(data)
+        this.initZoomViewport(false)
+        this.fillColor()
+      } catch (err) {
+        //console.error(err.message, err.warnings)
+      }
+    },
     // 让图能自适应屏幕
-    fitViewport() {
+    fitViewport(){
       this.zoom = this.modeler.get('canvas').zoom('fit-viewport')
       const bbox = document.querySelector('.flow-containers .viewport').getBBox()
       const currentViewbox = this.modeler.get('canvas').viewbox()
@@ -72,53 +104,68 @@ export default {
       this.zoom += (zoomIn ? 0.1 : -0.1)
       this.modeler.get('canvas').zoom(this.zoom)
     },
+    initZoomViewport(zoomIn = true) {
+      this.zoom = this.modeler.get('canvas').zoom()
+      this.zoom += (zoomIn ? 0.1 : -0.1)
+      this.modeler.get('canvas').zoom(this.zoom)
+      setTimeout(() => {
+        this.zoom = this.modeler.get('canvas').zoom("fit-viewport", "auto")
+        this.loading = false
+      },2000)
+    },
+    //上色
     fillColor() {
       const canvas = this.modeler.get('canvas')
-      this.modeler._definitions.rootElements[0].flowElements.forEach(n => {
-        if (n.$type === 'bpmn:UserTask') {
-          const completeTask = this.taskList.find(m => m.key === n.id) || { completed: true }
-          const todoTask = this.taskList.find(m => !m.completed)
-          const endTask = this.taskList[this.taskList.length - 1]
-          if (completeTask) {
-            canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
-            n.outgoing?.forEach(nn => {
-              const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
-              if (targetTask) {
-                canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
-              } else if (nn.targetRef.$type === 'bpmn:ExclusiveGateway') {
-                // canvas.addMarker(nn.id, 'highlight');
-                canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
-                canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
-              } else if (nn.targetRef.$type === 'bpmn:EndEvent') {
-                if (!todoTask && endTask.key === n.id) {
-                  canvas.addMarker(nn.id, 'highlight')
-                  canvas.addMarker(nn.targetRef.id, 'highlight')
+      this.bpmnNodeList(this.modeler._definitions.rootElements[0].flowElements,canvas)
+    },
+    //递归上色
+    bpmnNodeList(flowElements,canvas){
+        flowElements.forEach(n => {
+            if (n.$type === 'bpmn:UserTask') {
+                const completeTask = this.taskList.find(m => m.key === n.id)
+                const todoTask = this.taskList.find(m => !m.completed)
+                const endTask = this.taskList[this.taskList.length - 1]
+                if (completeTask) {
+                    canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                    n.outgoing?.forEach(nn => {
+                        const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
+                        if (targetTask) {
+                            canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
+                        } else if (nn.targetRef.$type === 'bpmn:ExclusiveGateway') {
+                            canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                            canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                        } else if (nn.targetRef.$type === 'bpmn:EndEvent') {
+                            if (!todoTask && endTask.key === n.id) {
+                                canvas.addMarker(nn.id, 'highlight')
+                                canvas.addMarker(nn.targetRef.id, 'highlight')
+                            }
+                            if (!completeTask.completed) {
+                                canvas.addMarker(nn.id, 'highlight-todo')
+                                canvas.addMarker(nn.targetRef.id, 'highlight-todo')
+                            }
+                        }
+                    })
                 }
-                if (!completeTask.completed) {
-                  canvas.addMarker(nn.id, 'highlight-todo')
-                  canvas.addMarker(nn.targetRef.id, 'highlight-todo')
-                }
-              }
-            })
-          }
-        } else if (n.$type === 'bpmn:ExclusiveGateway') {
-          n.outgoing.forEach(nn => {
-            const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
-            if (targetTask) {
-              canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
+            } else if (n.$type === 'bpmn:ExclusiveGateway') {
+                n.outgoing.forEach(nn => {
+                    const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
+                    if (targetTask) {
+                        canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
+                    }
+                })
+            } else if (n.$type === 'bpmn:SubProcess') {
+                this.bpmnNodeList(n.flowElements,canvas)
             }
-          })
-        }
-        if (n.$type === 'bpmn:StartEvent') {
-          n.outgoing.forEach(nn => {
-            const completeTask = this.taskList.find(m => m.key === nn.targetRef.id)
-            if (completeTask) {
-              canvas.addMarker(nn.id, 'highlight')
-              canvas.addMarker(n.id, 'highlight')
-              return
+            if (n.$type === 'bpmn:StartEvent') {
+                n.outgoing.forEach(nn => {
+                    const completeTask = this.taskList.find(m => m.key === nn.targetRef.id)
+                    if (completeTask) {
+                        canvas.addMarker(nn.id, 'highlight')
+                        canvas.addMarker(n.id, 'highlight')
+                        return
+                    }
+                })
             }
-          })
-        }
       })
     }
   }
@@ -126,22 +173,17 @@ export default {
 </script>
 
 <style lang="scss">
-/*左边工具栏以及编辑节点的样式*/
-@import "~bpmn-js/dist/assets/diagram-js.css";
-@import "~bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
-@import "~bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
-@import "~bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
 .containers {
-  position: absolute;
-  background-color: #ffffff;
-  top:0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+    position: absolute;
+    background-color: #ffffff;
+    top:0;
+    left: 0;
+    width: 100%;
+    height: 100%;
 }
 .canvas {
-  width: 100%;
-  height: 100%;
+    width: 100%;
+    height: 100%;
 }
 .view-mode {
   .el-header, .el-aside, .djs-palette, .bjs-powered-by {
@@ -155,73 +197,56 @@ export default {
   }
 }
 .flow-containers {
-  // background-color: #ffffff;
-  width: 100%;
-  height: 100%;
-  .canvas {
     width: 100%;
     height: 100%;
-  }
-  .load {
-    margin-right: 10px;
-  }
-  .el-form-item__label{
-    font-size: 13px;
-  }
+    .canvas {
+        width: 100%;
+        height: 100%;
+    }
+    .load {
+        margin-right: 10px;
+    }
+    .el-form-item__label{
+        font-size: 13px;
+    }
 
-  .djs-palette{
-    left: 0px!important;
-    top: 0px;
-    border-top: none;
-  }
+    .djs-palette{
+        left: 0px!important;
+        top: 0px;
+        border-top: none;
+    }
 
-  .djs-container svg {
-    min-height: 650px;
-  }
+    .djs-container svg {
+        min-height: 650px;
+    }
 
-  // .highlight.djs-shape .djs-visual > :nth-child(1) {
-  //   fill: green !important;
-  //   stroke: green !important;
-  //   fill-opacity: 0.2 !important;
-  // }
-  // .highlight.djs-shape .djs-visual > :nth-child(2) {
-  //   fill: green !important;
-  // }
-  // .highlight.djs-shape .djs-visual > path {
-  //   fill: green !important;
-  //   fill-opacity: 0.2 !important;
-  //   stroke: green !important;
-  // }
-  // .highlight.djs-connection > .djs-visual > path {
-  //   stroke: green !important;
-  // }
-  // // .djs-connection > .djs-visual > path {
-  // //   stroke: orange !important;
-  // //   stroke-dasharray: 4px !important;
-  // //   fill-opacity: 0.2 !important;
-  // // }
-  // // .djs-shape .djs-visual > :nth-child(1) {
-  // //   fill: orange !important;
-  // //   stroke: orange !important;
-  // //   stroke-dasharray: 4px !important;
-  // //   fill-opacity: 0.2 !important;
-  // // }
-  // .highlight-todo.djs-connection > .djs-visual > path {
-  //   stroke: orange !important;
-  //   stroke-dasharray: 4px !important;
-  //   fill-opacity: 0.2 !important;
-  // }
-  // .highlight-todo.djs-shape .djs-visual > :nth-child(1) {
-  //   fill: orange !important;
-  //   stroke: orange !important;
-  //   stroke-dasharray: 4px !important;
-  //   fill-opacity: 0.2 !important;
-  // }
-  // .overlays-div {
-  //   font-size: 10px;
-  //   color: red;
-  //   width: 100px;
-  //   top: -20px !important;
-  // }
+    .highlight.djs-shape .djs-visual > :nth-child(1) {
+        fill: green !important;
+        stroke: green !important;
+        fill-opacity: 0.2 !important;
+    }
+    .highlight.djs-shape .djs-visual > :nth-child(2) {
+        fill: green !important;
+    }
+    .highlight.djs-shape .djs-visual > path {
+        fill: green !important;
+        fill-opacity: 0.2 !important;
+        stroke: green !important;
+    }
+    .highlight.djs-connection > .djs-visual > path {
+        stroke: green !important;
+    }
+    .highlight-todo.djs-connection > .djs-visual > path {
+        stroke: orange !important;
+        stroke-dasharray: 4px !important;
+        fill-opacity: 0.2 !important;
+        marker-end: url(#sequenceflow-end-_E7DFDF-_E7DFDF-803g1kf6zwzmcig1y2ulm5egr);
+    }
+    .highlight-todo.djs-shape .djs-visual > :nth-child(1) {
+        fill: orange !important;
+        stroke: orange !important;
+        stroke-dasharray: 4px !important;
+        fill-opacity: 0.2 !important;
+    }
 }
 </style>
