@@ -1,6 +1,7 @@
 package com.ruoyi.workflow.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
@@ -20,8 +21,6 @@ import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.flowable.bpmn.converter.BpmnXMLConverter;
-import org.flowable.bpmn.model.BpmnModel;
 import org.flowable.common.engine.api.FlowableException;
 import org.flowable.editor.constants.ModelDataJsonConstants;
 import org.flowable.engine.repository.*;
@@ -30,11 +29,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamReader;
 import java.io.*;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -358,18 +354,11 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
     public Boolean convertToModel(String processDefinitionId) {
         ProcessDefinition pd = repositoryService.createProcessDefinitionQuery()
             .processDefinitionId(processDefinitionId).singleResult();
-        InputStream bpmnStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getResourceName());
+        InputStream inputStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getResourceName());
         Model model = repositoryService.createModelQuery().modelKey(pd.getKey()).singleResult();
             try {
-                XMLInputFactory xif = XMLInputFactory.newInstance();
-                InputStreamReader in = new InputStreamReader(bpmnStream, StandardCharsets.UTF_8);
-                XMLStreamReader xtr = xif.createXMLStreamReader(in);
-                BpmnModel bpmnModel = new BpmnXMLConverter().convertToBpmnModel(xtr);
-                BpmnXMLConverter converter = new BpmnXMLConverter();
-                byte[] xmlBytes = converter.convertToXML(bpmnModel);
                 if(ObjectUtil.isNotNull(model)){
-                    repositoryService.addModelEditorSource(model.getId(), xmlBytes);
-                    InputStream inputStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getDiagramResourceName());
+                    repositoryService.addModelEditorSource(model.getId(), IoUtil.readBytes(inputStream));
                     if(inputStream!=null){
                         repositoryService.addModelEditorSourceExtra(model.getId(),IOUtils.toByteArray(inputStream));
                     }
@@ -384,8 +373,7 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
                     modelObjectNode.put(ModelDataJsonConstants.MODEL_DESCRIPTION, pd.getDescription());
                     modelData.setMetaInfo(modelObjectNode.toString());
                     repositoryService.saveModel(modelData);
-                    repositoryService.addModelEditorSource(modelData.getId(), xmlBytes);
-                    InputStream inputStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getDiagramResourceName());
+                    repositoryService.addModelEditorSource(modelData.getId(), IoUtil.readBytes(inputStream));
                     if(inputStream!=null){
                         repositoryService.addModelEditorSourceExtra(modelData.getId(),IOUtils.toByteArray(inputStream));
                     }

@@ -83,6 +83,10 @@ export default {
     },
     // 让图能自适应屏幕
     fitViewport(){
+      this.autoViewport()
+      this.autoViewport()
+    },
+    autoViewport(){
       this.zoom = this.modeler.get('canvas').zoom('fit-viewport')
       const bbox = document.querySelector('.flow-containers .viewport').getBBox()
       const currentViewbox = this.modeler.get('canvas').viewbox()
@@ -108,10 +112,7 @@ export default {
       this.zoom = this.modeler.get('canvas').zoom()
       this.zoom += (zoomIn ? 0.1 : -0.1)
       this.modeler.get('canvas').zoom(this.zoom)
-      setTimeout(() => {
-        this.zoom = this.modeler.get('canvas').zoom("fit-viewport", "auto")
-        this.loading = false
-      },2000)
+      this.loading = false
     },
     //上色
     fillColor() {
