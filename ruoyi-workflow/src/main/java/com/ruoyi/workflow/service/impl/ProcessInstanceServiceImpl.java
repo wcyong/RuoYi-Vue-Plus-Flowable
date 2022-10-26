@@ -616,11 +616,9 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         List<Map<String, Object>> runtimeNodeList = taskList.stream().filter(e -> !(Boolean) e.get("completed")).collect(Collectors.toList());
         if (CollectionUtil.isNotEmpty(runtimeNodeList)) {
             Iterator<Map<String, Object>> iterator = taskList.iterator();
-            while (iterator.hasNext()){
+            while (iterator.hasNext()) {
                 Map<String, Object> next = iterator.next();
-                runtimeNodeList.stream().filter(t -> t.get("key").equals(next.get("key")) && (Boolean) next.get("completed")).findFirst().ifPresent(t->{
-                    iterator.remove();
-                });
+                runtimeNodeList.stream().filter(t -> t.get("key").equals(next.get("key")) && (Boolean) next.get("completed")).findFirst().ifPresent(t -> iterator.remove());
             }
         }
         map.put("taskList", taskList);
