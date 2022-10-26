@@ -49,7 +49,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -606,12 +605,22 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 if (tempActivity.getEndTime() == null) {
                     task.put("key", tempActivity.getActivityId());
                     task.put("completed", false);
-                    taskList.add(task);
                 } else {
                     task.put("key", tempActivity.getActivityId());
                     task.put("completed", true);
-                    taskList.add(task);
                 }
+                taskList.add(task);
+            }
+        }
+        //查询出运行中节点
+        List<Map<String, Object>> runtimeNodeList = taskList.stream().filter(e -> !(Boolean) e.get("completed")).collect(Collectors.toList());
+        if (CollectionUtil.isNotEmpty(runtimeNodeList)) {
+            Iterator<Map<String, Object>> iterator = taskList.iterator();
+            while (iterator.hasNext()){
+                Map<String, Object> next = iterator.next();
+                runtimeNodeList.stream().filter(t -> t.get("key").equals(next.get("key")) && (Boolean) next.get("completed")).findFirst().ifPresent(t->{
+                    iterator.remove();
+                });
             }
         }
         map.put("taskList", taskList);
