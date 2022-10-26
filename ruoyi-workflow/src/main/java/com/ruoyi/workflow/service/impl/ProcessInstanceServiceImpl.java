@@ -573,23 +573,43 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
     /**
      * @description: 获取xml
      * @param: processInstanceId
-     * @return: java.lang.String
+     * @return: java.util.Map<java.lang.String,java.lang.Object>
      * @author: gssong
      * @date: 2022/10/25 22:07
      */
     @Override
-    public String getXml(String processInstanceId) {
+    public Map<String,Object> getXml(String processInstanceId) {
+        Map<String, Object> map = new HashMap<>();
+        List<Map<String, Object>> taskList = new ArrayList<>();
         ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
         StringBuilder xml = new StringBuilder();
         ProcessDefinition processDefinition = repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+        // 获得活动的节点
+        List<HistoricActivityInstance> highLightedFlowList = historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstanceId).orderByHistoricActivityInstanceStartTime().asc().list();
+        for (HistoricActivityInstance tempActivity : highLightedFlowList) {
+            Map<String, Object> task = new HashMap<>();
+            if (!ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType())) {
+                if (tempActivity.getEndTime() == null) {
+                    task.put("key",tempActivity.getActivityId());
+                    task.put("completed",false);
+                    taskList.add(task);
+                } else {
+                    task.put("key",tempActivity.getActivityId());
+                    task.put("completed",true);
+                    taskList.add(task);
+                }
+            }
+        }
+        map.put("taskList",taskList);
         InputStream inputStream;
         try {
             inputStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(), processDefinition.getResourceName());
             xml.append(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+            map.put("xml",xml.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return xml.toString();
+        return map;
     }
 
     /**

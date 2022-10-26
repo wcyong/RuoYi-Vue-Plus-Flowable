@@ -175,14 +175,13 @@ public class ProcessInstanceController extends BaseController {
     /**
      * @description: 获取xml
      * @param: processInstanceId
-     * @return: com.ruoyi.common.core.domain.R<java.lang.String>
+     * @return: com.ruoyi.common.core.domain.R<java.util.Map<java.lang.String,java.lang.Object>>
      * @author: gssong
      * @date: 2022/10/25 22:07
      */
     @GetMapping("/getXml/{processInstanceId}")
-    public R<String> getXml(@NotBlank(message = "流程定义id不能为空") @PathVariable String processInstanceId) {
-        String xmlStr = iProcessInstanceService.getXml(processInstanceId);
-        return R.ok("操作成功", xmlStr);
+    public R<Map<String,Object>> getXml(@NotBlank(message = "流程定义id不能为空") @PathVariable String processInstanceId) {
+        return R.ok("操作成功", iProcessInstanceService.getXml(processInstanceId));
     }
 
 }

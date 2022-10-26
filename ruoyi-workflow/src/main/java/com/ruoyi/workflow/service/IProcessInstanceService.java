@@ -100,5 +100,5 @@ public interface IProcessInstanceService {
      * @param processInstanceId
      * @return
      */
-    String getXml(String processInstanceId);
+    Map<String,Object> getXml(String processInstanceId);
 }
