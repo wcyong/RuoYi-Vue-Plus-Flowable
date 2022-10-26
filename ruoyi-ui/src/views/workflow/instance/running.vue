@@ -72,7 +72,7 @@
               </el-row>
               <el-row :gutter="10" class="mb8">
                 <el-col :span="1.5">
-                  <el-button size="mini" type="text"  icon="el-icon-circle-close" @click="invalidRuntimeProcessInst(scope.row)">作废</el-button>
+                  <el-button size="mini" type="text"  icon="el-icon-circle-close" @click="openInvalidRuntimeProcessInst(scope.row)">作废</el-button>
                 </el-col>
               </el-row>
             </template>
@@ -84,6 +84,7 @@
           :page.sync="queryParams.pageNum"
           :limit.sync="queryParams.pageSize"
           @pagination="getList" />
+        <!-- 挂起或激活流程开始 -->
         <el-dialog
           title="挂起或激活流程"
           :close-on-click-modal="false"
@@ -97,6 +98,23 @@
             <el-button size="small" @click="dialogVisible = false">取 消</el-button>
           </span>
         </el-dialog>
+        <!-- 挂起或激活流程结束 -->
+
+        <!-- 作废申请开始 -->
+        <el-dialog
+          title="作废申请"
+          :close-on-click-modal="false"
+          :visible.sync="invalidVisible"
+          v-if="invalidVisible"
+          width="60%">
+          <el-input  type="textarea" v-model="invalidReason" maxlength="300" placeholder="请输入原因"
+          :autosize="{ minRows: 4 }" show-word-limit ></el-input>
+          <span slot="footer" class="dialog-footer">
+            <el-button type="primary" size="small" v-loading = "buttonLoading" @click="invalidRuntimeProcessInst">确 定</el-button>
+            <el-button size="small" @click="invalidVisible = false">取 消</el-button>
+          </span>
+        </el-dialog>
+        <!-- 作废申请结束 -->
     </div>
 </template>
 
@@ -108,8 +126,13 @@
       return {
         // 弹窗
         dialogVisible: false,
+        invalidVisible: false,
+        //流程实例id
+        processInstanceId: '',
         // 原因
         reason: '',
+        // 作废原因
+        invalidReason: '',
         //按钮loading
         buttonLoading: false,
         // 遮罩层
@@ -181,14 +204,25 @@
            this.loading = false;
          });
       },
-      invalidRuntimeProcessInst(row){
-        this.$modal.confirm('是否确认作废流程实例ID为"' + row.processInstanceId + '"的数据项？').then(() => {
+      //打开作废申请
+      openInvalidRuntimeProcessInst(row){
+          this.processInstanceId = row.processInstanceId
+          this.invalidVisible = true
+      },
+      //作废申请
+      invalidRuntimeProcessInst(){
+        this.$modal.confirm('是否确认作废流程实例ID为"' + this.processInstanceId + '"的数据项？').then(() => {
            this.loading = true;
-           return api.deleteRuntimeProcessInst(row.processInstanceId);
+           let param = {
+              deleteReason: this.invalidReason,
+              processInstId: this.processInstanceId
+           }
+           return api.deleteRuntimeProcessInst(param);
          }).then(() => {
            this.loading = false;
            this.getList();
            this.$modal.msgSuccess("作废成功");
+           this.invalidVisible = false
          }).finally(() => {
            this.loading = false;
          });

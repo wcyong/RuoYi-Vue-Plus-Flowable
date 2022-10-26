@@ -7,6 +7,7 @@ import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.R;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.ProcessInstFinishBo;
 import com.ruoyi.workflow.domain.bo.ProcessInstRunningBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
@@ -110,15 +111,15 @@ public class ProcessInstanceController extends BaseController {
 
     /**
      * 作废流程实例，不会删除历史记录
-     * @param: processInstId
+     * @param: processInstBo
      * @return: com.ruoyi.common.core.domain.R<java.lang.Void>
      * @author: gssong
      * @date: 2021/10/16
      */
     @Log(title = "流程实例管理", businessType = BusinessType.DELETE)
-    @DeleteMapping("/deleteRuntimeProcessInst/{processInstId}")
-    public R<Void> deleteRuntimeProcessInst(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstId){
-        return toAjax(iProcessInstanceService.deleteRuntimeProcessInst(processInstId));
+    @PostMapping("/deleteRuntimeProcessInst")
+    public R<Void> deleteRuntimeProcessInst(@RequestBody ProcessInstBo processInstBo){
+        return toAjax(iProcessInstanceService.deleteRuntimeProcessInst(processInstBo));
     }
 
     /**

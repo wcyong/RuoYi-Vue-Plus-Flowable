@@ -2,6 +2,9 @@
     <div>
       <el-tabs  type="border-card" >
         <el-tab-pane label="审批意见" v-loading="loading">
+            <el-table v-if="historicProcessInstance.length>0" :data="historicProcessInstance" style="width: 100%" max-height="570" v-loading="loading"> 
+                  <el-table-column prop="deleteReason" label="作废理由" align="center" ></el-table-column>
+            </el-table>
             <el-table :data="list" style="width: 100%" max-height="570">
               <el-table-column label="流程审批历史记录" align="center">
                 <el-table-column type="index" label="序号" align="center" width="50"></el-table-column>
@@ -89,7 +92,8 @@ export default {
         commentId: undefined,
         comment: undefined,
         attachmentList: [],
-        taskId: undefined
+        taskId: undefined,
+        historicProcessInstance: []
       }
     },
     watch: {
@@ -113,6 +117,9 @@ export default {
         async getHistoryInfoList() {
             const { data } = await apiProcessInst.getHistoryInfoList(this.processInstanceId)
             this.list = data
+            if(this.list[0].historicProcessInstance){
+              this.historicProcessInstance.push(this.list[0].historicProcessInstance)
+            }
             this.loading = false
         },
         // 打开编辑意见

@@ -7,6 +7,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
 import com.ruoyi.workflow.flowable.config.CustomDefaultProcessDiagramGenerator;
 import com.ruoyi.workflow.common.constant.ActConstant;
@@ -122,6 +123,8 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
      */
     @Override
     public List<ActHistoryInfoVo> getHistoryInfoList(String processInstanceId) {
+
+        HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
         //查询任务办理记录
         List<HistoricTaskInstance> list = historyService.createHistoricTaskInstanceQuery().processInstanceId(processInstanceId).orderByHistoricTaskInstanceEndTime().desc().list();
         list.stream().sorted(Comparator.comparing(HistoricTaskInstance::getEndTime, Comparator.nullsFirst(Date::compareTo))).collect(Collectors.toList());
@@ -173,6 +176,10 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         List<ActHistoryInfoVo> finishTask = actHistoryInfoVoList.stream().filter(e -> e.getEndTime() != null).collect(Collectors.toList());
         collect.addAll(waitingTask);
         collect.addAll(finishTask);
+        if (ObjectUtil.isNotEmpty(historicProcessInstance) && StringUtils.isNotBlank(historicProcessInstance.getDeleteReason())) {
+            ActHistoryInfoVo actHistoryInfoVo = collect.get(0);
+            actHistoryInfoVo.setHistoricProcessInstance(historicProcessInstance);
+        }
         return collect;
     }
 
@@ -376,23 +383,30 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
 
     /**
      * @description: 作废流程实例，不会删除历史记录
-     * @param: processInstId
+     * @param: processInstBo
      * @return: boolean
      * @author: gssong
      * @date: 2021/10/16
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteRuntimeProcessInst(String processInstId) {
+    public boolean deleteRuntimeProcessInst(ProcessInstBo processInstBo) {
         try {
             //1.删除流程实例
-            List<Task> list = taskService.createTaskQuery().processInstanceId(processInstId).list();
+            if (StringUtils.isBlank(processInstBo.getProcessInstId())) {
+                throw new ServiceException("流程实例id不能为空");
+            }
+            List<Task> list = taskService.createTaskQuery().processInstanceId(processInstBo.getProcessInstId()).list();
             List<Task> subTasks = list.stream().filter(e -> StringUtils.isNotBlank(e.getParentTaskId())).collect(Collectors.toList());
             if (CollectionUtil.isNotEmpty(subTasks)) {
                 subTasks.forEach(e -> taskService.deleteTask(e.getId()));
             }
-            runtimeService.deleteProcessInstance(processInstId, LoginHelper.getUserId() + "作废了当前流程申请");
-            ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(processInstId);
+            String deleteReason = LoginHelper.getUsername() + "作废了当前申请！";
+            if (StringUtils.isNotBlank(processInstBo.getDeleteReason())) {
+                deleteReason = LoginHelper.getUsername() + "作废理由:" + processInstBo.getDeleteReason();
+            }
+            runtimeService.deleteProcessInstance(processInstBo.getProcessInstId(), deleteReason);
+            ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(processInstBo.getProcessInstId());
             if (actBusinessStatus == null) {
                 throw new ServiceException("当前流程异常，未生成act_business_status对象");
             }
@@ -573,12 +587,12 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
     /**
      * @description: 获取xml
      * @param: processInstanceId
-     * @return: java.util.Map<java.lang.String,java.lang.Object>
+     * @return: java.util.Map<java.lang.String, java.lang.Object>
      * @author: gssong
      * @date: 2022/10/25 22:07
      */
     @Override
-    public Map<String,Object> getXml(String processInstanceId) {
+    public Map<String, Object> getXml(String processInstanceId) {
         Map<String, Object> map = new HashMap<>();
         List<Map<String, Object>> taskList = new ArrayList<>();
         ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
@@ -590,22 +604,22 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             Map<String, Object> task = new HashMap<>();
             if (!ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType())) {
                 if (tempActivity.getEndTime() == null) {
-                    task.put("key",tempActivity.getActivityId());
-                    task.put("completed",false);
+                    task.put("key", tempActivity.getActivityId());
+                    task.put("completed", false);
                     taskList.add(task);
                 } else {
-                    task.put("key",tempActivity.getActivityId());
-                    task.put("completed",true);
+                    task.put("key", tempActivity.getActivityId());
+                    task.put("completed", true);
                     taskList.add(task);
                 }
             }
         }
-        map.put("taskList",taskList);
+        map.put("taskList", taskList);
         InputStream inputStream;
         try {
             inputStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(), processDefinition.getResourceName());
             xml.append(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
-            map.put("xml",xml.toString());
+            map.put("xml", xml.toString());
         } catch (IOException e) {
             e.printStackTrace();
         }

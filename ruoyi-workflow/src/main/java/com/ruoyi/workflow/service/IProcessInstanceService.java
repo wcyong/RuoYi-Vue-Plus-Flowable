@@ -1,6 +1,7 @@
 package com.ruoyi.workflow.service;
 
 import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.ProcessInstFinishBo;
 import com.ruoyi.workflow.domain.bo.ProcessInstRunningBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
@@ -54,10 +55,10 @@ public interface IProcessInstanceService {
 
     /**
      * 作废流程实例，不会删除历史记录
-     * @param processInstId
+     * @param processInstBo
      * @return
      */
-    boolean deleteRuntimeProcessInst(String processInstId);
+    boolean deleteRuntimeProcessInst(ProcessInstBo processInstBo);
 
     /**
      * 删除运行中的实例，删除历史记录，删除业务与流程关联信息
