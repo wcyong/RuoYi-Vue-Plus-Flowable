@@ -58,7 +58,11 @@ public class TaskCompleteBo {
     private Map<String, Object> variables;
 
     public Map<String, Object> getVariables() {
-        return variables == null ? new HashMap<>(16) : variables;
+        if(variables == null){
+            return new HashMap<>(16);
+        }
+        variables.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
+        return variables;
     }
 
     /**

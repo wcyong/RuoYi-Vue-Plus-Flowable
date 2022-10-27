@@ -5,6 +5,7 @@ import lombok.Data;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @description: 流程定义查询
@@ -26,6 +27,10 @@ public class NextNodeBo implements Serializable {
     private Map<String, Object> variables;
 
     public Map<String, Object> getVariables() {
-        return variables == null ? new HashMap<>(16) : variables;
+        if(variables == null){
+            return new HashMap<>(16);
+        }
+        variables.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
+        return variables;
     }
 }

@@ -244,7 +244,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             // 3. 指定任务审批意见
             taskService.addComment(req.getTaskId(), task.getProcessInstanceId(), req.getMessage());
             // 设置变量
-            taskService.setVariables(req.getTaskId(), req.getVariables());
+            if (CollectionUtil.isNotEmpty(req.getVariables())) {
+                taskService.setVariables(req.getTaskId(), req.getVariables());
+            }
             // 任务前执行集合
             List<TaskListenerVo> handleBeforeList = null;
             // 任务后执行集合
@@ -440,7 +442,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             if (CollectionUtil.isNotEmpty(assigneeList)) {
                 List<SysUser> userList = iUserService.selectListUserByIds(assigneeList);
                 if (CollectionUtil.isNotEmpty(userList)) {
-                    taskFinishVoList.forEach(e -> userList.stream().filter(t -> t.getUserId().toString().equals(e.getAssigneeId().toString())).findFirst().ifPresent(t-> e.setAssignee(t.getNickName())));
+                    taskFinishVoList.forEach(e -> userList.stream().filter(t -> t.getUserId().toString().equals(e.getAssigneeId().toString())).findFirst().ifPresent(t -> e.setAssignee(t.getNickName())));
                 }
             }
         }
@@ -469,7 +471,6 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         //当前流程实例状态
         ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(task.getProcessInstanceId());
         if (ObjectUtil.isEmpty(actBusinessStatus)) {
-            throw new ServiceException("当前流程异常，未生成act_business_status对象");
         } else {
             map.put("businessStatus", actBusinessStatus);
         }
@@ -519,7 +520,10 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         if (CollectionUtil.isNotEmpty(taskList) && taskList.size() > 1) {
             //return null;
         }
-        taskService.setVariables(task.getId(), req.getVariables());
+
+        if (CollectionUtil.isNotEmpty(req.getVariables())) {
+            taskService.setVariables(task.getId(), req.getVariables());
+        }
         //流程定义
         String processDefinitionId = task.getProcessDefinitionId();
         //查询bpmn信息
