@@ -159,4 +159,10 @@ public interface ITaskService {
      */
     Boolean deleteAttachment(String attachmentId);
 
+    /**
+     * 终止任务
+     * @param taskBo
+     * @return
+     */
+    Boolean terminationTask(TaskBo taskBo);
 }

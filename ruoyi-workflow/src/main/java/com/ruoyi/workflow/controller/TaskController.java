@@ -322,6 +322,19 @@ public class TaskController extends BaseController {
         return toAjax(iTaskService.deleteAttachment(attachmentId));
     }
 
+    /**
+     * @description: 终止任务
+     * @param: taskBo
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Void>
+     * @author: gssong
+     * @date: 2022/10/27 20:31
+     */
+    @Log(title = "任务管理", businessType = BusinessType.DELETE)
+    @PostMapping("/terminationTask")
+    public R<Void> taskTermination(@RequestBody TaskBo taskBo) {
+        return toAjax(iTaskService.terminationTask(taskBo));
+    }
+
 }
 
 

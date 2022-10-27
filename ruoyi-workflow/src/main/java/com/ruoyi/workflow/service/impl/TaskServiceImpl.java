@@ -7,6 +7,7 @@ import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.JsonUtils;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.workflow.common.constant.ActConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.domain.*;
@@ -23,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.flowable.bpmn.model.*;
-import org.apache.commons.lang3.StringUtils;
 import org.flowable.engine.ManagementService;
 import org.flowable.engine.impl.bpmn.behavior.ParallelMultiInstanceBehavior;
 import org.flowable.engine.impl.bpmn.behavior.SequentialMultiInstanceBehavior;
@@ -1213,6 +1213,42 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         try {
             taskService.deleteAttachment(attachmentId);
             return true;
+        } catch (Exception e) {
+            throw new ServiceException(e.getMessage());
+        }
+    }
+
+    /**
+     * @description: 终止任务
+     * @param: taskBo
+     * @return: java.lang.Boolean
+     * @author: gssong
+     * @date: 2022/10/27 20:32
+     */
+    @Override
+    public Boolean terminationTask(TaskBo taskBo) {
+        try {
+            Task task = taskService.createTaskQuery().taskId(taskBo.getTaskId()).singleResult();
+            if (ObjectUtil.isEmpty(task)) {
+                throw new ServiceException("当前任务不存在");
+            }
+            ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(task.getProcessInstanceId());
+            if (actBusinessStatus == null) {
+                throw new ServiceException("当前流程异常，未生成act_business_status对象");
+            }
+            if (StringUtils.isBlank(taskBo.getComment())) {
+                taskBo.setComment(LoginHelper.getUsername() + "终止了申请");
+            }
+            taskService.addComment(task.getId(), task.getProcessInstanceId(), LoginHelper.getUsername() + "终止了申请:" + taskBo.getComment());
+            List<Task> list = taskService.createTaskQuery().processInstanceId(task.getProcessInstanceId()).list();
+            if (CollectionUtil.isNotEmpty(list)) {
+                List<Task> subTasks = list.stream().filter(e -> StringUtils.isNotBlank(e.getParentTaskId())).collect(Collectors.toList());
+                if (CollectionUtil.isNotEmpty(subTasks)) {
+                    subTasks.forEach(e -> taskService.deleteTask(e.getId()));
+                }
+                runtimeService.deleteProcessInstance(task.getProcessInstanceId(), "");
+            }
+            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.TERMINATION);
         } catch (Exception e) {
             throw new ServiceException(e.getMessage());
         }

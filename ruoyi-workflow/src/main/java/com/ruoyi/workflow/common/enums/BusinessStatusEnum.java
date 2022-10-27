@@ -40,7 +40,11 @@ public enum BusinessStatusEnum {
     /**
      * 已退回
      */
-    BACK("back", "已退回");
+    BACK("back", "已退回"),
+    /**
+     * 已终止
+     */
+    TERMINATION("termination", "已终止");
 
     /**
      * 状态
@@ -88,6 +92,8 @@ public enum BusinessStatusEnum {
             throw new ServiceException("该单据已作废");
         } else if (status.equals(DELETE.getStatus())) {
             throw new ServiceException("该单据已删除");
+        } else if (status.equals(TERMINATION.getStatus())) {
+            throw new ServiceException("该单据已终止");
         }
     }
 
@@ -109,6 +115,8 @@ public enum BusinessStatusEnum {
             throw new ServiceException("该单据已撤回");
         } else if (status.equals(BACK.getStatus())) {
             throw new ServiceException("该单据已退回");
+        } else if (status.equals(TERMINATION.getStatus())) {
+            throw new ServiceException("该单据已终止");
         }
     }
 }
