@@ -21,7 +21,6 @@ import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.flowable.common.engine.api.FlowableException;
 import org.flowable.editor.constants.ModelDataJsonConstants;
 import org.flowable.engine.repository.*;
 import org.flowable.image.exception.FlowableImageException;
@@ -109,7 +108,7 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             repositoryService.addModelEditorSourceExtra(model.getId(), result);
             return true;
         } catch (Exception e) {
-            throw new FlowableException("Error saving model", e);
+            throw new ServiceException(e.getMessage());
         }
     }
 
@@ -233,7 +232,7 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             repositoryService.addModelEditorSourceExtra(model.getId(), result);
             return true;
         }catch (Exception e){
-            throw new FlowableException("Error saving model", e);
+            throw new ServiceException(e.getMessage());
         }
     }
 

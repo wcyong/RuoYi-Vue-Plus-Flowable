@@ -4,6 +4,7 @@ package com.ruoyi.workflow.flowable.config;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import org.flowable.spring.SpringProcessEngineConfiguration;
 import org.flowable.spring.boot.EngineConfigurationConfigurer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 /**
  * @description: 配置
@@ -13,6 +14,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FlowableConfig implements EngineConfigurationConfigurer<SpringProcessEngineConfiguration> {
 
+    @Value("${flowable.activity-font-name}")
+    private String  activityFontName;
+
+    @Value("${flowable.label-font-name}")
+    private String  labelFontName;
+
+    @Value("${flowable.annotation-font-name}")
+    private String  annotationFontName;
 
     /**
      * 解決工作流生成图片乱码问题
@@ -21,9 +30,9 @@ public class FlowableConfig implements EngineConfigurationConfigurer<SpringProce
 
     @Override
     public void configure(SpringProcessEngineConfiguration processEngineConfiguration) {
-        processEngineConfiguration.setActivityFontName("宋体");
-        processEngineConfiguration.setAnnotationFontName("宋体");
-        processEngineConfiguration.setLabelFontName("宋体");
+        processEngineConfiguration.setActivityFontName(activityFontName);
+        processEngineConfiguration.setAnnotationFontName(annotationFontName);
+        processEngineConfiguration.setLabelFontName(labelFontName);
         processEngineConfiguration.setProcessDiagramGenerator(new CustomDefaultProcessDiagramGenerator());
 
         /**

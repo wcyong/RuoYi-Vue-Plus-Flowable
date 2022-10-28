@@ -38,6 +38,7 @@ import org.flowable.task.api.Task;
 import org.flowable.task.api.TaskQuery;
 import org.flowable.task.api.history.HistoricTaskInstance;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +64,15 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
     private final IActBusinessStatusService iActBusinessStatusService;
     private final IUserService iUserService;
     private final IActTaskNodeService iActTaskNodeService;
+
+    @Value("${flowable.activity-font-name}")
+    private String  activityFontName;
+
+    @Value("${flowable.label-font-name}")
+    private String  labelFontName;
+
+    @Value("${flowable.annotation-font-name}")
+    private String  annotationFontName;
 
     /**
      * @description: 提交申请，启动流程实例
@@ -250,7 +260,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             highLightedNodeList.addAll(redNodeCollect);
             BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinitionId);
             CustomDefaultProcessDiagramGenerator diagramGenerator = new CustomDefaultProcessDiagramGenerator();
-            inputStream = diagramGenerator.generateDiagram(bpmnModel, "png", highLightedNodeList, highLightedFlows, "宋体", "宋体", "宋体", null, 1.0, true);
+            inputStream = diagramGenerator.generateDiagram(bpmnModel, "png", highLightedNodeList, highLightedFlows, activityFontName, labelFontName, annotationFontName, null, 1.0, true);
             // 响应相关图片
             response.setContentType("image/png");
 
