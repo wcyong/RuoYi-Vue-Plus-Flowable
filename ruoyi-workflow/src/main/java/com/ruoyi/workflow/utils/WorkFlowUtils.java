@@ -2,12 +2,14 @@ package com.ruoyi.workflow.utils;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.JsonUtils;
+import com.ruoyi.common.utils.StreamUtils;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.workflow.domain.*;
 import com.ruoyi.workflow.domain.bo.SendMessage;
@@ -36,9 +38,15 @@ import org.flowable.task.service.impl.persistence.entity.TaskEntity;
 import org.flowable.variable.api.persistence.entity.VariableInstance;
 import org.springframework.util.ReflectionUtils;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.rmi.ServerException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -87,6 +95,84 @@ public class WorkFlowUtils {
         }
         //2.将bpmnModel转为xml
         return new BpmnXMLConverter().convertToXML(bpmnModel);
+    }
+
+    /**
+     * @description: xml转为bpmnModel
+     * @param: xml
+     * @return: org.flowable.bpmn.model.BpmnModel
+     * @author: gssong
+     * @date: 2022/10/30 18:25
+     */
+    public static BpmnModel xmlToBpmnModel(String xml) throws IOException {
+        if (xml == null) {
+            throw new ServerException("xml不能为空");
+        }
+        InputStream inputStream = new ByteArrayInputStream(StrUtil.utf8Bytes(xml));
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        try {
+            XMLStreamReader reader = factory.createXMLStreamReader(inputStream);
+            return new BpmnXMLConverter().convertToBpmnModel(reader);
+        } catch (XMLStreamException e) {
+            throw new ServerException(e.getMessage());
+        }
+    }
+
+    /**
+     * @description: 校验模型会签变量
+     * @param: bpmnModel
+     * @return: void
+     * @author: gssong
+     * @date: 2022/10/30 18:27
+     */
+    public static void checkBpmnModelMultiVariable(BpmnModel bpmnModel){
+        try {
+            Collection<FlowElement> flowElements = bpmnModel.getMainProcess().getFlowElements();
+            List<MultiVo> multiVoList = new ArrayList<>();
+            for (FlowElement flowElement : flowElements) {
+                FlowNode flowNode = (FlowNode) flowElement;
+                //判断是否为并行会签节点
+                if (flowNode.getBehavior() instanceof ParallelMultiInstanceBehavior) {
+                    ParallelMultiInstanceBehavior behavior = (ParallelMultiInstanceBehavior) flowNode.getBehavior();
+                    if (behavior != null && behavior.getCollectionExpression() != null) {
+                        MultiVo multiVo = new MultiVo();
+                        Expression collectionExpression = behavior.getCollectionExpression();
+                        String assigneeList = collectionExpression.getExpressionText();
+                        String assignee = behavior.getCollectionElementVariable();
+                        multiVo.setType(behavior);
+                        multiVo.setAssignee(assignee);
+                        multiVo.setAssigneeList(assigneeList);
+                        multiVoList.add(multiVo);
+                    }
+                    //判断是否为串行会签节点
+                } else if (flowNode.getBehavior() instanceof SequentialMultiInstanceBehavior) {
+                    SequentialMultiInstanceBehavior behavior = (SequentialMultiInstanceBehavior) flowNode.getBehavior();
+                    if (behavior != null && behavior.getCollectionExpression() != null) {
+                        MultiVo multiVo = new MultiVo();
+                        Expression collectionExpression = behavior.getCollectionExpression();
+                        String assigneeList = collectionExpression.getExpressionText();
+                        String assignee = behavior.getCollectionElementVariable();
+                        multiVo.setType(behavior);
+                        multiVo.setAssignee(assignee);
+                        multiVo.setAssigneeList(assigneeList);
+                        multiVoList.add(multiVo);
+                    }
+                }
+            }
+            if(CollectionUtil.isNotEmpty(multiVoList) && multiVoList.size()>1){
+                Map<String, List<MultiVo>> assigneeListGroup = StreamUtils.groupByKey(multiVoList, MultiVo::getAssigneeList);
+                for (Map.Entry<String, List<MultiVo>> entry : assigneeListGroup.entrySet()) {
+                    List<MultiVo> value = entry.getValue();
+                    if(CollectionUtil.isNotEmpty(value) && value.size()>1){
+                        String key = entry.getKey();
+                        String errorMsg = "会签人员集合【"+key+"】重复,请重新设置集合KEY";
+                        throw new ServerException(errorMsg);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
