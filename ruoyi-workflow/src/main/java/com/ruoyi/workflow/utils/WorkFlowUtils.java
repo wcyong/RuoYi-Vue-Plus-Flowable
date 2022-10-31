@@ -125,53 +125,25 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/30 18:27
      */
-    public static void checkBpmnModelMultiVariable(BpmnModel bpmnModel){
-        try {
-            Collection<FlowElement> flowElements = bpmnModel.getMainProcess().getFlowElements();
-            List<MultiVo> multiVoList = new ArrayList<>();
-            for (FlowElement flowElement : flowElements) {
-                FlowNode flowNode = (FlowNode) flowElement;
-                //判断是否为并行会签节点
-                if (flowNode.getBehavior() instanceof ParallelMultiInstanceBehavior) {
-                    ParallelMultiInstanceBehavior behavior = (ParallelMultiInstanceBehavior) flowNode.getBehavior();
-                    if (behavior != null && behavior.getCollectionExpression() != null) {
-                        MultiVo multiVo = new MultiVo();
-                        Expression collectionExpression = behavior.getCollectionExpression();
-                        String assigneeList = collectionExpression.getExpressionText();
-                        String assignee = behavior.getCollectionElementVariable();
-                        multiVo.setType(behavior);
-                        multiVo.setAssignee(assignee);
-                        multiVo.setAssigneeList(assigneeList);
-                        multiVoList.add(multiVo);
-                    }
-                    //判断是否为串行会签节点
-                } else if (flowNode.getBehavior() instanceof SequentialMultiInstanceBehavior) {
-                    SequentialMultiInstanceBehavior behavior = (SequentialMultiInstanceBehavior) flowNode.getBehavior();
-                    if (behavior != null && behavior.getCollectionExpression() != null) {
-                        MultiVo multiVo = new MultiVo();
-                        Expression collectionExpression = behavior.getCollectionExpression();
-                        String assigneeList = collectionExpression.getExpressionText();
-                        String assignee = behavior.getCollectionElementVariable();
-                        multiVo.setType(behavior);
-                        multiVo.setAssignee(assignee);
-                        multiVo.setAssigneeList(assigneeList);
-                        multiVoList.add(multiVo);
-                    }
+    public static void checkBpmnModelMultiVariable(BpmnModel bpmnModel) throws ServerException {
+        Collection<FlowElement> flowElements = bpmnModel.getMainProcess().getFlowElements();
+        List<MultiVo> multiVoList = new ArrayList<>();
+        for (FlowElement flowElement : flowElements) {
+            if (flowElement instanceof UserTask && ObjectUtil.isNotEmpty(((UserTask) flowElement).getLoopCharacteristics()) && StringUtils.isNotBlank(((UserTask) flowElement).getLoopCharacteristics().getInputDataItem())) {
+                MultiVo multiVo = new MultiVo();
+                multiVo.setAssigneeList(((UserTask) flowElement).getLoopCharacteristics().getInputDataItem());
+                multiVoList.add(multiVo);
+            }
+        }
+        if (CollectionUtil.isNotEmpty(multiVoList) && multiVoList.size() > 1) {
+            Map<String, List<MultiVo>> assigneeListGroup = StreamUtils.groupByKey(multiVoList, MultiVo::getAssigneeList);
+            for (Map.Entry<String, List<MultiVo>> entry : assigneeListGroup.entrySet()) {
+                List<MultiVo> value = entry.getValue();
+                if (CollectionUtil.isNotEmpty(value) && value.size() > 1) {
+                    String key = entry.getKey();
+                    throw new ServerException("会签人员集合【" + key + "】重复,请重新设置集合KEY");
                 }
             }
-            if(CollectionUtil.isNotEmpty(multiVoList) && multiVoList.size()>1){
-                Map<String, List<MultiVo>> assigneeListGroup = StreamUtils.groupByKey(multiVoList, MultiVo::getAssigneeList);
-                for (Map.Entry<String, List<MultiVo>> entry : assigneeListGroup.entrySet()) {
-                    List<MultiVo> value = entry.getValue();
-                    if(CollectionUtil.isNotEmpty(value) && value.size()>1){
-                        String key = entry.getKey();
-                        String errorMsg = "会签人员集合【"+key+"】重复,请重新设置集合KEY";
-                        throw new ServerException(errorMsg);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
@@ -930,8 +902,8 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:25
      */
-    public static void setVariable(String taskId,String variableName,Object value){
-        PROCESS_ENGINE.getTaskService().setVariable(taskId,variableName,value);
+    public static void setVariable(String taskId, String variableName, Object value) {
+        PROCESS_ENGINE.getTaskService().setVariable(taskId, variableName, value);
     }
 
     /**
@@ -942,8 +914,8 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:25
      */
-    public static void setVariables(String taskId, Map<String,Object> variables){
-        PROCESS_ENGINE.getTaskService().setVariables(taskId,variables);
+    public static void setVariables(String taskId, Map<String, Object> variables) {
+        PROCESS_ENGINE.getTaskService().setVariables(taskId, variables);
     }
 
     /**
@@ -953,7 +925,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:26
      */
-    public static Task getCurrentTask(String taskId){
+    public static Task getCurrentTask(String taskId) {
         return PROCESS_ENGINE.getTaskService().createTaskQuery().taskId(taskId).singleResult();
     }
 
@@ -964,7 +936,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:26
      */
-    public static List<Task> getCurrentTaskList(String processInstanceId){
+    public static List<Task> getCurrentTaskList(String processInstanceId) {
         return PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
     }
 
@@ -975,7 +947,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:43
      */
-    public static List<IdentityLink> getCurrentApprover(String taskId){
+    public static List<IdentityLink> getCurrentApprover(String taskId) {
         return PROCESS_ENGINE.getTaskService().getIdentityLinksForTask(taskId);
     }
 }

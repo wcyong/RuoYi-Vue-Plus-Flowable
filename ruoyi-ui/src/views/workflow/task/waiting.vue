@@ -98,8 +98,10 @@
           :limit.sync="queryParams.pageSize"
           @pagination="getList" />
         <!-- 驳回 -->
-        <el-dialog title="审批记录" :visible.sync="visible" v-if="visible" width="60%" :close-on-click-modal="false">
-          <history :processInstanceId="processInstanceId" :editMessage="true"></history>
+        <el-dialog title="审批记录" :visible.sync="visible" v-if="visible" width="80%" :close-on-click-modal="false">
+            <div class="historyContainer">
+              <history :processInstanceId="processInstanceId" :editMessage="true"></history>
+            </div>
         </el-dialog>
 
         <!-- 选择人员 -->
@@ -381,5 +383,16 @@
 }
 .box-card::-webkit-scrollbar-thumb {
 	border-radius: 10px;
+}
+.historyContainer{
+  height: 600px;
+  overflow: auto;
+}
+.historyContainer::-webkit-scrollbar {
+	width: 4px;
+}
+.historyContainer::-webkit-scrollbar-thumb {
+	border-radius: 10px;
+  height: 5px;
 }
 </style>

@@ -38,10 +38,8 @@
               </el-table-column>
             </el-table>
         </el-tab-pane>
-        <el-tab-pane label="流程进度">
-           <el-image v-if="processInstanceId" :src="url" style="font-size: 20px; margin: 50px;">
-              <div slot="placeholder"><i class="el-icon-loading"></i> 流程审批历史图加载中……</div>
-           </el-image>
+        <el-tab-pane label="流程进度" v-if="processInstanceId">
+           <HistoryBpmn :processInstanceId="processInstanceId"/>
         </el-tab-pane>
       </el-tabs>
       <el-dialog title="编辑意见" :close-on-click-modal="false" :visible.sync="dialogVisible" v-if="dialogVisible" append-to-body width="60%">
@@ -74,7 +72,7 @@
 <script>
 import apiProcessInst from '@/api/workflow/processInst'
 import taskApi from '@/api/workflow/task'
-
+import HistoryBpmn from "@/components/Process/HistoryBpmn";
 export default {
     props: {
       processInstanceId: String,
@@ -83,10 +81,12 @@ export default {
         default: false
       },
     },
+    components:{
+      HistoryBpmn
+    },
     data() {
       return {
         loading: false,
-        url: null,
         list: [],
         dialogVisible: false,
         commentId: undefined,
@@ -103,8 +103,6 @@ export default {
             this.loading = true
             // 审批历史数据
             this.getHistoryInfoList()
-            // 通过流程实例id获取历史流程图
-            this.url = process.env.VUE_APP_BASE_API+'/workflow/processInstance/getHistoryProcessImage?processInstanceId='+newVal
           }
         },
         immediate: true,

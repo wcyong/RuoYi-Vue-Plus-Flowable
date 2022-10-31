@@ -127,7 +127,7 @@
           <HistoryRecord :processInstanceId="processInstanceId"/>
         </el-tab-pane>
         <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
-          <HistoryImage :processInstanceId="processInstanceId"/>
+          <HistoryBpmn :processInstanceId="processInstanceId"/>
         </el-tab-pane>
       </el-tabs>
       <!-- 动态表单查看结束-->
@@ -144,7 +144,7 @@ import dynamicFormView from './dynamicFormView'
 import verify from "@/components/Process/Verify";
 import processApi from "@/api/workflow/processInst";
 import HistoryRecord from "@/components/Process/HistoryRecord";
-import HistoryImage from "@/components/Process/HistoryImage";
+import HistoryBpmn from "@/components/Process/HistoryBpmn";
 export default {
   name: "BusinessForm",
   components:{
@@ -152,7 +152,7 @@ export default {
     dynamicFormView,
     verify,
     HistoryRecord,
-    HistoryImage
+    HistoryBpmn
   },
   data() {
     return {

@@ -57,7 +57,12 @@ export default {
   mounted() {
     this.modeler = new BpmnViewer({
       container: this.$refs.canvas,
-      height: 'calc(100vh - 200px)',
+      additionalModules:[
+        {
+          //禁止滚轮滚动
+          zoomScroll: ["value",""]
+        }
+      ]
     })
     processApi.getXml(this.processInstanceId).then(response=>{        
       this.xml = response.data.xml
@@ -174,14 +179,6 @@ export default {
 </script>
 
 <style lang="scss">
-.containers {
-    position: absolute;
-    background-color: #ffffff;
-    top:0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
 .canvas {
     width: 100%;
     height: 100%;

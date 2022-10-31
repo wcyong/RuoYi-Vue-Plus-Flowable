@@ -15,12 +15,14 @@ import com.ruoyi.workflow.common.constant.ActConstant;
 import com.ruoyi.workflow.domain.bo.ModelBo;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.service.IModelService;
+import com.ruoyi.workflow.utils.WorkFlowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.flowable.bpmn.model.BpmnModel;
 import org.flowable.editor.constants.ModelDataJsonConstants;
 import org.flowable.engine.repository.*;
 import org.flowable.image.exception.FlowableImageException;
@@ -65,6 +67,8 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             if(StringUtils.isBlank(category)){
                 throw new ServiceException("请选择流程分类！");
             }
+            BpmnModel bpmnModel = WorkFlowUtils.xmlToBpmnModel(xml);
+            WorkFlowUtils.checkBpmnModelMultiVariable(bpmnModel);
             JSONObject jsonObject = JSONUtil.xmlToJson(xml);
             JSONObject definitions = (JSONObject) jsonObject.get("definitions");
             String description = "";
@@ -191,6 +195,8 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             if(StringUtils.isBlank(category)){
                 throw new ServiceException("请选择流程分类！");
             }
+            BpmnModel bpmnModel = WorkFlowUtils.xmlToBpmnModel(xml);
+            WorkFlowUtils.checkBpmnModelMultiVariable(bpmnModel);
             JSONObject jsonObject = JSONUtil.xmlToJson(xml);
             JSONObject definitions = (JSONObject) jsonObject.get("definitions");
             String description = "";

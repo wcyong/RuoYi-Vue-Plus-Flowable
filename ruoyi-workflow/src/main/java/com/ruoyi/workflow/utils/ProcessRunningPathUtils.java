@@ -44,7 +44,7 @@ public class ProcessRunningPathUtils {
         List<Task> list = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
         List<ProcessNodePath> processNodePathList = new ArrayList<>();
         Map<String, Object> variables = PROCESS_ENGINE.getRuntimeService().getVariables(list.get(0).getExecutionId());
-        FlowElement startElement = flowElements.stream().filter(f -> f instanceof StartEvent).findFirst().orElse(null);
+        FlowElement startElement = flowElements.stream().filter(StartEvent.class::isInstance).findFirst().orElse(null);
         assert startElement != null;
         List<SequenceFlow> outgoingFlows = ((StartEvent) startElement).getOutgoingFlows();
         if (outgoingFlows.size() == 1) {
