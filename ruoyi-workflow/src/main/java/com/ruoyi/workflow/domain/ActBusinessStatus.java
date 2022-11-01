@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 业务状态实体对象 act_business_status
+ * 业务状态对象 act_business_status
  *
  * @author gssong
  * @date 2021-10-10
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @TableName("act_business_status")
-public class ActBusinessStatus  extends BaseEntity{
+public class ActBusinessStatus extends BaseEntity{
 
     private static final long serialVersionUID=1L;
 

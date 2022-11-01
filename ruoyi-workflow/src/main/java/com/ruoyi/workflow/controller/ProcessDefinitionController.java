@@ -148,4 +148,19 @@ public class ProcessDefinitionController extends BaseController {
         return R.ok(iProcessDefinitionService.setting(processDefinitionId));
     }
 
+    /**
+     * @description: 迁移流程定义
+     * @param: currentProcessDefinitionId
+     * @param: fromProcessDefinitionId
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Boolean>
+     * @author: gssong
+     * @date: 2022/11/1 12:49
+     */
+    @Log(title = "流程定义管理", businessType = BusinessType.UPDATE)
+    @PutMapping("/migrationProcessDefinition/{currentProcessDefinitionId}/{fromProcessDefinitionId}")
+    public R<Boolean> migrationProcessDefinition(@PathVariable String currentProcessDefinitionId,@PathVariable String fromProcessDefinitionId) {
+        return R.ok(iProcessDefinitionService.migrationProcessDefinition(currentProcessDefinitionId,fromProcessDefinitionId));
+    }
+
+
 }
