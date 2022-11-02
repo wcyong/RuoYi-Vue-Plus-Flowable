@@ -33,7 +33,7 @@
     <!-- 表格数据 -->
     <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
         <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
-        <el-table-column align="center" prop="name" label="模型名称" width="150" :show-overflow-tooltip="true"></el-table-column>
+        <el-table-column align="center" prop="name" label="流程定义名称" width="150" :show-overflow-tooltip="true"></el-table-column>
         <el-table-column align="center" prop="key" label="标识Key" width="120"></el-table-column>
         <el-table-column align="center" prop="version" label="版本号" width="90" >
           <template slot-scope="{row}"> v{{row.version}}.0</template>
@@ -145,7 +145,7 @@
     <el-dialog title="历史版本" :visible.sync="histVisible" width="90%" :close-on-click-modal="false" append-to-body>
       <el-table v-loading="loading" :data="histList" @selection-change="handleSelectionChange">
           <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
-          <el-table-column align="center" prop="name" label="模型名称"  min-width="160"></el-table-column>
+          <el-table-column align="center" prop="name" label="流程定义名称"  min-width="160"></el-table-column>
           <el-table-column align="center" prop="key" label="标识Key"  min-width="120"></el-table-column>
           <el-table-column align="center" prop="version" label="版本号" width="80" >
           <template slot-scope="{row}"> v{{row.version}}.0</template>
@@ -277,8 +277,6 @@ export default {
             description: '',
             // 流程图
             url: [],
-            // 流程key
-            propKey: null,
             // 流程定义id
             definitionId: null,
             // 按钮loading
@@ -431,10 +429,9 @@ export default {
       },
       //历史版本
       clickHistList(row) {
-          this.propKey = row.key
           this.definitionId = row.id
           this.histVisible = true
-          let data = {id:this.definitionId,key:this.propKey}
+          let data = {id:this.definitionId,key:row.key}
           this.getHistList(data)
       },
        //查询历史列表

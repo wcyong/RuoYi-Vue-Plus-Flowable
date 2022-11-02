@@ -22,9 +22,9 @@ public enum BusinessStatusEnum {
      */
     DRAFT("draft", "草稿"),
     /**
-     * 处理中
+     * 待审批
      */
-    WAITING("waiting", "处理中"),
+    WAITING("waiting", "待审批"),
     /**
      * 已完成
      */

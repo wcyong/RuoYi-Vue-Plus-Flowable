@@ -149,7 +149,7 @@ public class ProcessDefinitionController extends BaseController {
     }
 
     /**
-     * @description: 迁移流程定义
+     * 迁移流程定义
      * @param: currentProcessDefinitionId
      * @param: fromProcessDefinitionId
      * @return: com.ruoyi.common.core.domain.R<java.lang.Boolean>

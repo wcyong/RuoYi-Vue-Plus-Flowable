@@ -48,7 +48,7 @@
             </el-table-column>
             <el-table-column  align="center" prop="businessKey" :show-overflow-tooltip="true" label="流程关联业务ID" width="160"/>
             <el-table-column  align="center" prop="createTime" label="创建时间" width="160"/>
-            <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width">
+            <el-table-column label="操作" align="center" width="220" class-name="small-padding fixed-width">
               <template slot-scope="scope">
                 <el-row :gutter="20" class="mb8">
                     <el-col :span="1.5">
@@ -126,7 +126,7 @@
         </el-dialog>
         <!-- 减签结束 -->
 
-        <!-- 流程变量 -->
+        <!-- 流程变量开始 -->
         <el-dialog title="流程变量" :visible.sync="variableVisible" v-if="variableVisible" width="60%" :close-on-click-modal="false">
           <el-card class="box-card">
             <div slot="header" class="clearfix">
@@ -141,6 +141,8 @@
             </div>
           </el-card>
         </el-dialog>
+        <!-- 流程变量结束 -->
+
     </div>
 </template>
 

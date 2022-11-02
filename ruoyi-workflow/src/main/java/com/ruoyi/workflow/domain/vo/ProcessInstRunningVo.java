@@ -20,6 +20,10 @@ public class ProcessInstRunningVo implements Serializable {
      */
     private String processInstanceId;
     /**
+     * 流程定义id
+     */
+    private String processDefinitionId;
+    /**
      * 流程定义名称
      */
     private String name;

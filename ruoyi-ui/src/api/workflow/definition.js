@@ -26,7 +26,7 @@ export function list(query) {
 }
 
 /**
- *
+ * 挂起或激活流程定义
  * @param {参数} data
  * @returns
  */
@@ -63,8 +63,8 @@ export function deployProcessFile(data) {
 }
 
 /**
- *
- * @param {流程定义设置} definitionId
+ * 流程定义设置
+ * @param definitionId
  * @returns
  */
 export function setting(definitionId) {
@@ -75,8 +75,8 @@ export function setting(definitionId) {
 }
 
 /**
- *
- * @param {查看xml} definitionId
+ * 查看xml
+ * @param definitionId
  * @returns
  */
 export function getXml(definitionId) {
@@ -85,6 +85,20 @@ export function getXml(definitionId) {
     method: 'get'
   })
 }
+
+/**
+ * 迁移流程定义版本
+ * @param currentProcessDefinitionId
+ * @param fromProcessDefinitionId
+ * @returns
+ */
+ export function migrationProcessDefinition(currentProcessDefinitionId,fromProcessDefinitionId) {
+    return request({
+      url: `/workflow/definition/migrationProcessDefinition/${currentProcessDefinitionId}/${fromProcessDefinitionId}`,
+      method: 'put'
+    })
+ }
+
 
 
 

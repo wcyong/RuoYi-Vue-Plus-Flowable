@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("act_task_Node")
+@TableName("act_task_node")
 public class ActTaskNode extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
