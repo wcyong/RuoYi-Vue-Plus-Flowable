@@ -397,9 +397,8 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                 .migrateToProcessDefinition(currentProcessDefinitionId)
                 .validateMigrationOfProcessInstances(fromProcessDefinitionId)
                 .isMigrationValid();
-            // 验证失败
             if (!migrationValid) {
-                throw new ServiceException("流程定义差异过大不满足在途流程的迁移，请修改流程图");
+                throw new ServiceException("流程定义差异过大无法迁移，请修改流程图");
             }
             // 已结束的流程实例不会迁移
             processMigrationService.createProcessInstanceMigrationBuilder()

@@ -1,103 +1,117 @@
 <template>
     <div class="app-container">
-         <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-          <el-form-item label="模型名称" prop="name">
-            <el-input
-              v-model="queryParams.name"
-              placeholder="请输入模型名称"
-              clearable
-              size="small"
-              @keyup.enter.native="handleQuery"
+         <div>
+            <el-tree
+                :data="deptOptions"
+                :props="defaultProps"
+                :expand-on-click-node="false"
+                :filter-node-method="filterNode"
+                ref="tree"
+                default-expand-all
+                @node-click="handleNodeClick"
             />
-          </el-form-item>
-          <el-form-item label="标识Key" prop="key">
-            <el-input
-              v-model="queryParams.key"
-              placeholder="请输入标识Key"
-              clearable
-              size="small"
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
+         </div>
+         <div>
+            <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
+                <el-form-item label="模型名称" prop="name">
+                    <el-input
+                    v-model="queryParams.name"
+                    placeholder="请输入模型名称"
+                    clearable
+                    size="small"
+                    @keyup.enter.native="handleQuery"
+                    />
+                </el-form-item>
+                <el-form-item label="标识Key" prop="key">
+                    <el-input
+                    v-model="queryParams.key"
+                    placeholder="请输入标识Key"
+                    clearable
+                    size="small"
+                    @keyup.enter.native="handleQuery"
+                    />
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+                    <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+                </el-form-item>
+            </el-form>
 
-         <el-row :gutter="10" class="mb8">
-            <el-col :span="1.5">
-              <el-button
-                type="primary"
-                plain
-                icon="el-icon-plus"
-                size="mini"
-                @click="handleAdd"
-                v-hasPermi="['demo:demo:add']"
-              >新增</el-button>
-            </el-col>
-            <el-col :span="1.5">
-              <el-button
-                type="danger"
-                plain
-                icon="el-icon-delete"
-                size="mini"
-                :disabled="multiple"
-                @click="handleDelete"
-                v-hasPermi="['demo:demo:remove']"
-              >删除</el-button>
-            </el-col>
-            <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-        </el-row>
+            <el-row :gutter="10" class="mb8">
+                <el-col :span="1.5">
+                <el-button
+                    type="primary"
+                    plain
+                    icon="el-icon-plus"
+                    size="mini"
+                    @click="handleAdd"
+                    v-hasPermi="['demo:demo:add']"
+                >新增</el-button>
+                </el-col>
+                <el-col :span="1.5">
+                <el-button
+                    type="danger"
+                    plain
+                    icon="el-icon-delete"
+                    size="mini"
+                    :disabled="multiple"
+                    @click="handleDelete"
+                    v-hasPermi="['demo:demo:remove']"
+                >删除</el-button>
+                </el-col>
+                <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+            </el-row>
 
-        <el-table v-loading="loading" :data="modelList" @selection-change="handleSelectionChange">
-            <el-table-column type="selection" width="55" align="center" />
-            <el-table-column fixed align="center" type="index" label="序号" width="50"></el-table-column>
-            <el-table-column fixed align="center" prop="name" label="模型名称"></el-table-column>
-            <el-table-column  align="center" prop="key" label="标识Key" ></el-table-column>
-            <el-table-column align="center" prop="version" label="版本号" width="90" >
-              <template slot-scope="{row}"> v{{row.version}}.0</template>
+            <el-table v-loading="loading" :data="modelList" @selection-change="handleSelectionChange">
+                <el-table-column type="selection" width="55" align="center" />
+                <el-table-column fixed align="center" type="index" label="序号" width="50"></el-table-column>
+                <el-table-column fixed align="center" prop="name" label="模型名称"></el-table-column>
+                <el-table-column  align="center" prop="key" label="标识Key" ></el-table-column>
+                <el-table-column align="center" prop="version" label="版本号" width="90" >
+                <template slot-scope="{row}"> v{{row.version}}.0</template>
+                </el-table-column>
+                <el-table-column  align="center" prop="metaInfo" label="备注说明"  min-width="130"></el-table-column>
+                <el-table-column  align="center" prop="createTime" label="创建时间" width="160"></el-table-column>
+                <el-table-column  align="center" prop="lastUpdateTime" label="更新时间" width="160"></el-table-column>
+                <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
+                <template slot-scope="scope">
+                <el-row :gutter="10" class="mb8">
+                    <el-col :span="1.5">
+                    <el-button type="text" size="small" icon="el-icon-thumb" @click="clickDesign(scope.row.id)">设计流程</el-button>
+                    </el-col>
+                    <el-col :span="1.5">
+                    <el-button type="text" size="small" icon="el-icon-download" @click="clickExportZip(scope.row)">导出</el-button>
+                    </el-col>
+                </el-row>
+                <el-row :gutter="10" class="mb8">
+                    <el-col :span="1.5">
+                    <el-button type="text" size="small" icon="el-icon-c-scale-to-original" @click="clickDeploy(scope.row.id,scope.row.key)">流程部署</el-button>
+                    </el-col>
+                    <el-col :span="1.5">
+                    <el-button size="mini" type="text"  icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
+                    </el-col>
+                </el-row>
+                </template>
             </el-table-column>
-            <el-table-column  align="center" prop="metaInfo" label="备注说明"  min-width="130"></el-table-column>
-            <el-table-column  align="center" prop="createTime" label="创建时间" width="160"></el-table-column>
-            <el-table-column  align="center" prop="lastUpdateTime" label="更新时间" width="160"></el-table-column>
-            <el-table-column label="操作" align="center" width="160" class-name="small-padding fixed-width">
-            <template slot-scope="scope">
-               <el-row :gutter="10" class="mb8">
-                <el-col :span="1.5">
-                  <el-button type="text" size="small" icon="el-icon-thumb" @click="clickDesign(scope.row.id)">设计流程</el-button>
-                </el-col>
-                <el-col :span="1.5">
-                  <el-button type="text" size="small" icon="el-icon-download" @click="clickExportZip(scope.row)">导出</el-button>
-                </el-col>
-               </el-row>
-              <el-row :gutter="10" class="mb8">
-                <el-col :span="1.5">
-                  <el-button type="text" size="small" icon="el-icon-c-scale-to-original" @click="clickDeploy(scope.row.id,scope.row.key)">流程部署</el-button>
-                </el-col>
-                <el-col :span="1.5">
-                  <el-button size="mini" type="text"  icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
-                </el-col>
-              </el-row>
-            </template>
-          </el-table-column>
-        </el-table>
+            </el-table>
 
-        <pagination v-show="total>0"
-          :total="total"
-          :page.sync="queryParams.pageNum"
-          :limit.sync="queryParams.pageSize"
-          @pagination="getList" />
-        <!-- 设计流程 -->
-        <el-dialog title="设计模型" :before-close="handleClose" :visible.sync="bpmnJsModelVisible"
-        v-if="bpmnJsModelVisible" fullscreen :modal-append-to-body='false'>
-            <bpmnJs ref="bpmnJsModel" @close-bpmn="closeBpmn" :categorysBpmn="categorysBpmn" :modelId="modelId"/>
-        </el-dialog>
+            <pagination v-show="total>0"
+            :total="total"
+            :page.sync="queryParams.pageNum"
+            :limit.sync="queryParams.pageSize"
+            @pagination="getList" />
+            <!-- 设计流程 -->
+            <el-dialog title="设计模型" :before-close="handleClose" :visible.sync="bpmnJsModelVisible"
+            v-if="bpmnJsModelVisible" fullscreen :modal-append-to-body='false'>
+                <bpmnJs ref="bpmnJsModel" @close-bpmn="closeBpmn" :categorysBpmn="categorysBpmn" :modelId="modelId"/>
+            </el-dialog>
+         </div>
     </div>
 </template>
 
 <script>
 import {list,add,del,deploy} from "@/api/workflow/model";
+import {queryTreeList} from "@/api/workflow/category";
 import BpmnJs from './bpmnJs'
 export default {
     dicts: ['act_category'],
@@ -105,7 +119,7 @@ export default {
     components: {BpmnJs},
     data() {
         return {
-            //按钮loading
+            // 按钮loading
             buttonLoading: false,
             // 遮罩层
             loading: true,
@@ -144,12 +158,18 @@ export default {
               ],
             },
             modelId: null, // 模型id
-            categorys:[]
+            categorys:[],
+            deptOptions: [],
+            defaultProps: {
+                children: "children",
+                label: "label"
+            },
         }
     },
     created() {
       this.categorysBpmn = this.dict.type.act_category
       this.getList();
+      this.getTreeCategoryList();
     },
     methods: {
       /** 搜索按钮操作 */
@@ -248,7 +268,22 @@ export default {
       // 导出流程模型
       clickExportZip(data){
           this.$download.zip('/workflow/model/export/zip/'+data.id,data.name+"-"+data.key+"-"+data.category);
-      }
+      },
+      // 筛选节点
+      filterNode(value, data) {
+        if (!value) return true;
+        return data.label.indexOf(value) !== -1;
+      },
+      // 流程分类
+      getTreeCategoryList() {
+        queryTreeList().then(response => {
+            this.deptOptions = response.data;
+        });
+      },
+      // 节点单击事件
+      handleNodeClick(data) {
+            //this.queryParams.deptId = data.id;
+      },
     }
 
 }

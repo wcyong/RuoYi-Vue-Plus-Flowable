@@ -36,5 +36,11 @@ public class ActCategory extends BaseEntity {
      */
     private Long parentId;
 
+    /**
+     * 排序
+     */
+    private Long orderNum;
+
+
 
 }
