@@ -1,6 +1,17 @@
 <template>
     <div class="app-container">
-         <div>
+        <el-row :gutter="20">
+         <el-col :span="4" :xs="24">
+            <div class="head-container">
+                <el-input
+                    v-model="categoryName"
+                    placeholder="请输入分类名称"
+                    clearable
+                    size="small"
+                    prefix-icon="el-icon-search"
+                    style="margin-bottom: 20px;margin-top: 3px;"
+                />
+            </div>
             <el-tree
                 :data="deptOptions"
                 :props="defaultProps"
@@ -9,9 +20,27 @@
                 ref="tree"
                 default-expand-all
                 @node-click="handleNodeClick"
-            />
-         </div>
-         <div>
+            >
+            <span class="custom-tree-node" slot-scope="{ node, data }">
+                <span>{{ data.label }}</span>
+                <span  v-if="data.id!==-1">
+                    <el-button
+                        type="text"
+                        size="mini"
+                        @click="() => append(node, data)">
+                        新增
+                    </el-button>
+                    <el-button
+                        type="text"
+                        size="mini"
+                        @click="() => remove(node, data)">
+                        删除
+                    </el-button>
+                </span>
+            </span>
+            </el-tree>
+         </el-col>
+         <el-col :span="20" :xs="24">
             <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
                 <el-form-item label="模型名称" prop="name">
                     <el-input
@@ -100,23 +129,47 @@
             :page.sync="queryParams.pageNum"
             :limit.sync="queryParams.pageSize"
             @pagination="getList" />
-            <!-- 设计流程 -->
+            <!-- 设计流程开始 -->
             <el-dialog title="设计模型" :before-close="handleClose" :visible.sync="bpmnJsModelVisible"
             v-if="bpmnJsModelVisible" fullscreen :modal-append-to-body='false'>
                 <bpmnJs ref="bpmnJsModel" @close-bpmn="closeBpmn" :categorysBpmn="categorysBpmn" :modelId="modelId"/>
             </el-dialog>
-         </div>
+            <!-- 设计流程结束 -->
+
+            <!-- 流程分类开始 -->
+            <el-dialog title="新增流程分类" :visible.sync="categoryVisible" width="40%" v-if="categoryVisible" :modal-append-to-body='false'>
+                <el-form :model="categoryForm" ref="categoryForm" :rules="rules" v-show="showSearch" label-width="80px">
+                    <el-form-item label="父级分类" prop="parentId">
+                        <treeselect v-model="categoryForm.parentId" :options="deptOptions" :show-count="true" placeholder="请选择流程分类" />
+                    </el-form-item>
+                    <el-form-item label="分类名称" prop="categoryName">
+                        <el-input v-model="categoryForm.categoryName" placeholder="请输入分类名称" />
+                    </el-form-item>
+                    <el-form-item label="排序" prop="orderNum">
+                        <el-input-number style="width:100%" v-model="categoryForm.orderNum" controls-position="right" :min="1"/>
+                    </el-form-item>
+                </el-form>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="categoryVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="saveCategory">确 定</el-button>
+                </span>
+            </el-dialog>
+            <!-- 流程分类结束 -->
+         </el-col>
+        </el-row>
     </div>
 </template>
 
 <script>
 import {list,add,del,deploy} from "@/api/workflow/model";
-import {queryTreeList} from "@/api/workflow/category";
+import {queryTreeList,delCategory,addCategory} from "@/api/workflow/category";
+import Treeselect from "@riophae/vue-treeselect";
+import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import BpmnJs from './bpmnJs'
 export default {
     dicts: ['act_category'],
     name: 'Model', // 和对应路由表中配置的name值一致
-    components: {BpmnJs},
+    components: {BpmnJs,Treeselect},
     data() {
         return {
             // 按钮loading
@@ -137,6 +190,7 @@ export default {
             total: 0,
             // 是否显示弹出层
             bpmnJsModelVisible: false,
+            categoryVisible: false,
             // 模型定义表格数据
             modelList: [],
             // 查询参数
@@ -144,18 +198,22 @@ export default {
                 pageNum: 1,
                 pageSize: 10,
                 name: undefined,
-                key : undefined
+                key : undefined,
+                category : undefined
             },
             // 表单参数
             form: {},
             // 表单校验
             rules: {
-              name: [
-                { required: true, message: "模型名称不能为空", trigger: "blur" }
+              categoryName: [
+                { required: true, message: "分类名称不能为空", trigger: "blur" }
               ],
-              key: [
-                { required: true, message: "标识key不能为空", trigger: "blur" }
+              parentId: [
+                { required: true, message: "父级分类不能为空", trigger: "blur" }
               ],
+              orderNum: [
+                { required: true, message: "排序不能为空", trigger: "blur" }
+              ]
             },
             modelId: null, // 模型id
             categorys:[],
@@ -164,6 +222,20 @@ export default {
                 children: "children",
                 label: "label"
             },
+            // 分类名称
+            categoryName:'',
+            // 流程分类
+            categoryForm:{
+                parentId:'',
+                categoryName:'',
+                orderNum: 0
+            }
+        }
+    },
+    watch: {
+        // 根据名称筛选分类树
+        categoryName(val) {
+            this.$refs.tree.filter(val);
         }
     },
     created() {
@@ -282,9 +354,55 @@ export default {
       },
       // 节点单击事件
       handleNodeClick(data) {
-            //this.queryParams.deptId = data.id;
+        if(data.id === -1){
+            this.queryParams.category = undefined
+        }else{
+            this.queryParams.category = data.id;
+        }
+        this.getList()
       },
+      // 流程分类删除
+      remove(node,data){
+        this.$confirm('是否确认删除【'+data.label+'】?',{
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+            delCategory(data.id).then(response=>{
+                this.$modal.msgSuccess("删除成功");
+                this.getList()
+                this.getTreeCategoryList()
+            })
+        }).catch(() => {})
+      },
+      // 流程分类添加
+      append(node,data){
+        this.categoryForm.parentId = data.id
+        this.categoryVisible = true
+      },
+      // 流程分类保存
+      saveCategory(){
+        addCategory(this.categoryForm).then(response=>{
+            this.$modal.msgSuccess("新增成功");
+            this.getList()
+            this.categoryForm = {
+                orderNum:1
+            }
+            this.getTreeCategoryList()
+            this.categoryVisible = false
+        })
+      }
     }
 
 }
 </script>
+<style scoped>
+  .custom-tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    padding-right: 8px;
+  }
+</style>

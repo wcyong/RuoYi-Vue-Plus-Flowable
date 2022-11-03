@@ -52,6 +52,11 @@ public class ModelBo extends PageEntity implements Serializable {
      */
     private String key;
 
+    /**
+     * 流程分类
+     */
+    private String category;
+
     @Data
     public static class Process{
 

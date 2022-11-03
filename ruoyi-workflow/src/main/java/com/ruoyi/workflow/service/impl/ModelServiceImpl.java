@@ -156,6 +156,9 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
         if (StringUtils.isNotEmpty(modelBo.getKey())) {
             query.modelKey(modelBo.getKey());
         }
+        if (StringUtils.isNotEmpty(modelBo.getCategory())) {
+            query.modelCategoryLike("%" + modelBo.getCategory() + "%");
+        }
         query.orderByLastUpdateTime().desc();
         //创建时间降序排列
         query.orderByCreateTime().desc();
