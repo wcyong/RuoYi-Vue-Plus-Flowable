@@ -2,12 +2,18 @@ package com.ruoyi.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.tree.Tree;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.TreeBuildUtils;
 import com.ruoyi.workflow.domain.ActCategory;
 import com.ruoyi.workflow.mapper.ActCategoryMapper;
 import com.ruoyi.workflow.service.IActCategoryService;
 import lombok.RequiredArgsConstructor;
+import org.flowable.engine.RepositoryService;
+import org.flowable.engine.repository.Model;
+import org.flowable.engine.repository.ProcessDefinition;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -16,13 +22,14 @@ import java.util.List;
  *  流程分类对象 Service业务层处理
  *
  * @author gssong
- * @date 2021-10-10
+ * @date 2022-11-01
  */
 @Service
 @RequiredArgsConstructor
 public class ActCategoryServiceImpl extends ServiceImpl<ActCategoryMapper, ActCategory> implements IActCategoryService {
 
     private final ActCategoryMapper actCategoryMapper;
+    private final RepositoryService repositoryService;
 
     @Override
     public List<Tree<Long>> queryTreeList(ActCategory entity) {
@@ -52,6 +59,20 @@ public class ActCategoryServiceImpl extends ServiceImpl<ActCategoryMapper, ActCa
 
     @Override
     public Boolean deleteById(Long id) {
+        LambdaQueryWrapper<ActCategory> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(ActCategory::getParentId,id);
+        List<ActCategory> categoryList = actCategoryMapper.selectList(wrapper);
+        if(CollUtil.isNotEmpty(categoryList)){
+            throw new ServiceException("该分类下存在子级无法删除");
+        }
+        List<Model> modelList = repositoryService.createModelQuery().modelCategory(id.toString()).list();
+        if(CollUtil.isNotEmpty(modelList)){
+            throw new ServiceException("该分类下存在模型无法删除");
+        }
+        List<ProcessDefinition> definitionList = repositoryService.createProcessDefinitionQuery().processDefinitionCategory(id.toString()).list();
+        if(CollUtil.isNotEmpty(definitionList)){
+            throw new ServiceException("该分类下存在流程定义无法删除");
+        }
         return actCategoryMapper.deleteById(id)>0;
     }
 

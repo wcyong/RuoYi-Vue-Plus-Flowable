@@ -19,10 +19,9 @@
                 :filter-node-method="filterNode"
                 ref="tree"
                 default-expand-all
-                @node-click="handleNodeClick"
             >
             <span class="custom-tree-node" slot-scope="{ node, data }">
-                <span>{{ data.label }}</span>
+                <span @click="handleNodeClick(data)">{{ data.label }}</span>
                 <span  v-if="data.id!==-1">
                     <el-button
                         type="text"

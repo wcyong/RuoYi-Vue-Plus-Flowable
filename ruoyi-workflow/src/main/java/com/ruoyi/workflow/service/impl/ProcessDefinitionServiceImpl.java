@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.domain.ActCategory;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.bo.DefinitionBo;
 import com.ruoyi.workflow.domain.vo.ActProcessDefSettingVo;
@@ -13,6 +14,7 @@ import com.ruoyi.workflow.domain.vo.ActProcessNodeVo;
 import com.ruoyi.workflow.domain.vo.ProcessDefinitionVo;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.mapper.ProcessDefinitionMapper;
+import com.ruoyi.workflow.service.IActCategoryService;
 import com.ruoyi.workflow.service.IActNodeAssigneeService;
 import com.ruoyi.workflow.service.IActProcessDefSetting;
 import com.ruoyi.workflow.service.IProcessDefinitionService;
@@ -24,7 +26,6 @@ import org.flowable.bpmn.model.*;
 import org.flowable.bpmn.model.Process;
 import org.flowable.engine.ProcessMigrationService;
 import org.flowable.engine.repository.Deployment;
-import org.flowable.engine.repository.DeploymentBuilder;
 import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.engine.repository.ProcessDefinitionQuery;
 import org.flowable.task.api.history.HistoricTaskInstance;
@@ -57,6 +58,8 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
 
     private final IActProcessDefSetting iActProcessDefSetting;
 
+    private final IActCategoryService iActCategoryService;
+
     /**
      * @description: 查询流程定义列表
      * @param: definitionBo
@@ -72,6 +75,9 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
         }
         if (StringUtils.isNotEmpty(definitionBo.getName())) {
             query.processDefinitionNameLike("%" + definitionBo.getName() + "%");
+        }
+        if (StringUtils.isNotEmpty(definitionBo.getCategory())) {
+            query.processDefinitionCategory(definitionBo.getCategory());
         }
         // 分页查询
         List<ProcessDefinitionVo> processDefinitionVoList = new ArrayList<>();
@@ -187,24 +193,26 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             //流程分类
             String category = splitFilename[2];
 
+            ActCategory actCategory = iActCategoryService.queryById(Long.valueOf(category));
+            if (actCategory == null) {
+                throw new ServiceException("流程分类不存在");
+            }
             // 文件后缀名
             String suffix = filename.substring(filename.lastIndexOf(".") + 1).toUpperCase();
             InputStream inputStream = file.getInputStream();
-            DeploymentBuilder deployment = repositoryService.createDeployment();
+            Deployment deployment;
             if (ActConstant.ZIP.equals(suffix)) {
                 // zip
-                deployment.addZipInputStream(new ZipInputStream(inputStream));
+                deployment = repositoryService.createDeployment()
+                    .addZipInputStream(new ZipInputStream(inputStream)).name(processName).key(processKey).category(category).deploy();
             } else {
                 // xml 或 bpmn
-                deployment.addInputStream(filename, inputStream);
+                deployment = repositoryService.createDeployment()
+                    .addInputStream(filename, inputStream).name(processName).key(processKey).category(category).deploy();
             }
-            // 部署名称
-            deployment.name(processName);
-            deployment.key(processKey);
-            deployment.category(category);
-
-            // 开始部署
-            deployment.deploy();
+            // 更新分类
+            ProcessDefinition definition = repositoryService.createProcessDefinitionQuery().deploymentId(deployment.getId()).singleResult();
+            repositoryService.setProcessDefinitionCategory(definition.getId(), category);
 
             return true;
         } catch (IOException e) {

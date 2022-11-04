@@ -26,7 +26,13 @@ public class DefinitionBo extends PageEntity implements Serializable {
     private String name;
 
     /**
-     * 模型标识key
+     * 流程定义key
      */
     private String key;
+
+    /**
+     * 流程定义分类
+     */
+    private String category;
+
 }

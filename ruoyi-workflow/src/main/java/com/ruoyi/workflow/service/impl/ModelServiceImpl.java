@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -157,7 +158,7 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             query.modelKey(modelBo.getKey());
         }
         if (StringUtils.isNotEmpty(modelBo.getCategory())) {
-            query.modelCategoryLike("%" + modelBo.getCategory() + "%");
+            query.modelCategory(modelBo.getCategory());
         }
         query.orderByLastUpdateTime().desc();
         //创建时间降序排列
@@ -288,6 +289,9 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             // 更新 部署id 到流程定义模型数据表中
             model.setDeploymentId(deployment.getId());
             repositoryService.saveModel(model);
+            // 更新分类
+            ProcessDefinition definition = repositoryService.createProcessDefinitionQuery().deploymentId(deployment.getId()).singleResult();
+            repositoryService.setProcessDefinitionCategory(definition.getId(), model.getCategory());
             return true;
         }catch (Exception e){
             e.printStackTrace();
@@ -374,7 +378,7 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
                     Model modelData = repositoryService.newModel();
                     modelData.setKey(pd.getKey());
                     modelData.setName(pd.getName());
-
+                    modelData.setCategory(pd.getCategory());
                     ObjectNode modelObjectNode = new ObjectMapper().createObjectNode();
                     modelObjectNode.put(ModelDataJsonConstants.MODEL_NAME, pd.getName());
                     modelObjectNode.put(ModelDataJsonConstants.MODEL_REVISION, modelData.getVersion());
