@@ -22,6 +22,12 @@ public interface IActCategoryService {
     List<Tree<Long>> queryTreeList(ActCategory entity);
 
     /**
+     * 查询流程分类
+     * @return
+     */
+    List<ActCategory> queryList();
+
+    /**
      * 新增
      * @param actCategory
      * @return

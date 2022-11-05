@@ -8,6 +8,13 @@ export function queryTreeList() {
   })
 }
 
+// 查询流程分类
+export function categoryList() {
+  return request({
+    url: '/workflow/category/list',
+    method: 'get'
+  })
+}
 
 // 新增流程分类
 export function addCategory(data) {

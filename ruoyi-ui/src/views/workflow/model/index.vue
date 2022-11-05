@@ -161,12 +161,11 @@
 
 <script>
 import {list,add,del,deploy} from "@/api/workflow/model";
-import {queryTreeList,delCategory,addCategory} from "@/api/workflow/category";
+import {queryTreeList,delCategory,addCategory,categoryList} from "@/api/workflow/category";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import BpmnJs from './bpmnJs'
 export default {
-    dicts: ['act_category'],
     name: 'Model', // 和对应路由表中配置的name值一致
     components: {BpmnJs,Treeselect},
     data() {
@@ -238,11 +237,16 @@ export default {
         }
     },
     created() {
-      this.categorysBpmn = this.dict.type.act_category
       this.getList();
       this.getTreeCategoryList();
+      this.getCategoryList();
     },
     methods: {
+      getCategoryList(){
+        categoryList().then(response=>{
+          this.categorysBpmn = response.data
+        })
+      },
       /** 搜索按钮操作 */
       handleQuery() {
         this.queryParams.pageNum = 1;
@@ -356,7 +360,7 @@ export default {
         if(data.id === -1){
             this.queryParams.category = undefined
         }else{
-            this.queryParams.category = data.id;
+            this.queryParams.category = data.label;
         }
         this.getList()
       },

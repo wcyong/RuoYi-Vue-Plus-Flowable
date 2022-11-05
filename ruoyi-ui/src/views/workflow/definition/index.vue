@@ -57,7 +57,7 @@
             <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
                 <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
                 <el-table-column align="center" prop="name" label="流程定义名称" width="150" :show-overflow-tooltip="true"></el-table-column>
-                <el-table-column align="center" prop="key" label="标识Key" width="120"></el-table-column>
+                <el-table-column align="center" prop="key" label="标识Key" width="100"></el-table-column>
                 <el-table-column align="center" prop="version" label="版本号" width="90" >
                 <template slot-scope="{row}"> v{{row.version}}.0</template>
                 </el-table-column>
@@ -91,7 +91,7 @@
                 </template>
                 </el-table-column>
                 
-                <el-table-column  align="center" prop="description" :show-overflow-tooltip="true" label="挂起或激活原因" width="150"></el-table-column>
+                <el-table-column  align="center" prop="description" :show-overflow-tooltip="true" label="挂起或激活原因" width="120"></el-table-column>
                 <el-table-column label="操作" align="center" width="220" class-name="small-padding fixed-width">
                 <template slot-scope="scope">
                 <el-row :gutter="20" class="mb8">
@@ -191,7 +191,7 @@
                 </el-table-column>
                 <el-table-column align="center" prop="deploymentTime" label="部署时间" width="150"></el-table-column>
                 <el-table-column  align="center" prop="description" :show-overflow-tooltip="true" label="挂起或激活原因" width="150"></el-table-column>
-                <el-table-column label="操作" align="center" width="220" class-name="small-padding fixed-width">
+                <el-table-column label="操作" align="center" width="240" class-name="small-padding fixed-width">
                     <template slot-scope="scope">
                     <el-row :gutter="20" class="mb8">
                         <el-col :span="1.5">
@@ -242,6 +242,14 @@
                             icon="el-icon-copy-document"
                             @click="copySetting(scope.row)"
                         >复制节点设置</el-button>
+                        </el-col>
+                        <el-col :span="1.5">
+                        <el-button
+                            size="mini"
+                            type="text"
+                            icon="el-icon-postcard"
+                            @click="handleFormSetting(scope.row)"
+                            >设置</el-button>
                         </el-col>
                     </el-row>
                     </template>
@@ -427,6 +435,7 @@ export default {
 
       // 预览图片 downFile
       clickPreviewImg(id) {
+        console.log(id)
         this.type = 'png'
         this.url = []
         this.url.push(process.env.VUE_APP_BASE_API+'/workflow/definition/export/png/'+id)
@@ -531,7 +540,7 @@ export default {
         if(data.id === -1){
             this.queryParams.category = undefined
         }else{
-            this.queryParams.category = data.id;
+            this.queryParams.category = data.label;
         }
         this.getList()
       },
