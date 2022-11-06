@@ -21,8 +21,11 @@
                 default-expand-all
             >
             <span class="custom-tree-node" slot-scope="{ node, data }">
-                <span @click="handleNodeClick(data)">{{ data.label }}</span>
-                <span  v-if="data.id!==-1">
+                <span @click="handleNodeClick(data)" v-if="data.label.length < 6">{{ data.label }}</span>
+                <el-tooltip v-else effect="dark" :content="data.label" placement="bottom-end">
+                    <span @click="handleNodeClick(data)">{{`${data.label.substring(0, 6)}...`}}</span>
+                </el-tooltip>
+                <span>
                     <el-button
                         type="text"
                         size="mini"
@@ -30,6 +33,7 @@
                         新增
                     </el-button>
                     <el-button
+                        v-if="data.id!==-1"
                         type="text"
                         size="mini"
                         @click="() => remove(node, data)">

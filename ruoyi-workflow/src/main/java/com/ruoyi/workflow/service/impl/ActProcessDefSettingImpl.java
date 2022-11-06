@@ -65,7 +65,13 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
     public R<Long> checkProcessDefSetting(ActProcessDefSettingBo bo) {
         List<Task> taskList = taskService.createTaskQuery().processDefinitionId(bo.getProcessDefinitionId()).list();
         if (CollUtil.isNotEmpty(taskList)) {
-            throw new ServiceException("当前表单有运行中的单据不可切换绑定！");
+            LambdaQueryWrapper<ActProcessDefSetting> lqw = Wrappers.lambdaQuery();
+            lqw.eq(bo.getId() != null, ActProcessDefSetting::getId, bo.getId());
+            lqw.eq(ActProcessDefSetting::getProcessDefinitionId, bo.getProcessDefinitionId());
+            ActProcessDefSetting setting = baseMapper.selectOne(lqw);
+            if (setting != null) {
+                throw new ServiceException("当前表单有运行中的单据不可切换绑定！");
+            }
         }
         //排除当前绑定流程定义
         LambdaQueryWrapper<ActProcessDefSetting> lqw = Wrappers.lambdaQuery();

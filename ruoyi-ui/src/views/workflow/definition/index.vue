@@ -20,7 +20,14 @@
                 ref="tree"
                 @node-click="handleNodeClick"
                 default-expand-all
-            />
+            >
+            <span class="custom-tree-node" slot-scope="{ data }">
+                <span @click="handleNodeClick(data)" v-if="data.label.length < 12">{{ data.label }}</span>
+                <el-tooltip v-else effect="dark" :content="data.label" placement="bottom-end">
+                    <span @click="handleNodeClick(data)">{{`${data.label.substring(0, 12)}...`}}</span>
+                </el-tooltip>
+            </span>
+            </el-tree>
         </el-col>
         <el-col :span="20" :xs="24">
             <!-- 检索 -->
@@ -55,30 +62,29 @@
             </el-row>
             <!-- 表格数据 -->
             <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
-                <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
                 <el-table-column align="center" prop="name" label="流程定义名称" width="150" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column align="center" prop="key" label="标识Key" width="100"></el-table-column>
                 <el-table-column align="center" prop="version" label="版本号" width="90" >
                 <template slot-scope="{row}"> v{{row.version}}.0</template>
                 </el-table-column>
-                <el-table-column align="center" prop="resourceName" label="流程XML" min-width="100" :show-overflow-tooltip="true">
+                <el-table-column align="center" prop="resourceName" label="流程XML" min-width="80" :show-overflow-tooltip="true">
                 <template slot-scope="{row}">
                 <el-link type="primary" @click.native="clickExportXML(row.id)">{{ row.resourceName }}</el-link>
                 </template>
                 </el-table-column>
-                <el-table-column align="center" prop="diagramResourceName" label="流程图片" min-width="100" :show-overflow-tooltip="true">
+                <el-table-column align="center" prop="diagramResourceName" label="流程图片" min-width="80" :show-overflow-tooltip="true">
                 <template slot-scope="{row}">
                 <el-link type="primary" @click="clickPreviewImg(row.id)">{{ row.diagramResourceName }}</el-link>
                 </template>
                 </el-table-column>
-                <el-table-column  align="center" prop="suspensionState" label="状态"  min-width="50">
+                <el-table-column  align="center" prop="suspensionState" label="状态"  min-width="70">
                 <template slot-scope="scope">
                     <el-tag type="success" v-if="scope.row.suspensionState==1">激活</el-tag>
                     <el-tag type="danger" v-else>挂起</el-tag>
                 </template>
                 </el-table-column>
                 <el-table-column  align="center" prop="deploymentTime" label="部署时间" :show-overflow-tooltip="true" width="100"></el-table-column>
-                <el-table-column  align="center" prop="actProcessDefSettingVo.businessType" label="表单Key" width="80">
+                <el-table-column  align="center" prop="actProcessDefSettingVo.businessType" label="表单" width="80">
                 <template slot-scope="scope">
                     <el-tag type="success" v-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===0">动态表单</el-tag>
                     <el-tag type="primary" v-else-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===1">业务表单</el-tag>
@@ -142,7 +148,7 @@
                     <el-button
                         size="mini"
                         type="text"
-                        icon="el-icon-setting"
+                        icon="el-icon-user"
                         @click="handleUserSetting(scope.row)"
                         >人员设置</el-button>
                     </el-col>
@@ -150,7 +156,7 @@
                     <el-button
                         size="mini"
                         type="text"
-                        icon="el-icon-postcard"
+                        icon="el-icon-setting"
                         @click="handleFormSetting(scope.row)"
                         >设置</el-button>
                     </el-col>
@@ -228,29 +234,31 @@
                     </el-row>
                     <el-row :gutter="20" class="mb8">
                         <el-col :span="1.5">
-                        <el-button
-                            size="mini"
-                            type="text"
-                            icon="el-icon-setting"
-                            @click="handleUserSetting(scope.row)"
-                        >人员设置</el-button>
+                          <el-button
+                              size="mini"
+                              type="text"
+                              icon="el-icon-user"
+                              @click="handleUserSetting(scope.row)"
+                          >人员设置</el-button>
                         </el-col>
                         <el-col :span="1.5">
-                        <el-button
-                            size="mini"
-                            type="text"
-                            icon="el-icon-copy-document"
-                            @click="copySetting(scope.row)"
-                        >复制节点设置</el-button>
+                          <el-tooltip class="item" effect="dark" content="复制节点人员设置" placement="top-start">
+                            <el-button
+                                size="mini"
+                                type="text"
+                                icon="el-icon-copy-document"
+                                @click="copySetting(scope.row)"
+                            >复制节点</el-button>
+                          </el-tooltip>
                         </el-col>
                         <el-col :span="1.5">
-                        <el-button
-                            size="mini"
-                            type="text"
-                            icon="el-icon-postcard"
-                            @click="handleFormSetting(scope.row)"
-                            >设置</el-button>
-                        </el-col>
+                          <el-button
+                              size="mini"
+                              type="text"
+                              icon="el-icon-setting"
+                              @click="handleFormSetting(scope.row)"
+                              >设置</el-button>
+                          </el-col>
                     </el-row>
                     </template>
                 </el-table-column>
@@ -552,4 +560,14 @@ export default {
     }
 }
 </script>
+<style scoped>
+  .custom-tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    padding-right: 8px;
+  }
+</style>
 
