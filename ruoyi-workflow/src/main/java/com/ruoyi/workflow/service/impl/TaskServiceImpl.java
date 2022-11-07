@@ -106,6 +106,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             query.taskNameLikeIgnoreCase("%" + req.getTaskName() + "%");
         }
         List<Task> taskList = query.listPage(req.getPageNum(), req.getPageSize());
+        if (CollectionUtil.isEmpty(taskList)) {
+            return new TableDataInfo<>();
+        }
         long total = query.count();
         List<TaskWaitingVo> list = new ArrayList<>();
         //流程实例id
@@ -194,8 +197,10 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             throw new ServiceException("当前审批人id为空");
         }
         QueryWrapper<TaskWaitingVo> wrapper = Wrappers.query();
-        wrapper.eq(StringUtils.isNotBlank(req.getStatus()),"t.status",req.getStatus());
         Page<TaskWaitingVo> page = taskMapper.getCustomTaskWaitByPage(pageQuery.build(), wrapper,assignee);
+        if (CollectionUtil.isEmpty(page.getRecords())) {
+            return new TableDataInfo<>();
+        }
         //流程实例id
         Set<String> processInstanceIds = page.getRecords().stream().map(TaskWaitingVo::getProcessInstanceId).collect(Collectors.toSet());
         //流程定义id
