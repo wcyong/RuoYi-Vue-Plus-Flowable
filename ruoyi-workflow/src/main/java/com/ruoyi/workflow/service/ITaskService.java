@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.service;
 
+import com.ruoyi.common.core.domain.PageQuery;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.workflow.domain.ActTaskNode;
 import com.ruoyi.workflow.domain.bo.*;
@@ -25,6 +26,13 @@ public interface ITaskService {
      * @return
      */
     TableDataInfo<TaskWaitingVo> getTaskWaitByPage(TaskBo req);
+
+    /**
+     * 自定义sql查询当前用户的待办任务
+     * @param req
+     * @return
+     */
+    TableDataInfo<TaskWaitingVo> getCustomTaskWaitByPage(TaskBo req, PageQuery pageQuery);
 
     /**
      * 完成任务

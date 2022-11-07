@@ -30,6 +30,11 @@ public class TaskWaitingVo implements Serializable {
     /**
      * 流程状态
      */
+    private Boolean suspensionState;
+
+    /**
+     * 流程状态
+     */
     private String processStatus;
 
     /**

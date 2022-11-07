@@ -2,6 +2,7 @@ package com.ruoyi.workflow.controller;
 
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
+import com.ruoyi.common.core.domain.PageQuery;
 import com.ruoyi.common.core.domain.R;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.core.validate.AddGroup;
@@ -49,6 +50,19 @@ public class TaskController extends BaseController {
     @GetMapping("/getTaskWaitByPage")
     public TableDataInfo<TaskWaitingVo> getTaskWaitByPage(TaskBo req) {
         return iTaskService.getTaskWaitByPage(req);
+    }
+
+    /**
+     * 自定义sql查询当前用户的待办任务
+     * @param: req
+     * @param: pageQuery
+     * @return: com.ruoyi.common.core.page.TableDataInfo<com.ruoyi.workflow.domain.vo.TaskWaitingVo>
+     * @author: gssong
+     * @date: 2022/11/7
+     */
+    @GetMapping("/getCustomTaskWaitByPage")
+    public TableDataInfo<TaskWaitingVo> getCustomTaskWaitByPage(TaskBo req, PageQuery pageQuery) {
+        return iTaskService.getCustomTaskWaitByPage(req,pageQuery);
     }
 
 
