@@ -164,15 +164,16 @@
     <!-- 导入表结束 -->
      <span slot="footer" class="dialog-footer">
       <el-button @click="visible = false">取 消</el-button>
+      <el-button type="danger" v-if="this.formData.id" @click="deleteForm()">重 置</el-button>
       <el-button type="primary" @click="submitForm('formDataRef')">确 定</el-button>
     </span>
   </el-dialog>
 </template>
 
 <script>
-import { listDynamicFormEnable } from "@/api/workflow/dynamicForm";
+import { listDynamicFormEnable} from "@/api/workflow/dynamicForm";
 import { listDbTable } from "@/api/tool/gen";
-import { addProcessDefSetting,checkProcessDefSetting } from "@/api/workflow/processDefSetting";
+import { addProcessDefSetting,checkProcessDefSetting,delProcessDefSetting } from "@/api/workflow/processDefSetting";
 export default {
   props:{
     formData: {
@@ -360,6 +361,14 @@ export default {
         })
        }
       })
+    },
+    //删除设置
+    deleteForm(){
+      if(this.formData.id){
+        delProcessDefSetting(this.formData.id).then(response=>{
+          this.$modal.msgSuccess("重置成功");
+        })
+      }
     }
   }
 };

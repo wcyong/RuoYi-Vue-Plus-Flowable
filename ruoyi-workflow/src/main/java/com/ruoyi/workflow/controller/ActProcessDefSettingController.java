@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.controller;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Arrays;
 
@@ -104,8 +105,8 @@ public class ActProcessDefSettingController extends BaseController {
      * 删除流程定义设置
      */
     @Log(title = "流程定义设置", businessType = BusinessType.DELETE)
-    @DeleteMapping("/{ids}")
-    public R<Void> remove(@NotEmpty(message = "主键不能为空") @PathVariable Long[] ids) {
-        return toAjax(iActProcessDefSetting.deleteWithValidByIds(Arrays.asList(ids)) ? 1 : 0);
+    @DeleteMapping("/{id}")
+    public R<Void> remove(@NotNull(message = "主键不能为空") @PathVariable Long id) {
+        return toAjax(iActProcessDefSetting.deleteWithValidByIds(Collections.singletonList(id)) ? 1 : 0);
     }
 }

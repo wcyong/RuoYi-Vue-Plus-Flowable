@@ -21,8 +21,11 @@
                 default-expand-all
             >
             <span class="custom-tree-node" slot-scope="{ node, data }">
-                <span @click="handleNodeClick(data)">{{ data.label }}</span>
-                <span  v-if="data.id!==-1">
+                <span @click="handleNodeClick(data)" v-if="data.label.length < 6">{{ data.label }}</span>
+                <el-tooltip v-else effect="dark" :content="data.label" placement="bottom-end">
+                    <span @click="handleNodeClick(data)">{{`${data.label.substring(0, 6)}...`}}</span>
+                </el-tooltip>
+                <span>
                     <el-button
                         type="text"
                         size="mini"
@@ -30,6 +33,7 @@
                         新增
                     </el-button>
                     <el-button
+                        v-if="data.id!==-1"
                         type="text"
                         size="mini"
                         @click="() => remove(node, data)">
@@ -161,12 +165,11 @@
 
 <script>
 import {list,add,del,deploy} from "@/api/workflow/model";
-import {queryTreeList,delCategory,addCategory} from "@/api/workflow/category";
+import {queryTreeList,delCategory,addCategory,categoryList} from "@/api/workflow/category";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import BpmnJs from './bpmnJs'
 export default {
-    dicts: ['act_category'],
     name: 'Model', // 和对应路由表中配置的name值一致
     components: {BpmnJs,Treeselect},
     data() {
@@ -238,11 +241,16 @@ export default {
         }
     },
     created() {
-      this.categorysBpmn = this.dict.type.act_category
       this.getList();
       this.getTreeCategoryList();
+      this.getCategoryList();
     },
     methods: {
+      getCategoryList(){
+        categoryList().then(response=>{
+          this.categorysBpmn = response.data
+        })
+      },
       /** 搜索按钮操作 */
       handleQuery() {
         this.queryParams.pageNum = 1;
@@ -356,7 +364,7 @@ export default {
         if(data.id === -1){
             this.queryParams.category = undefined
         }else{
-            this.queryParams.category = data.id;
+            this.queryParams.category = data.label;
         }
         this.getList()
       },

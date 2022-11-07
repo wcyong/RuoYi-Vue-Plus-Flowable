@@ -48,6 +48,11 @@ public class ActCategoryServiceImpl extends ServiceImpl<ActCategoryMapper, ActCa
     }
 
     @Override
+    public List<ActCategory> queryList() {
+        return actCategoryMapper.selectList(null);
+    }
+
+    @Override
     public Boolean add(ActCategory actCategory) {
         return actCategoryMapper.insert(actCategory)>0;
     }

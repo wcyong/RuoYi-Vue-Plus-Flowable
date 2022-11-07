@@ -39,6 +39,14 @@ public class ActCategoryController extends BaseController {
     }
 
     /**
+     * 查询流程分类
+     */
+    @GetMapping("/list")
+    public R<List<ActCategory>> queryList() {
+        return R.ok(iActCategoryService.queryList());
+    }
+
+    /**
      * 新增流程分类
      */
     @SaCheckPermission("workflow:category:add")
