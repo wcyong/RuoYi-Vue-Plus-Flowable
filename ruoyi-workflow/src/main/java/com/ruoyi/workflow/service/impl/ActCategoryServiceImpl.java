@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.TreeBuildUtils;
 import com.ruoyi.workflow.domain.ActCategory;
 import com.ruoyi.workflow.mapper.ActCategoryMapper;
@@ -48,8 +49,10 @@ public class ActCategoryServiceImpl extends ServiceImpl<ActCategoryMapper, ActCa
     }
 
     @Override
-    public List<ActCategory> queryList() {
-        return actCategoryMapper.selectList(null);
+    public List<ActCategory> queryList(ActCategory actCategory) {
+        LambdaQueryWrapper<ActCategory> wrapper = Wrappers.lambdaQuery();
+        wrapper.like(StringUtils.isNotBlank(actCategory.getCategoryName()),ActCategory::getCategoryName,actCategory.getCategoryName());
+        return actCategoryMapper.selectList(wrapper);
     }
 
     @Override

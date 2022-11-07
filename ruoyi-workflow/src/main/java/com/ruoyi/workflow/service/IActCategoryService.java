@@ -23,9 +23,10 @@ public interface IActCategoryService {
 
     /**
      * 查询流程分类
+     * @param actCategory
      * @return
      */
-    List<ActCategory> queryList();
+    List<ActCategory> queryList(ActCategory actCategory);
 
     /**
      * 新增

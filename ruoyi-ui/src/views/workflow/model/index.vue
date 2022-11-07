@@ -18,29 +18,14 @@
                 :expand-on-click-node="false"
                 :filter-node-method="filterNode"
                 ref="tree"
+                @node-click="handleNodeClick"
                 default-expand-all
             >
-            <span class="custom-tree-node" slot-scope="{ node, data }">
-                <span @click="handleNodeClick(data)" v-if="data.label.length < 6">{{ data.label }}</span>
-                <el-tooltip v-else effect="dark" :content="data.label" placement="bottom-end">
-                    <span @click="handleNodeClick(data)">{{`${data.label.substring(0, 6)}...`}}</span>
-                </el-tooltip>
-                <span>
-                    <el-button
-                        type="text"
-                        size="mini"
-                        @click="() => append(node, data)">
-                        新增
-                    </el-button>
-                    <el-button
-                        v-if="data.id!==-1"
-                        type="text"
-                        size="mini"
-                        @click="() => remove(node, data)">
-                        删除
-                    </el-button>
-                </span>
-            </span>
+              <span class="custom-tree-node" slot-scope="{ data }">
+                  <el-tooltip effect="dark" :content="data.label" placement="bottom-end">
+                      <span @click="handleNodeClick(data)">{{`${data.label}`}}</span>
+                  </el-tooltip>
+              </span>
             </el-tree>
          </el-col>
          <el-col :span="20" :xs="24">
@@ -138,26 +123,6 @@
                 <bpmnJs ref="bpmnJsModel" @close-bpmn="closeBpmn" :categorysBpmn="categorysBpmn" :modelId="modelId"/>
             </el-dialog>
             <!-- 设计流程结束 -->
-
-            <!-- 流程分类开始 -->
-            <el-dialog title="新增流程分类" :visible.sync="categoryVisible" width="40%" v-if="categoryVisible" :modal-append-to-body='false'>
-                <el-form :model="categoryForm" ref="categoryForm" :rules="rules" v-show="showSearch" label-width="80px">
-                    <el-form-item label="父级分类" prop="parentId">
-                        <treeselect v-model="categoryForm.parentId" :options="deptOptions" :show-count="true" placeholder="请选择流程分类" />
-                    </el-form-item>
-                    <el-form-item label="分类名称" prop="categoryName">
-                        <el-input v-model="categoryForm.categoryName" placeholder="请输入分类名称" />
-                    </el-form-item>
-                    <el-form-item label="排序" prop="orderNum">
-                        <el-input-number style="width:100%" v-model="categoryForm.orderNum" controls-position="right" :min="1"/>
-                    </el-form-item>
-                </el-form>
-                <span slot="footer" class="dialog-footer">
-                    <el-button @click="categoryVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="saveCategory">确 定</el-button>
-                </span>
-            </el-dialog>
-            <!-- 流程分类结束 -->
          </el-col>
         </el-row>
     </div>
@@ -165,7 +130,7 @@
 
 <script>
 import {list,add,del,deploy} from "@/api/workflow/model";
-import {queryTreeList,delCategory,addCategory,categoryList} from "@/api/workflow/category";
+import {queryTreeList} from "@/api/workflow/category";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import BpmnJs from './bpmnJs'
@@ -225,13 +190,7 @@ export default {
                 label: "label"
             },
             // 分类名称
-            categoryName:'',
-            // 流程分类
-            categoryForm:{
-                parentId:'',
-                categoryName:'',
-                orderNum: 0
-            }
+            categoryName:''
         }
     },
     watch: {
@@ -243,14 +202,8 @@ export default {
     created() {
       this.getList();
       this.getTreeCategoryList();
-      this.getCategoryList();
     },
     methods: {
-      getCategoryList(){
-        categoryList().then(response=>{
-          this.categorysBpmn = response.data
-        })
-      },
       /** 搜索按钮操作 */
       handleQuery() {
         this.queryParams.pageNum = 1;
@@ -367,37 +320,6 @@ export default {
             this.queryParams.category = data.label;
         }
         this.getList()
-      },
-      // 流程分类删除
-      remove(node,data){
-        this.$confirm('是否确认删除【'+data.label+'】?',{
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-            delCategory(data.id).then(response=>{
-                this.$modal.msgSuccess("删除成功");
-                this.getList()
-                this.getTreeCategoryList()
-            })
-        }).catch(() => {})
-      },
-      // 流程分类添加
-      append(node,data){
-        this.categoryForm.parentId = data.id
-        this.categoryVisible = true
-      },
-      // 流程分类保存
-      saveCategory(){
-        addCategory(this.categoryForm).then(response=>{
-            this.$modal.msgSuccess("新增成功");
-            this.getList()
-            this.categoryForm = {
-                orderNum:1
-            }
-            this.getTreeCategoryList()
-            this.categoryVisible = false
-        })
       }
     }
 

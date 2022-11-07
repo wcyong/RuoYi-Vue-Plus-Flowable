@@ -22,9 +22,8 @@
                 default-expand-all
             >
             <span class="custom-tree-node" slot-scope="{ data }">
-                <span @click="handleNodeClick(data)" v-if="data.label.length < 12">{{ data.label }}</span>
-                <el-tooltip v-else effect="dark" :content="data.label" placement="bottom-end">
-                    <span @click="handleNodeClick(data)">{{`${data.label.substring(0, 12)}...`}}</span>
+                <el-tooltip effect="dark" :content="data.label" placement="bottom-end">
+                    <span @click="handleNodeClick(data)">{{`${data.label}`}}</span>
                 </el-tooltip>
             </span>
             </el-tree>

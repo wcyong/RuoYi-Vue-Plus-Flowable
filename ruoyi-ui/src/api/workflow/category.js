@@ -9,10 +9,11 @@ export function queryTreeList() {
 }
 
 // 查询流程分类
-export function categoryList() {
+export function categoryList(query) {
   return request({
     url: '/workflow/category/list',
-    method: 'get'
+    method: 'get',
+    params: query
   })
 }
 

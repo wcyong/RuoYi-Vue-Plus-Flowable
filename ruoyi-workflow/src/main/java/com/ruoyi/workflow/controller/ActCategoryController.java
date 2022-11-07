@@ -32,7 +32,6 @@ public class ActCategoryController extends BaseController {
     /**
      * 查询流程分类构建树形结构
      */
-    @SaCheckPermission("workflow:category:list")
     @GetMapping("/queryTreeList")
     public R<List<Tree<Long>>> queryTreeList(ActCategory entity) {
         return R.ok(iActCategoryService.queryTreeList(entity));
@@ -41,9 +40,10 @@ public class ActCategoryController extends BaseController {
     /**
      * 查询流程分类
      */
+    @SaCheckPermission("workflow:category:list")
     @GetMapping("/list")
-    public R<List<ActCategory>> queryList() {
-        return R.ok(iActCategoryService.queryList());
+    public R<List<ActCategory>> queryList(ActCategory entity) {
+        return R.ok(iActCategoryService.queryList(entity));
     }
 
     /**
@@ -55,17 +55,6 @@ public class ActCategoryController extends BaseController {
     @PostMapping()
     public R<Void> add(@RequestBody ActCategory entity) {
         return toAjax(iActCategoryService.add(entity));
-    }
-
-    /**
-     * 修改流程分类
-     */
-    @SaCheckPermission("workflow:category:update")
-    @Log(title = "流程分类", businessType = BusinessType.UPDATE)
-    @RepeatSubmit()
-    @PutMapping()
-    public R<Void> update(@RequestBody ActCategory entity) {
-        return toAjax(iActCategoryService.update(entity));
     }
 
     /**
