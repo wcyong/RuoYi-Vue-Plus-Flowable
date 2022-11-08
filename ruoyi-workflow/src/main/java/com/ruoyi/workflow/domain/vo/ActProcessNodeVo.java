@@ -39,4 +39,9 @@ public class ActProcessNodeVo implements Serializable {
      * x坐标
      */
     private Double x;
+
+    /**
+     * 是否最后一个节点
+     */
+    private Boolean end = false;
 }

@@ -130,7 +130,7 @@
 
 <script>
 import {list,add,del,deploy} from "@/api/workflow/model";
-import {queryTreeList} from "@/api/workflow/category";
+import {queryTreeList,categoryList} from "@/api/workflow/category";
 import Treeselect from "@riophae/vue-treeselect";
 import "@riophae/vue-treeselect/dist/vue-treeselect.css";
 import BpmnJs from './bpmnJs'
@@ -190,7 +190,8 @@ export default {
                 label: "label"
             },
             // 分类名称
-            categoryName:''
+            categoryName:'',
+            categorysBpmn:[]
         }
     },
     watch: {
@@ -310,6 +311,9 @@ export default {
       getTreeCategoryList() {
         queryTreeList().then(response => {
             this.deptOptions = response.data;
+        });
+        categoryList().then(response => {
+            this.categorysBpmn = response.data;
         });
       },
       // 节点单击事件
