@@ -61,6 +61,7 @@
             </el-row>
             <!-- 表格数据 -->
             <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
+              
                 <el-table-column align="center" prop="name" label="流程定义名称" width="150" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column align="center" prop="key" label="标识Key" width="100"></el-table-column>
                 <el-table-column align="center" prop="version" label="版本号" width="90" >
@@ -97,7 +98,7 @@
                 </el-table-column>
                 
                 <el-table-column  align="center" prop="description" :show-overflow-tooltip="true" label="挂起或激活原因" width="120"></el-table-column>
-                <el-table-column label="操作" align="center" width="220" class-name="small-padding fixed-width">
+                <el-table-column label="操作" align="center" fixed="right" width="240" class-name="small-padding fixed-width">
                 <template slot-scope="scope">
                 <el-row :gutter="20" class="mb8">
                     <el-col :span="1.5">

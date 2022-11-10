@@ -52,7 +52,7 @@
               </el-col>
               <el-col class="line" :span="8">
                   <el-form-item label="是否能抄送" prop="isCopy">
-                    <el-switch v-model="form.isCopy"></el-switch>
+                    <el-switch :disabled="node.end" v-model="form.isCopy"></el-switch>
                   </el-form-item>
               </el-col>
             </el-row>

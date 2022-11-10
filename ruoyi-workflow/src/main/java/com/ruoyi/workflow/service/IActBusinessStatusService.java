@@ -70,6 +70,13 @@ public interface IActBusinessStatusService extends IService<ActBusinessStatus> {
     boolean deleteStateByProcessInstId(String processInstanceId);
 
     /**
+     * 按照业务流程实例id删除缓存
+     * @param processInstanceId 业务id
+     * @return
+     */
+    boolean deleteCache(String processInstanceId);
+
+    /**
      * 根据流程实例id查询流程实例
      * @param processInstanceId 流程实例id
      * @return

@@ -130,6 +130,16 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
     }
 
     @Override
+    public boolean deleteCache(String processInstanceId) {
+        ActBusinessStatus actBusinessStatus = getInfoByProcessInstId(processInstanceId);
+        if (actBusinessStatus != null) {
+            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
+            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getBusinessKey());
+        }
+        return true;
+    }
+
+    @Override
     public ActBusinessStatus getInfoByProcessInstId(String processInstanceId) {
         ActBusinessStatus cacheBusinessStatus = RedisUtils.getCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
         if (cacheBusinessStatus != null) {
