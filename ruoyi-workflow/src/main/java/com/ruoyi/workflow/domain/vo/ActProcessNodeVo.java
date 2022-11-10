@@ -26,6 +26,11 @@ public class ActProcessNodeVo implements Serializable {
     private String nodeName;
 
     /**
+     * 节点类型
+     */
+    private String nodeType;
+
+    /**
      * 流程定义id
      */
     private String processDefinitionId;

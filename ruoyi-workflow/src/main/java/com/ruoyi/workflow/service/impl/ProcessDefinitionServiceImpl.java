@@ -339,6 +339,7 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                         firstNode.setNodeId(flowElement.getId());
                         firstNode.setNodeName(flowElement.getName());
                         firstNode.setProcessDefinitionId(processDefinitionId);
+                        firstNode.setNodeType(ActConstant.USER_TASK);
                         firstNode.setIndex(0);
                     }
                 }
@@ -351,6 +352,7 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                 actProcessNodeVo.setNodeId(element.getId());
                 actProcessNodeVo.setNodeName(element.getName());
                 actProcessNodeVo.setProcessDefinitionId(processDefinitionId);
+                actProcessNodeVo.setNodeType(ActConstant.USER_TASK);
                 actProcessNodeVo.setIndex(1);
                 processNodeVoList.add(actProcessNodeVo);
             } else if (element instanceof SubProcess) {
@@ -361,10 +363,18 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                         actProcessNode.setNodeId(flowElement.getId());
                         actProcessNode.setNodeName(flowElement.getName());
                         actProcessNode.setProcessDefinitionId(processDefinitionId);
+                        actProcessNode.setNodeType(ActConstant.USER_TASK);
                         actProcessNode.setIndex(1);
                         processNodeVoList.add(actProcessNode);
                     }
                 }
+            } else if (element instanceof EndEvent) {
+                actProcessNodeVo.setNodeId(element.getId());
+                actProcessNodeVo.setNodeName(element.getName());
+                actProcessNodeVo.setProcessDefinitionId(processDefinitionId);
+                actProcessNodeVo.setNodeType(ActConstant.END_EVENT);
+                actProcessNodeVo.setIndex(1);
+                processNodeVoList.add(actProcessNodeVo);
             }
         }
         ActProcessNodeVo actProcessNodeVo = processNodeVoList.get(0);
@@ -385,6 +395,45 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             GraphicInfo graphicInfo = bpmnModel.getGraphicInfo(processNodeVo.getNodeId());
             processNodeVo.setX(graphicInfo.getX());
         }
+        for (ActProcessNodeVo node : processNodeVoList) {
+            if(ActConstant.END_EVENT.equals(node.getNodeType())){
+                FlowElement flowElement = bpmnModel.getFlowElement(node.getNodeId());
+
+                List<SequenceFlow> incomingFlows = ((FlowNode) flowElement).getIncomingFlows();
+                for (SequenceFlow incomingFlow : incomingFlows) {
+                    FlowElement sourceFlowElement = incomingFlow.getSourceFlowElement();
+                    if (sourceFlowElement instanceof ParallelGateway) {
+                        List<SequenceFlow> parallelGatewayOutgoingFlow = ((ParallelGateway) sourceFlowElement).getOutgoingFlows();
+                        for (SequenceFlow sequenceFlow : parallelGatewayOutgoingFlow) {
+                            FlowElement element = sequenceFlow.getTargetFlowElement();
+                            if (element instanceof UserTask) {
+                                node.setEnd(true);
+                            }
+                        }
+                    } else if (sourceFlowElement instanceof InclusiveGateway) {
+                        List<SequenceFlow> inclusiveGatewayOutgoingFlow = ((InclusiveGateway) sourceFlowElement).getOutgoingFlows();
+                        for (SequenceFlow sequenceFlow : inclusiveGatewayOutgoingFlow) {
+                            FlowElement element = sequenceFlow.getTargetFlowElement();
+                            if (element instanceof UserTask) {
+                                node.setEnd(true);
+                            }
+                        }
+                    } else if (sourceFlowElement instanceof ExclusiveGateway) {
+                        List<SequenceFlow> exclusiveGatewayOutgoingFlow = ((ExclusiveGateway) sourceFlowElement).getOutgoingFlows();
+                        for (SequenceFlow sequenceFlow : exclusiveGatewayOutgoingFlow) {
+                            FlowElement element = sequenceFlow.getTargetFlowElement();
+                            if (element instanceof UserTask) {
+                                node.setEnd(true);
+                            }
+                        }
+                    } else if (sourceFlowElement instanceof UserTask) {
+                        processNodeVoList.stream().filter(e->e.getNodeId().equals(sourceFlowElement.getId())).findFirst().ifPresent(e-> e.setEnd(true));
+                    }
+                }
+            }
+        }
+
+        processNodeVoList.removeIf(e->ActConstant.END_EVENT.equals(e.getNodeType()));
         return processNodeVoList.stream().sorted(Comparator.comparing(ActProcessNodeVo::getX)).collect(Collectors.toList());
     }
 
