@@ -238,7 +238,7 @@
                 <HistoryRecord :processInstanceId="processInstanceId"/>
             </el-tab-pane>
             <el-tab-pane label="流程进度" v-if="processInstanceId">
-                <HistoryImage :processInstanceId="processInstanceId"/>
+                <HistoryBpmn :processInstanceId="processInstanceId"/>
             </el-tab-pane>
         </el-tabs>
     </div>
@@ -252,14 +252,14 @@
 import { listLeave, getLeave, delLeave, addLeave, updateLeave } from "@/api/demo/leave";
 import processApi from "@/api/workflow/processInst";
 import HistoryRecord from "@/components/Process/HistoryRecord";
-import HistoryImage from "@/components/Process/HistoryImage";
+import HistoryBpmn from "@/components/Process/HistoryBpmn";
 import verify from "@/components/Process/Verify";
 export default {
   name: "Leave",
   dicts: ['bs_leave_type','act_status'],
   components: {
     HistoryRecord,
-    HistoryImage,
+    HistoryBpmn,
     verify
   },
   data() {
