@@ -214,7 +214,7 @@
 </script>
 <style scoped>
 .form-container-header{
-    height: 30px;
+    height: 20px;
     padding-bottom: 10px;
 }
 .el-icon-close{

@@ -181,11 +181,11 @@
     <!-- 单据信息开始 -->
     <div class="form-container" v-if="formVisible">
         <div class="form-container-header"><i class="el-dialog__close el-icon el-icon-close" @click="closeForm"></i></div>
-        <div style="height: 45px;">
-          <el-button :loading="buttonLoading" type="primary" @click="submitForm()">提交</el-button>
-          <el-button @click="bpmnProcess" v-if="processInstanceId">流程进度</el-button>
-          <el-button @click="bpmnRecord" v-if="processInstanceId">审批意见</el-button>
-          <el-button @click="closeForm">关闭</el-button>
+        <div style="height: 45px;margin-top: -30px;">
+          <el-button :loading="buttonLoading" size="small" type="primary" @click="submitForm()">提交</el-button>
+          <el-button @click="bpmnProcess" size="small" v-if="processInstanceId">流程进度</el-button>
+          <el-button @click="bpmnRecord" size="small" v-if="processInstanceId">审批意见</el-button>
+          <el-button @click="closeForm" size="small">关闭</el-button>
         </div>
         <el-tabs  type="border-card" class="container-tab">
             <el-tab-pane label="业务单据" v-loading="loading">
@@ -530,7 +530,7 @@ export default {
 </script>
 <style scoped>
     .container-tab{
-        height: calc(100vh - 200px);
+        height: calc(100vh - 160px);
         overflow-y: auto;
     }
     /* 修改滚动条样式 */
@@ -541,7 +541,7 @@ export default {
         border-radius: 10px;
     }
     .form-container-header{
-        height: 30px;
+        height: 20px;
         padding-bottom: 10px;
     }
     .el-icon-close{

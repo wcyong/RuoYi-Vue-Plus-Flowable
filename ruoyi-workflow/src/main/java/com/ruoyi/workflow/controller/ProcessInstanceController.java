@@ -174,7 +174,7 @@ public class ProcessInstanceController extends BaseController {
     }
 
     /**
-     * @description: 获取xml
+     * 获取xml
      * @param: processInstanceId
      * @return: com.ruoyi.common.core.domain.R<java.util.Map<java.lang.String,java.lang.Object>>
      * @author: gssong
