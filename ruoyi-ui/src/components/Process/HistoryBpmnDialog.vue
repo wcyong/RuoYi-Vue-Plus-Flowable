@@ -1,5 +1,6 @@
 <template>
-  <div class="containers">
+<el-dialog  title="流程进度" :visible.sync="bpmnVisible" v-if="bpmnVisible" width="70%">
+  <div class="containers" v-loading="loading">
     <el-header style="border-bottom: 1px solid rgb(218 218 218);height: auto;">
         <div style="display: flex; padding: 10px 0px; justify-content: space-between;">
           <div>
@@ -16,54 +17,58 @@
         </div>
      </el-header>
      <div class="flow-containers">
-        <el-container style="align-items: stretch">
+        <el-container class="bpmn-el-container" style="align-items: stretch">
             <el-main style="padding: 0;">
             <div ref="canvas" class="canvas" />
             </el-main>
         </el-container>
     </div>
   </div>
+</el-dialog>
 </template>
 
 <script>
 import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
 import processApi from "@/api/workflow/processInst";
 export default {
-  name: 'WorkflowBpmnModeler',
-  props: {
-    processInstanceId: String
-  },
   data() {
     return {
       modeler: null,
       taskList: [],
       zoom: 1,
-      xml:''
+      xml:'',
+      loading: false,
+      bpmnVisible: false
     }
   },
-  mounted() {
-    if (this.modeler) this.modeler.destroy();
-    this.modeler = new BpmnViewer({
-      container: this.$refs.canvas,
-      additionalModules:[
-        {
-          //禁止滚轮滚动
-          zoomScroll: ["value",""]
-        }
-      ]
-    })
-    processApi.getXml(this.processInstanceId).then(response=>{        
-      this.xml = response.data.xml
-      this.taskList = response.data.taskList
-      this.createDiagram(this.xml)
-    }) 
-  },
   methods: {
+    init(bpmnVisible,processInstanceId) {
+      this.loading = true
+      this.bpmnVisible = bpmnVisible
+      this.$nextTick(()=>{
+        if (this.modeler) this.modeler.destroy();
+        this.modeler = new BpmnViewer({
+          container: this.$refs.canvas,
+          additionalModules:[
+            {
+              //禁止滚轮滚动
+              zoomScroll: ["value",""]
+            }
+          ]
+        })
+        processApi.getXml(processInstanceId).then(response=>{        
+          this.xml = response.data.xml
+          this.taskList = response.data.taskList
+          this.createDiagram(this.xml)
+        })
+      })
+    },
     async createDiagram(data) {
       try {
         await this.modeler.importXML(data)
-        this.modeler.get('canvas').zoom(0.6)
+        this.autoViewport()
         this.fillColor()
+        this.loading = false
       } catch (err) {
         //console.error(err.message, err.warnings)
       }
@@ -154,7 +159,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss" >
 .canvas {
     width: 100%;
     height: 100%;
@@ -170,9 +175,20 @@ export default {
     display: none;
   }
 }
+/* 修改滚动条样式 */
+.flow-containers::-webkit-scrollbar-thumb {
+	border-radius: 10px;
+}
+.flow-containers::-webkit-scrollbar {
+  width: 5px;
+}
+.bpmn-el-container{
+  height: 500px;
+}
 .flow-containers {
     width: 100%;
     height: 100%;
+    overflow-y: auto;
     .canvas {
         width: 100%;
         height: 100%;

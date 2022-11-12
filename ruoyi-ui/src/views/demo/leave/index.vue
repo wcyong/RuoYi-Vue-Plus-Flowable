@@ -181,85 +181,85 @@
     <!-- 单据信息开始 -->
     <div class="form-container" v-if="formVisible">
         <div class="form-container-header"><i class="el-dialog__close el-icon el-icon-close" @click="closeForm"></i></div>
+        <div style="height: 45px;">
+          <el-button :loading="buttonLoading" type="primary" @click="submitForm()">提交</el-button>
+          <el-button @click="bpmnProcess" v-if="processInstanceId">流程进度</el-button>
+          <el-button @click="bpmnRecord" v-if="processInstanceId">审批意见</el-button>
+          <el-button @click="closeForm">关闭</el-button>
+        </div>
         <el-tabs  type="border-card" class="container-tab">
             <el-tab-pane label="业务单据" v-loading="loading">
                 <el-form ref="form" :model="form" :rules="rules" label-width="120px">
-                <el-form-item label="申请人用户名" prop="username">
-                    <el-input v-model="form.username" placeholder="请输入申请人用户名" />
-                </el-form-item>
-                <el-form-item label="请假时长" prop="duration">
-                    <el-input v-model="form.duration" placeholder="请输入请假时长，单位：天" />
-                </el-form-item>
-                <el-form-item label="工作委托人" prop="principal">
-                    <el-input v-model="form.principal" placeholder="请输入工作委托人" />
-                </el-form-item>
-                <el-form-item label="联系电话" prop="contactPhone">
-                    <el-input v-model="form.contactPhone" placeholder="请输入联系电话" />
-                </el-form-item>
-                <el-form-item label="请假类型" prop="leaveType">
-                    <el-select v-model="form.leaveType" placeholder="请选择请假类型">
-                    <el-option
-                        v-for="dict in dict.type.bs_leave_type"
-                        :key="dict.value"
-                        :label="dict.label"
-                        :value="parseInt(dict.value)"
-                    ></el-option>
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="标题" prop="title">
-                    <el-input v-model="form.title" placeholder="请输入标题" />
-                </el-form-item>
-                <el-form-item label="请假原因" prop="leaveReason">
-                    <el-input v-model="form.leaveReason" type="textarea" placeholder="请输入内容" />
-                </el-form-item>
-                <el-form-item label="请假开始时间" prop="startDate">
-                    <el-date-picker clearable size="small"
-                    v-model="form.startDate"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择请假开始时间">
-                    </el-date-picker>
-                </el-form-item>
-                <el-form-item label="请假结束时间" prop="endDate">
-                    <el-date-picker clearable size="small"
-                    v-model="form.endDate"
-                    type="datetime"
-                    value-format="yyyy-MM-dd HH:mm:ss"
-                    placeholder="选择请假结束时间">
-                    </el-date-picker>
-                </el-form-item>
+                  <el-form-item label="申请人用户名" prop="username">
+                      <el-input v-model="form.username" placeholder="请输入申请人用户名" />
+                  </el-form-item>
+                  <el-form-item label="请假时长" prop="duration">
+                      <el-input v-model="form.duration" placeholder="请输入请假时长，单位：天" />
+                  </el-form-item>
+                  <el-form-item label="工作委托人" prop="principal">
+                      <el-input v-model="form.principal" placeholder="请输入工作委托人" />
+                  </el-form-item>
+                  <el-form-item label="联系电话" prop="contactPhone">
+                      <el-input v-model="form.contactPhone" placeholder="请输入联系电话" />
+                  </el-form-item>
+                  <el-form-item label="请假类型" prop="leaveType">
+                      <el-select v-model="form.leaveType" placeholder="请选择请假类型">
+                      <el-option
+                          v-for="dict in dict.type.bs_leave_type"
+                          :key="dict.value"
+                          :label="dict.label"
+                          :value="parseInt(dict.value)"
+                      ></el-option>
+                      </el-select>
+                  </el-form-item>
+                  <el-form-item label="标题" prop="title">
+                      <el-input v-model="form.title" placeholder="请输入标题" />
+                  </el-form-item>
+                  <el-form-item label="请假原因" prop="leaveReason">
+                      <el-input v-model="form.leaveReason" type="textarea" placeholder="请输入内容" />
+                  </el-form-item>
+                  <el-form-item label="请假开始时间" prop="startDate">
+                      <el-date-picker clearable size="small"
+                      v-model="form.startDate"
+                      type="datetime"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      placeholder="选择请假开始时间">
+                      </el-date-picker>
+                  </el-form-item>
+                  <el-form-item label="请假结束时间" prop="endDate">
+                      <el-date-picker clearable size="small"
+                      v-model="form.endDate"
+                      type="datetime"
+                      value-format="yyyy-MM-dd HH:mm:ss"
+                      placeholder="选择请假结束时间">
+                      </el-date-picker>
+                  </el-form-item>
                 </el-form>
-                <div class="dialog-footer" style="float:right">
-                <el-button :loading="buttonLoading" type="primary" @click="submitForm()">提交</el-button>
-                <el-button @click="closeForm">取 消</el-button>
-                </div>
-            </el-tab-pane>
-            <el-tab-pane label="审批意见" v-if="processInstanceId">
-                <HistoryRecord :processInstanceId="processInstanceId"/>
-            </el-tab-pane>
-            <el-tab-pane label="流程进度" v-if="processInstanceId">
-                <HistoryBpmn :processInstanceId="processInstanceId"/>
             </el-tab-pane>
         </el-tabs>
     </div>
     <!-- 单据信息结束 -->
     <!-- 提交 -->
     <verify ref="verifyRef" @submitCallback="submitCallback" :taskId="taskId" :taskVariables="taskVariables" :sendMessage="sendMessage"></verify>
+    <!-- 流程进度 -->
+    <HistoryBpmnDialog ref="historyBpmnRef"/>
+    <!-- 审批意见 -->
+    <HistoryRecordDialog ref="historyRecordRef"/>
   </div>
 </template>
 
 <script>
 import { listLeave, getLeave, delLeave, addLeave, updateLeave } from "@/api/demo/leave";
 import processApi from "@/api/workflow/processInst";
-import HistoryRecord from "@/components/Process/HistoryRecord";
-import HistoryBpmn from "@/components/Process/HistoryBpmn";
 import verify from "@/components/Process/Verify";
+import HistoryBpmnDialog from "@/components/Process/HistoryBpmnDialog";
+import HistoryRecordDialog from "@/components/Process/HistoryRecordDialog";
 export default {
   name: "Leave",
   dicts: ['bs_leave_type','act_status'],
   components: {
-    HistoryRecord,
-    HistoryBpmn,
+    HistoryBpmnDialog,
+    HistoryRecordDialog,
     verify
   },
   data() {
@@ -337,13 +337,21 @@ export default {
       taskId: undefined, //任务id
       // 消息提醒
       sendMessage: {},
-      processKey: 'leave'
+      processKey: 'leave',
+      bpmnProcessInstanceId: undefined
     };
   },
   created() {
     this.getList();
   },
-  methods: {
+  methods: {//流程进度
+    bpmnProcess(){
+      this.$refs.historyBpmnRef.init(true,this.processInstanceId)
+    },
+    //审批意见
+    bpmnRecord(){
+      this.$refs.historyRecordRef.init(true,this.processInstanceId)
+    },
     /** 查询请假业务列表 */
     getList() {
       this.loading = true;
@@ -522,7 +530,7 @@ export default {
 </script>
 <style scoped>
     .container-tab{
-        height: calc(100vh - 155px);
+        height: calc(100vh - 200px);
         overflow-y: auto;
     }
     /* 修改滚动条样式 */

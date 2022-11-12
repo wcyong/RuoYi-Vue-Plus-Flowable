@@ -1,23 +1,23 @@
 <template>
-    <el-tabs type="border-card">
-        <el-tab-pane label="业务单据" v-loading="loading" class="container-tab">
-            <component :is="currProcessForm" 
-                :businessKey="businessKey" 
-                :parentTaskId="parentTaskId" 
-                @closeForm="closeForm" 
-                :taskId="taskId" 
-                :buildData="dynamicFormData.formText"
-                v-model="dynamicFormData.formValue"
-                :dynamicFormData="dynamicFormData"
-            ></component>
-        </el-tab-pane>
-        <el-tab-pane label="审批意见" v-if="processInstanceId" class="container-tab">
-            <HistoryRecord :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-        <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
-            <HistoryBpmn :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-    </el-tabs>
+    <div>
+        <el-tabs type="border-card">
+            <el-tab-pane label="业务单据" v-loading="loading" class="container-tab">
+                <component :is="currProcessForm" 
+                    :businessKey="businessKey" 
+                    :parentTaskId="parentTaskId" 
+                    @closeForm="closeForm" 
+                    :taskId="taskId" 
+                    :buildData="dynamicFormData.formText"
+                    v-model="dynamicFormData.formValue"
+                    :dynamicFormData="dynamicFormData"
+                ></component>
+            </el-tab-pane>
+        </el-tabs>
+        <!-- 流程进度 -->
+        <HistoryBpmnDialog ref="historyBpmnRef"/>
+        <!-- 审批意见 -->
+        <HistoryRecordDialog ref="historyRecordRef"/>
+    </div>
 </template>
 
 <script>
@@ -29,10 +29,10 @@ allComponents.keys().forEach(fileName => {
   let componentName = allComponents(fileName)
   components[fileName.replace(/^\.\/(.*)\.\w+$/, '$1')] = componentName.default
 })
-import HistoryRecord from "@/components/Process/HistoryRecord";
-components['HistoryRecord'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryRecord
-import HistoryBpmn from "@/components/Process/HistoryBpmn";
-components['HistoryBpmn'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryBpmn
+import HistoryRecordDialog from "@/components/Process/HistoryRecordDialog";
+components['HistoryRecordDialog'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryRecordDialog
+import HistoryBpmnDialog from "@/components/Process/HistoryBpmnDialog";
+components['HistoryBpmnDialog'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryBpmnDialog
 
 export default {
     props: {
@@ -57,6 +57,12 @@ export default {
         closeForm(){
           this.visible = false
           this.$emit("closeForm")
+        },
+        bpmnProcess(){
+          this.$refs.historyBpmnRef.init(true,this.processInstanceId)
+        },
+        bpmnRecord(){
+          this.$refs.historyRecordRef.init(true,this.processInstanceId)
         }
     }
 

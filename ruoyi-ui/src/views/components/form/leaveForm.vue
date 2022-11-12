@@ -1,6 +1,12 @@
 <template>
   <div class="app-container">
-    <!-- 添加或修改请假业务对话框 -->
+      <div style="height: 45px;margin-top: -30px;">
+        <el-button @click="bpmnProcess" v-if="processInstanceId">流程进度</el-button>
+        <el-button @click="bpmnRecord" v-if="processInstanceId">审批意见</el-button>
+        <el-button v-show="parentTaskId===null" :loading="buttonLoading" size="small" type="primary" @click="submitForm">提交</el-button>
+        <el-button :loading="buttonLoading" size="small" type="info" @click="submitCallback">关闭</el-button>
+      </div>
+      <!-- 添加或修改请假业务对话框 -->
       <el-form ref="form" :model="form" :rules="rules" label-width="120px">
         <el-form-item label="申请人用户名" prop="username">
           <el-input v-model="form.username" placeholder="请输入申请人用户名" />
@@ -48,13 +54,13 @@
           </el-date-picker>
         </el-form-item>
       </el-form>
-      <div v-show="parentTaskId===null" class="dialog-footer" style="text-align:center">
-        <el-button :loading="buttonLoading" size="small" type="info" @click="submitCallback">关闭</el-button>
-        <el-button :loading="buttonLoading" size="small" type="primary" @click="submitForm">提交</el-button>
-      </div>
       <!-- 工作流开始 -->
       <verify ref="verifyRef" :taskId="taskId" @submitCallback="submitCallback"
       :taskVariables="taskVariables" :sendMessage="sendMessage"></verify>
+      <!-- 流程进度 -->
+      <HistoryBpmnDialog ref="historyBpmnRef"/>
+      <!-- 审批意见 -->
+      <HistoryRecordDialog ref="historyRecordRef"/>
       <!-- 工作流结束 -->
   </div>
 </template>
@@ -62,6 +68,8 @@
 <script>
 import { getLeave} from "@/api/demo/leave";
 import verify from "@/components/Process/Verify";
+import HistoryBpmnDialog from "@/components/Process/HistoryBpmnDialog";
+import HistoryRecordDialog from "@/components/Process/HistoryRecordDialog";
 export default {
   name: "Leave",
   dicts: ['bs_leave_type'],
@@ -71,7 +79,9 @@ export default {
       taskId: String // 任务id
   },
   components: {
-      verify
+      verify,
+      HistoryRecordDialog,
+      HistoryBpmnDialog
   },
   data() {
     return {
@@ -118,7 +128,8 @@ export default {
       },
       taskVariables: undefined,
       //消息提醒
-      sendMessage: {}
+      sendMessage: {},
+      processInstanceId:undefined
     };
   },
   watch: {
@@ -132,12 +143,21 @@ export default {
       }
   },
   methods: {
+    //流程进度
+    bpmnProcess(){
+      this.$refs.historyBpmnRef.init(true,this.processInstanceId)
+    },
+    //审批意见
+    bpmnRecord(){
+      this.$refs.historyRecordRef.init(true,this.processInstanceId)
+    },
     submitCallback(){
       this.$emit("closeForm")
     },
     async getById() {
         const {data} = await getLeave(this.businessKey)
         this.form = data;
+        this.processInstanceId = data.actBusinessStatus.processInstanceId
     },
     /** 提交按钮 */
     submitForm() {
