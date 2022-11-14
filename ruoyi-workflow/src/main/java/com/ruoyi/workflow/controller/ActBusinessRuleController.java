@@ -98,4 +98,16 @@ public class ActBusinessRuleController extends BaseController {
     public R<Void> remove(@NotEmpty(message = "主键不能为空") @PathVariable Long[] ids) {
         return toAjax(iActBusinessRuleService.deleteWithValidByIds(Arrays.asList(ids), true) ? 1 : 0);
     }
+
+    /**
+     * 校验是否被关联
+     * @param: id
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Void>
+     * @author: gssong
+     * @date: 2022/11/14
+     */
+    @GetMapping("checkRelation/{id}")
+    public R<Void> checkRelation(@PathVariable Long id) {
+        return R.ok(iActBusinessRuleService.checkRelation(id));
+    }
 }

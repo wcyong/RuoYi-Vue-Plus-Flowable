@@ -1,14 +1,20 @@
 package com.ruoyi.workflow.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ruoyi.common.core.domain.PageQuery;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.workflow.domain.ActBusinessRuleParam;
+import com.ruoyi.workflow.domain.ActNodeAssignee;
+import com.ruoyi.workflow.mapper.ActNodeAssigneeMapper;
 import lombok.RequiredArgsConstructor;
+import org.flowable.engine.RepositoryService;
+import org.flowable.engine.repository.ProcessDefinition;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -21,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 业务规则Service业务层处理
@@ -33,6 +41,10 @@ import java.util.Collection;
 public class ActBusinessRuleServiceImpl implements IActBusinessRuleService {
 
     private final ActBusinessRuleMapper baseMapper;
+
+    private final ActNodeAssigneeMapper actNodeAssigneeMapper;
+
+    private final RepositoryService repositoryService;
 
     @Override
     public ActBusinessRuleVo queryById(Long id){
@@ -89,6 +101,27 @@ public class ActBusinessRuleServiceImpl implements IActBusinessRuleService {
 
     @Override
     public Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid) {
+        LambdaQueryWrapper<ActNodeAssignee> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(ActNodeAssignee::getBusinessRuleId,ids);
+        List<ActNodeAssignee> actNodeAssignees = actNodeAssigneeMapper.selectList(wrapper);
+        if(CollUtil.isNotEmpty(actNodeAssignees)){
+            Set<String> collect = actNodeAssignees.stream().map(ActNodeAssignee::getProcessDefinitionId).collect(Collectors.toSet());
+            List<ProcessDefinition> list = repositoryService.createProcessDefinitionQuery().processDefinitionIds(collect).list();
+            throw new ServiceException("当前规则已被【"+list.stream().map(ProcessDefinition::getName).collect(Collectors.joining(","))+"】使用！");
+        }
         return baseMapper.deleteBatchIds(ids)>0;
+    }
+
+    @Override
+    public String checkRelation(Long id) {
+        LambdaQueryWrapper<ActNodeAssignee> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(ActNodeAssignee::getBusinessRuleId,id);
+        List<ActNodeAssignee> actNodeAssignees = actNodeAssigneeMapper.selectList(wrapper);
+        if(CollUtil.isNotEmpty(actNodeAssignees)){
+            Set<String> collect = actNodeAssignees.stream().map(ActNodeAssignee::getProcessDefinitionId).collect(Collectors.toSet());
+            List<ProcessDefinition> list = repositoryService.createProcessDefinitionQuery().processDefinitionIds(collect).list();
+            return "当前规则已被【"+list.stream().map(ProcessDefinition::getName).collect(Collectors.joining(","))+"】使用，是否确认修改？";
+        }
+        return "";
     }
 }
