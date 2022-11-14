@@ -25,9 +25,7 @@ import com.ruoyi.workflow.mapper.ActBusinessRuleMapper;
 import com.ruoyi.workflow.service.IActBusinessRuleService;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Collection;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -101,9 +99,7 @@ public class ActBusinessRuleServiceImpl implements IActBusinessRuleService {
 
     @Override
     public Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid) {
-        LambdaQueryWrapper<ActNodeAssignee> wrapper = Wrappers.lambdaQuery();
-        wrapper.in(ActNodeAssignee::getBusinessRuleId,ids);
-        List<ActNodeAssignee> actNodeAssignees = actNodeAssigneeMapper.selectList(wrapper);
+        List<ActNodeAssignee> actNodeAssignees = getActNodeAssignees(ids);
         if(CollUtil.isNotEmpty(actNodeAssignees)){
             Set<String> collect = actNodeAssignees.stream().map(ActNodeAssignee::getProcessDefinitionId).collect(Collectors.toSet());
             List<ProcessDefinition> list = repositoryService.createProcessDefinitionQuery().processDefinitionIds(collect).list();
@@ -114,14 +110,18 @@ public class ActBusinessRuleServiceImpl implements IActBusinessRuleService {
 
     @Override
     public String checkRelation(Long id) {
-        LambdaQueryWrapper<ActNodeAssignee> wrapper = Wrappers.lambdaQuery();
-        wrapper.in(ActNodeAssignee::getBusinessRuleId,id);
-        List<ActNodeAssignee> actNodeAssignees = actNodeAssigneeMapper.selectList(wrapper);
+        List<ActNodeAssignee> actNodeAssignees = getActNodeAssignees(Collections.singletonList(id));
         if(CollUtil.isNotEmpty(actNodeAssignees)){
             Set<String> collect = actNodeAssignees.stream().map(ActNodeAssignee::getProcessDefinitionId).collect(Collectors.toSet());
             List<ProcessDefinition> list = repositoryService.createProcessDefinitionQuery().processDefinitionIds(collect).list();
             return "当前规则已被【"+list.stream().map(ProcessDefinition::getName).collect(Collectors.joining(","))+"】使用，是否确认修改？";
         }
         return "";
+    }
+
+    private List<ActNodeAssignee> getActNodeAssignees(Collection<Long> ids) {
+        LambdaQueryWrapper<ActNodeAssignee> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(ActNodeAssignee::getBusinessRuleId, ids);
+        return actNodeAssigneeMapper.selectList(wrapper);
     }
 }
