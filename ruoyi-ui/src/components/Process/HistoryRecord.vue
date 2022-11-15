@@ -37,11 +37,7 @@
 import apiProcessInst from '@/api/workflow/processInst'
 export default {
     props: {
-      processInstanceId: String,
-      editMessage: {
-        type: Boolean,
-        default: false
-      },
+      processInstanceId: String
     },
     data() {
       return {
@@ -82,7 +78,7 @@ export default {
 
 }
 </script>
-<style>
+<style scoped>
 /* 修改滚动条样式 */
 .el-table__body-wrapper::-webkit-scrollbar-thumb {
 	border-radius: 10px;

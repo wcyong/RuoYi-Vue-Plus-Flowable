@@ -1,115 +1,121 @@
 <template>
   <div >
-    <div class="btn">
-        <span>
-        <el-button type="info" @click="draftForm">暂存</el-button>
-        <el-button type="primary" @click="submitForm">提交</el-button>
-        </span>
+    <div style="height: 45px;margin-top: -30px;">
+      <el-button  size="small" type="info" @click="draftForm">暂存</el-button>
+      <el-button size="small" type="primary" @click="submitForm">提交</el-button>
+      <el-button @click="bpmnProcess" size="small" v-if="processInstanceId">流程进度</el-button>
+      <el-button @click="bpmnRecord" size="small" v-if="processInstanceId">审批意见</el-button>
     </div>
-    <div>
-      <el-row  :gutter="formConf.gutter" class="form-builder">
-        <el-form
-            :rules="rules"
-            :ref="formConf.formModel"
-            :size="formConf.size"
-            :model="form"
-            :label-position="formConf.labelPosition"
-            :disabled="formConf.disabled"
-            :validate-on-rule-change="false"
-            :label-width="formConf.labelWidth + 'px'"
-          >
-            <template v-for="(element,index) in itemList"  >
-              <preview-row-item 
-                v-if="element.compType === 'row'"
-                :key="'row-'+index" 
-                :model="element"
+    <el-tabs type="border-card">
+      <el-tab-pane label="业务单据" class="container-tab">
+        <el-row  :gutter="formConf.gutter" class="form-builder">
+            <el-form
+                :rules="rules"
+                :ref="formConf.formModel"
+                :size="formConf.size"
+                :model="form"
+                :label-position="formConf.labelPosition"
+                :disabled="formConf.disabled"
+                :validate-on-rule-change="false"
+                :label-width="formConf.labelWidth + 'px'"
+            >
+                <template v-for="(element,index) in itemList"  >
+                <preview-row-item 
+                    v-if="element.compType === 'row'"
+                    :key="'row-'+index" 
+                    :model="element"
+                    >
+                    <el-col v-for="(column) in element.columns" :key="column.index" :span="column.span">
+                    <template v-for="(col) in column.list">
+                        <preview-item
+                            v-if="col.compType!== 'dynamicTable'"
+                            :key="col.id"
+                            :model="col"
+                            v-model="form[col.id]"
+                            @valChange="handlerValChange"
+                        />
+                        <fancy-dynamic-table
+                            v-else-if="col.compType === 'dynamicTable'"
+                            ref="dynamicTable"
+                            :key="'dynamic-'+index"
+                            :data="form[col.id]"
+                            :conf="col"
+                            @addRow="handlerAddRow"
+                            @deleteRow="handlerDeleteRow"
+                        >
+                        <template v-slot:item="{rowScope,item}">
+                            <fancy-dynamic-table-item
+                                :model="item"
+                                :parent="col"
+                                :key="'tableIndex-'+rowScope.$index"
+                                :index="rowScope.$index"
+                                v-model="rowScope.row[item.id]"
+                                @valChange="handlerDynamicValChange"
+                            />
+                        </template>
+                        </fancy-dynamic-table>
+                    </template>
+                    </el-col>
+                </preview-row-item>
+                <fancy-dynamic-table
+                    v-else-if="element.compType === 'dynamicTable'"
+                    :key="'dynamic-'+index"
+                    :data="form[element.id]"
+                    :ref="element.id"
+                    :conf="element"
+                    @addRow="handlerAddRow"
+                    @deleteRow="handlerDeleteRow"
                 >
-                <el-col v-for="(column) in element.columns" :key="column.index" :span="column.span">
-                  <template v-for="(col) in column.list">
-                    <preview-item
+                    <template v-slot:item="{rowScope,item}">
+                    <fancy-dynamic-table-item
+                        :model="item"
+                        :ref="item.id+rowScope.$index"
+                        :parent="element"
+                        :key="'tableIndex-'+rowScope.$index"
+                        :index="rowScope.$index"
+                        v-model="rowScope.row[item.id]"
+                        @valChange="handlerDynamicValChange"
+                    />
+                    </template>
+                </fancy-dynamic-table>
+                <fancy-edit-table
+                    v-else-if="element.compType === 'table'"
+                    :layoutArray="element.layoutArray"
+                    :tdStyle="element.tdStyle"
+                    :width="element.width"
+                    :height="element.height"
+                >
+                <template v-slot="{td}">
+                    <template v-for="(col) in td.columns">
+                        <preview-item
                         v-if="col.compType!== 'dynamicTable'"
                         :key="col.id"
                         :model="col"
                         v-model="form[col.id]"
                         @valChange="handlerValChange"
-                    />
-                    <fancy-dynamic-table
-                        v-else-if="col.compType === 'dynamicTable'"
-                        ref="dynamicTable"
-                        :key="'dynamic-'+index"
-                        :data="form[col.id]"
-                        :conf="col"
-                        @addRow="handlerAddRow"
-                        @deleteRow="handlerDeleteRow"
-                    >
-                      <template v-slot:item="{rowScope,item}">
-                        <fancy-dynamic-table-item
-                            :model="item"
-                            :parent="col"
-                            :key="'tableIndex-'+rowScope.$index"
-                            :index="rowScope.$index"
-                            v-model="rowScope.row[item.id]"
-                            @valChange="handlerDynamicValChange"
                         />
-                      </template>
-                    </fancy-dynamic-table>
-                  </template>
-                </el-col>
-              </preview-row-item>
-              <fancy-dynamic-table
-                  v-else-if="element.compType === 'dynamicTable'"
-                  :key="'dynamic-'+index"
-                  :data="form[element.id]"
-                  :ref="element.id"
-                  :conf="element"
-                  @addRow="handlerAddRow"
-                  @deleteRow="handlerDeleteRow"
-              >
-                <template v-slot:item="{rowScope,item}">
-                  <fancy-dynamic-table-item
-                      :model="item"
-                      :ref="item.id+rowScope.$index"
-                      :parent="element"
-                      :key="'tableIndex-'+rowScope.$index"
-                      :index="rowScope.$index"
-                      v-model="rowScope.row[item.id]"
-                      @valChange="handlerDynamicValChange"
-                  />
                 </template>
-              </fancy-dynamic-table>
-              <fancy-edit-table
-                v-else-if="element.compType === 'table'"
-                :layoutArray="element.layoutArray"
-                :tdStyle="element.tdStyle"
-                :width="element.width"
-                :height="element.height"
-              >
-              <template v-slot="{td}">
-                <template v-for="(col) in td.columns">
-                    <preview-item
-                      v-if="col.compType!== 'dynamicTable'"
-                      :key="col.id"
-                      :model="col"
-                      v-model="form[col.id]"
-                      @valChange="handlerValChange"
+                </template>
+                </fancy-edit-table>
+                <!--item-->
+                
+                <el-col class="drag-col-wrapper" :key="index"   :span="element.span" v-else>
+                    <preview-item 
+                    :model="element"
+                    v-model="form[element.id]"
+                    @valChange="handlerValChange"
                     />
-              </template>
-              </template>
-              </fancy-edit-table>
-              <!--item-->
-              
-              <el-col class="drag-col-wrapper" :key="index"   :span="element.span" v-else>
-                <preview-item 
-                  :model="element"
-                  v-model="form[element.id]"
-                  @valChange="handlerValChange"
-                />
-              </el-col>
-            </template>
-            
-          </el-form>
-      </el-row>
-    </div>
+                </el-col>
+                </template>
+                
+            </el-form>
+        </el-row>
+      </el-tab-pane>
+    </el-tabs>
+    <!-- 流程进度 -->
+    <HistoryBpmnDialog ref="historyBpmnRef"/>
+    <!-- 审批意见 -->
+    <HistoryRecordDialog ref="historyRecordRef"/>
   </div>
 </template>
 <script>
@@ -119,6 +125,8 @@ import fancyDynamicTable from "@/components/FormDesigner/dynamic/fancyDynamicTab
 import fancyDynamicTableItem from "@/components/FormDesigner/dynamic/fancyDynamicTableItem";
 import {datas,addRow,deleteRow,fillDatas} from "@/components/FormDesigner/custom/formDraw";
 import fancyEditTable from "@/components/FormDesigner/table/fancyEditTable";
+import HistoryBpmnDialog from "@/components/Process/HistoryBpmnDialog";
+import HistoryRecordDialog from "@/components/Process/HistoryRecordDialog";
 export default {
   name:'dynamicFormEdit',
   props:{
@@ -133,14 +141,20 @@ export default {
     disabled:{
       type:Boolean,
       default:false
-    }
+    },
+    processInstanceId:{
+      type:String,
+      default:''
+    } 
   },
   components:{
     previewItem,
     previewRowItem,
     fancyDynamicTable,
     fancyDynamicTableItem,
-    fancyEditTable
+    fancyEditTable,
+    HistoryBpmnDialog,
+    HistoryRecordDialog
   },
   data(){
     return{
@@ -159,6 +173,14 @@ export default {
     })
   },
   methods:{
+    //流程进度
+    bpmnProcess(){
+      this.$refs.historyBpmnRef.init(true,this.processInstanceId)
+    },
+    //审批意见
+    bpmnRecord(){
+      this.$refs.historyRecordRef.init(true,this.processInstanceId)
+    },
     //暂存
     draftForm(){
       this.validate()
@@ -237,9 +259,17 @@ export default {
 .form-builder >>> .el-checkbox.is-bordered+.el-checkbox.is-bordered{
   margin-left:0px;
 }
-.btn{
-    position: relative;
-    height: 50px;
-    background: #fff;
+.container-tab{
+    height: calc(100vh - 240px);
+    overflow-y: auto;
+    padding: 10px;
+}
+/* 修改滚动条样式 */
+.container-tab::-webkit-scrollbar {
+    width: 4px;
+}
+.container-tab::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    background-color: #ccc;
 }
 </style>

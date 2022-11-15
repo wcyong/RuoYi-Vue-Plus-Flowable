@@ -5,6 +5,7 @@
             :parentTaskId="parentTaskId" 
             @closeForm="closeForm" 
             :taskId="taskId" 
+            :processInstanceId="processInstanceId"
             :buildData="dynamicFormData.formText"
             v-model="dynamicFormData.formValue"
             :dynamicFormData="dynamicFormData"

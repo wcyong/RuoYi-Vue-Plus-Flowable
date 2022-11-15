@@ -54,10 +54,18 @@
                     <el-col :span="1.5">
                       <el-button
                           type="text"
-                          @click="clickHistPop(scope.row)"
+                          @click="bpmnRecord(scope.row)"
                           size="mini"
                           icon="el-icon-tickets"
                       >审批记录</el-button>
+                    </el-col>
+                    <el-col :span="1.5">
+                      <el-button
+                          type="text"
+                          @click="bpmnProcess(scope.row)"
+                          size="mini"
+                          icon="el-icon-tickets"
+                      >流程进度</el-button>
                     </el-col>
                     <el-col :span="1.5">
                       <el-button
@@ -65,7 +73,7 @@
                           type="text"
                           @click="addMultiPeople(scope.row)"
                           size="mini"
-                          icon="el-icon-tickets"
+                          icon="el-icon-document-add"
                       >加签</el-button>
                     </el-col>
                   </el-row>
@@ -85,7 +93,7 @@
                           type="text"
                           @click="deleteMultiClick(scope.row)"
                           size="mini"
-                          icon="el-icon-tickets"
+                          icon="el-icon-document-remove"
                       >减签</el-button>
                     </el-col>
                   </el-row>
@@ -97,12 +105,12 @@
           :page.sync="queryParams.pageNum"
           :limit.sync="queryParams.pageSize"
           @pagination="getList" />
-        <!-- 驳回 -->
-        <el-dialog title="审批记录" :visible.sync="visible" v-if="visible" width="80%" :close-on-click-modal="false">
-            <div class="historyContainer">
-              <history :processInstanceId="processInstanceId" :editMessage="true"></history>
-            </div>
-        </el-dialog>
+
+        <!-- 流程进度 -->
+        <HistoryBpmnDialog ref="historyBpmnRef"/>
+
+        <!-- 审批意见 -->
+        <HistoryRecordDialog ref="historyRecordRef"/>
 
         <!-- 选择人员 -->
         <sys-dept-user ref="userRef" @confirmUser="clickUser" :multiple="false"/>
@@ -152,12 +160,16 @@
   import Back from "@/components/Process/Back";
   import SysDeptUser from "@/views/components/user/sys-dept-user";
   import MultiUser from "@/views/components/user/multi-user";
+  import HistoryBpmnDialog from "@/components/Process/HistoryBpmnDialog";
+  import HistoryRecordDialog from "@/components/Process/HistoryRecordDialog";
   export default {
     components: {
       Back,
       History,
       SysDeptUser,
-      MultiUser
+      MultiUser,
+      HistoryBpmnDialog,
+      HistoryRecordDialog
     },
     data () {
       return {
@@ -246,10 +258,13 @@
             this.loading = false;
           })
       },
-      //审批记录
-      clickHistPop(row){
-         this.processInstanceId = row.processInstanceId
-         this.visible = true
+      //流程进度
+      bpmnProcess(row){
+        this.$refs.historyBpmnRef.init(true,row.processInstanceId)
+      },
+      //审批意见
+      bpmnRecord(row){
+        this.$refs.historyRecordRef.init(true,row.processInstanceId)
       },
       //修改办理人
       openAssignee(){
