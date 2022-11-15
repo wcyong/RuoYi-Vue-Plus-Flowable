@@ -54,22 +54,6 @@
                 placeholder="选择请假结束时间">
               </el-date-picker>
             </el-form-item>
-            <el-form-item label="请假结束时间" prop="endDate">
-              <el-date-picker style="width:100%" clearable size="small"
-                v-model="form.endDate"
-                type="datetime"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                placeholder="选择请假结束时间">
-              </el-date-picker>
-            </el-form-item>
-            <el-form-item label="请假结束时间" prop="endDate">
-              <el-date-picker style="width:100%" clearable size="small"
-                v-model="form.endDate"
-                type="datetime"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                placeholder="选择请假结束时间">
-              </el-date-picker>
-            </el-form-item>
           </el-form>
           <!-- 工作流开始 -->
           <verify ref="verifyRef" :taskId="taskId" @submitCallback="submitCallback"

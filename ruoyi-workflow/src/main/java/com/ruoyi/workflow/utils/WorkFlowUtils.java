@@ -188,9 +188,15 @@ public class WorkFlowUtils {
             } else if (outFlowElement instanceof SubProcess) {
                 Collection<FlowElement> subFlowElements = ((SubProcess) outFlowElement).getFlowElements();
                 for (FlowElement element : subFlowElements) {
-                    if (element instanceof UserTask) {
-                        nextNodeBuild(executionEntity, nextNodes, tempNodes, taskId, gateway, sequenceFlow, processNode, tempNode, element);
-                        break;
+                    if (element instanceof StartEvent) {
+                        List<SequenceFlow> startOutgoingFlows = ((StartEvent) element).getOutgoingFlows();
+                        for (SequenceFlow outgoingFlow : startOutgoingFlows) {
+                            FlowElement targetFlowElement = outgoingFlow.getTargetFlowElement();
+                            if (targetFlowElement instanceof UserTask) {
+                                nextNodeBuild(executionEntity, nextNodes, tempNodes, taskId, gateway, sequenceFlow, processNode, tempNode, targetFlowElement);
+                                break;
+                            }
+                        }
                     }
                 }
             } else {

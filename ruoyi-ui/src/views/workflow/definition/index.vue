@@ -61,7 +61,7 @@
             </el-row>
             <!-- 表格数据 -->
             <el-table v-loading="loading" :data="dataList" @selection-change="handleSelectionChange">
-              
+                <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
                 <el-table-column align="center" prop="name" label="流程定义名称" width="150" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column align="center" prop="key" label="标识Key" width="100"></el-table-column>
                 <el-table-column align="center" prop="version" label="版本号" width="90" >
