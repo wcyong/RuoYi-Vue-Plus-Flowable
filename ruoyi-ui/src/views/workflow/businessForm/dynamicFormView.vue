@@ -183,12 +183,4 @@ export default {
     overflow-y: auto;
     padding: 10px;
 }
-/* 修改滚动条样式 */
-.container-tab::-webkit-scrollbar {
-    width: 4px;
-}
-.container-tab::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background-color: #ccc;
-}
 </style>

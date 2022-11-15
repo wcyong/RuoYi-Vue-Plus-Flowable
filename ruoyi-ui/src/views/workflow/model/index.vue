@@ -329,7 +329,7 @@ export default {
 
 }
 </script>
-<style scoped>
+<style scoped lang="scss">
   .custom-tree-node {
     flex: 1;
     display: flex;
@@ -337,5 +337,17 @@ export default {
     justify-content: space-between;
     font-size: 14px;
     padding-right: 8px;
+  }
+  ::v-deep .el-tree .el-tree-node__expand-icon.expanded {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  ::v-deep .el-tree .el-icon-caret-right:before {
+    content: "\e783";
+    font-size: 18px;
+  }
+  ::v-deep .el-tree .el-tree-node__expand-icon.expanded.el-icon-caret-right:before {
+    content: "\e781";
+    font-size: 18px;
   }
 </style>

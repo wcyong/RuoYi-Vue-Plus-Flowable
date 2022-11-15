@@ -71,13 +71,6 @@ export default {
 }
 </script>
 <style scoped>
-/* 修改滚动条样式 */
-.containers::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
-.containers::-webkit-scrollbar {
-  width: 5px;
-}
 .containers{
   height: 550px;
   overflow-y: auto;

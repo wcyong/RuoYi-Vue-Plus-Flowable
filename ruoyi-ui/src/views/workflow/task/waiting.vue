@@ -378,13 +378,6 @@
   width: inherit;
   line-height: 8px;
 }
-/* 修改滚动条样式 */
-.box-card::-webkit-scrollbar {
-	width: 4px;
-}
-.box-card::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
 .historyContainer{
   height: 600px;
   overflow: auto;

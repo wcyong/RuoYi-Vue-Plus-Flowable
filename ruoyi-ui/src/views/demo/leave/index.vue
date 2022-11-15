@@ -533,13 +533,6 @@ export default {
         height: calc(100vh - 160px);
         overflow-y: auto;
     }
-    /* 修改滚动条样式 */
-    .container-tab::-webkit-scrollbar {
-        width: 4px;
-    }
-    .container-tab::-webkit-scrollbar-thumb {
-        border-radius: 10px;
-    }
     .form-container-header{
         height: 20px;
         padding-bottom: 10px;

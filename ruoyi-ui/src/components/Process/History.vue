@@ -193,26 +193,6 @@ export default {
 }
 </script>
 <style lang="scss">
-/* 修改滚动条样式 */
-.el-table__body-wrapper::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
-.el-table__body-wrapper::-webkit-scrollbar {
-  width: 5px;
-}
-.container-tab{
-    height: calc(100vh - 440px);
-    overflow-y: auto;
-    padding: 10px;
-}
-/* 修改滚动条样式 */
-.container-tab::-webkit-scrollbar {
-    width: 4px;
-}
-.container-tab::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background-color: #ccc;
-}
 .canvas {
     width: 100%;
     height: 100%;
@@ -227,13 +207,6 @@ export default {
   .el-loading-spinner {
     display: none;
   }
-}
-/* 修改滚动条样式 */
-.flow-containers::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
-.flow-containers::-webkit-scrollbar {
-  width: 5px;
 }
 .bpmn-el-container{
   height: 500px;

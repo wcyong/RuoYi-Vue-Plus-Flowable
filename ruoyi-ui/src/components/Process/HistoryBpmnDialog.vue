@@ -171,13 +171,6 @@ export default {
     display: none;
   }
 }
-/* 修改滚动条样式 */
-.flow-containers::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
-.flow-containers::-webkit-scrollbar {
-  width: 5px;
-}
 .bpmn-el-container{
   height: 500px;
 }

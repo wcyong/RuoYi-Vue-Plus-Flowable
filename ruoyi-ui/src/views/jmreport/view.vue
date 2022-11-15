@@ -297,19 +297,6 @@ export default {
   .container::-webkit-scrollbar {
     width: 5px;
   }
-  /* 修改滚动条样式 */
-  .aside::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-  }
-  .aside::-webkit-scrollbar {
-    width: 5px;
-  }
-  .main::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-  }
-  .main::-webkit-scrollbar {
-    width: 5px;
-  }
   .item{
     border-bottom: 1px solid #eff3fa;
     white-space: nowrap;

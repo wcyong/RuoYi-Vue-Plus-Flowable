@@ -443,13 +443,4 @@ export default {
     font-family:'幼圆';
     font-weight:500;
 }
-/* 修改滚动条样式 */
-.viewXml::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-    background: #ccc;
-}
-.viewXml::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-}
 </style>

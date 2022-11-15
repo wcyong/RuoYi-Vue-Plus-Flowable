@@ -302,32 +302,10 @@ export default {
     height: 570px;
     overflow-y: scroll;
   }
-  .left-container::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background-color: #ccc; /*滚动条的背景颜色*/
-  }
-  .left-container::-webkit-scrollbar {
-    width: 5px; /*滚动条宽度*/
-    height: 5px; /*滚动条高度*/
-  }
   .item-font{
     white-space: nowrap;
     line-height: 42px;
     font-weight: 600;
-  }
-  /deep/ .el-table__body-wrapper::-webkit-scrollbar {
-      width: 5px; /*滚动条宽度*/
-      height: 5px; /*滚动条高度*/
-  }
-  /*定义滚动条轨道 内阴影+圆角*/
-  /deep/ .el-table__body-wrapper::-webkit-scrollbar-track {
-      border-radius: 10px; /*滚动条的背景区域的圆角*/
-      background-color: #fff; /*滚动条的背景颜色*/
-  }
-  /*定义滑块 内阴影+圆角*/
-  /deep/ .el-table__body-wrapper::-webkit-scrollbar-thumb {
-      border-radius: 10px; /*滚动条的圆角*/
-      background-color: #ccc; /*滚动条的背景颜色*/
   }
   .selected{
     font-weight: bold;

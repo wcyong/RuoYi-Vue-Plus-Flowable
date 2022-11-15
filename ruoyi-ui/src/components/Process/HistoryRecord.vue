@@ -79,11 +79,4 @@ export default {
 }
 </script>
 <style scoped>
-/* 修改滚动条样式 */
-.el-table__body-wrapper::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
-.el-table__body-wrapper::-webkit-scrollbar {
-  width: 5px;
-}
 </style>
