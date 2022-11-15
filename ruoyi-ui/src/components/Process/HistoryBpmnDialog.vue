@@ -66,7 +66,7 @@ export default {
     async createDiagram(data) {
       try {
         await this.modeler.importXML(data)
-        this.autoViewport()
+        this.fitViewport()
         this.fillColor()
         this.loading = false
       } catch (err) {
@@ -75,10 +75,6 @@ export default {
     },
     // 让图能自适应屏幕
     fitViewport(){
-      this.autoViewport()
-      this.autoViewport()
-    },
-    autoViewport(){
       this.zoom = this.modeler.get('canvas').zoom('fit-viewport')
       const bbox = document.querySelector('.flow-containers .viewport').getBBox()
       const currentViewbox = this.modeler.get('canvas').viewbox()
@@ -159,7 +155,7 @@ export default {
 }
 </script>
 
-<style lang="scss" >
+<style lang="scss">
 .canvas {
     width: 100%;
     height: 100%;
