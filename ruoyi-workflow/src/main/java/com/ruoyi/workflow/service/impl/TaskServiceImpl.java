@@ -344,13 +344,6 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             }
             // 4. 完成任务
             taskService.complete(req.getTaskId());
-            // 任务后执行
-            if (CollectionUtil.isNotEmpty(handleAfterList)) {
-                for (TaskListenerVo taskListenerVo : handleAfterList) {
-                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), ActConstant.HANDLE_PROCESS
-                        , task.getProcessInstanceId());
-                }
-            }
             // 5. 记录执行过的流程任务节点
             WorkFlowUtils.recordExecuteNode(task, actNodeAssignees);
             // 更新业务状态为：办理中
@@ -362,7 +355,13 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
                 // 更新业务状态已完成 办结流程
                 return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH);
             }
-
+            // 任务后执行
+            if (CollectionUtil.isNotEmpty(handleAfterList)) {
+                for (TaskListenerVo taskListenerVo : handleAfterList) {
+                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), ActConstant.HANDLE_PROCESS
+                        , task.getProcessInstanceId());
+                }
+            }
             // 抄送
             if (req.getIsCopy()) {
                 if (StringUtils.isBlank(req.getAssigneeIds())) {
