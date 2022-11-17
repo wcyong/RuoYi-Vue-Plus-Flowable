@@ -295,15 +295,12 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             processDefinitionMapper.updateDescriptionById(definitionId, description);
             ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
                 .processDefinitionId(definitionId).singleResult();
+            //将当前为挂起状态更新为激活状态
+            //参数说明：参数1：流程定义id,参数2：是否激活（true是否级联对应流程实例，激活了则对应流程实例都可以审批），
+            //参数3：什么时候激活，如果为null则立即激活，如果为具体时间则到达此时间后激活
             if (processDefinition.isSuspended()) {
-                // 将当前为挂起状态更新为激活状态
-                // 参数说明：参数1：流程定义id,参数2：是否激活（true是否级联对应流程实例，激活了则对应流程实例都可以审批），
-                // 参数3：什么时候激活，如果为null则立即激活，如果为具体时间则到达此时间后激活
                 repositoryService.activateProcessDefinitionById(definitionId, true, null);
             } else {
-                // 将当前为激活状态更新为挂起状态
-                // 参数说明：参数1：流程定义id,参数2：是否挂起（true是否级联对应流程实例，挂起了则对应流程实例都不可以审批），
-                // 参数3：什么时候挂起，如果为null则立即挂起，如果为具体时间则到达此时间后挂起
                 repositoryService.suspendProcessDefinitionById(definitionId, true, null);
             }
             return true;
@@ -396,7 +393,7 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             processNodeVo.setX(graphicInfo.getX());
         }
         for (ActProcessNodeVo node : processNodeVoList) {
-            if(ActConstant.END_EVENT.equals(node.getNodeType())){
+            if (ActConstant.END_EVENT.equals(node.getNodeType())) {
                 FlowElement flowElement = bpmnModel.getFlowElement(node.getNodeId());
 
                 List<SequenceFlow> incomingFlows = ((FlowNode) flowElement).getIncomingFlows();
@@ -427,13 +424,13 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                             }
                         }
                     } else if (sourceFlowElement instanceof UserTask) {
-                        processNodeVoList.stream().filter(e->e.getNodeId().equals(sourceFlowElement.getId())).findFirst().ifPresent(e-> e.setEnd(true));
+                        processNodeVoList.stream().filter(e -> e.getNodeId().equals(sourceFlowElement.getId())).findFirst().ifPresent(e -> e.setEnd(true));
                     }
                 }
             }
         }
 
-        processNodeVoList.removeIf(e->ActConstant.END_EVENT.equals(e.getNodeType()));
+        processNodeVoList.removeIf(e -> ActConstant.END_EVENT.equals(e.getNodeType()));
         return processNodeVoList.stream().sorted(Comparator.comparing(ActProcessNodeVo::getX)).collect(Collectors.toList());
     }
 

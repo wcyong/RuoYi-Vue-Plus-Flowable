@@ -45,12 +45,6 @@
             <artifactId>flowable-json-converter</artifactId>
         </dependency>
 
-        <!-- 核心模块-->
-        <dependency>
-            <groupId>com.ruoyi</groupId>
-            <artifactId>ruoyi-framework</artifactId>
-        </dependency>
-
         <!--系统模块-->
         <dependency>
             <groupId>com.ruoyi</groupId>
