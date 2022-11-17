@@ -351,9 +351,10 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             // 6. 查询下一个任务
             List<Task> taskList = taskService.createTaskQuery().processInstanceId(task.getProcessInstanceId()).list();
             // 7. 如果为空 办结任务
+            boolean end = false;
             if (CollectionUtil.isEmpty(taskList)) {
                 // 更新业务状态已完成 办结流程
-                return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH);
+                end = iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH);
             }
             // 任务后执行
             if (CollectionUtil.isNotEmpty(handleAfterList)) {
@@ -361,6 +362,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
                     WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), ActConstant.HANDLE_PROCESS
                         , task.getProcessInstanceId());
                 }
+            }
+            if(CollectionUtil.isEmpty(taskList) && end){
+                return true;
             }
             // 抄送
             if (req.getIsCopy()) {
