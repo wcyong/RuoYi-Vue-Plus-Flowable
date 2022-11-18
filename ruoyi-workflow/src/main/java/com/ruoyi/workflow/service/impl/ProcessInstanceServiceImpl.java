@@ -416,7 +416,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 throw new ServiceException("当前流程异常，未生成act_business_status对象");
             }
             //2. 更新业务状态
-            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.INVALID);
+            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.INVALID,processInstBo.getProcessInstId());
         } catch (Exception e) {
             throw new ServiceException(e.getMessage());
         }
@@ -582,7 +582,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 }
                 iActTaskNodeService.deleteByInstanceId(processInstId);
             }
-            return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.CANCEL);
+            return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.CANCEL,processInstId);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ServiceException("撤销失败:" + e.getMessage());

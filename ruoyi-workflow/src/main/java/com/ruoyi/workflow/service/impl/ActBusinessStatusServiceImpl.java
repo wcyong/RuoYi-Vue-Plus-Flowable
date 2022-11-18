@@ -30,14 +30,14 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
      * @description: 修改业务状态
      * @param: businessKey 业务id
      * @param: statusEnum 业务状态
-     * @param: procInstId 流程实例id
+     * @param: processInstanceId 流程实例id
      * @param: tableName 表名
      * @return: boolean
      * @author: gssong
      * @date: 2021/10/21
      */
     @Override
-    public boolean updateState(String businessKey, BusinessStatusEnum statusEnum, String procInstId, String tableName) {
+    public boolean updateState(String businessKey, BusinessStatusEnum statusEnum, String processInstanceId, String tableName) {
         try {
             // 1. 查询当前数据
             ActBusinessStatus bs = baseMapper.selectOne(new LambdaQueryWrapper<ActBusinessStatus>().eq(ActBusinessStatus::getBusinessKey, businessKey));
@@ -49,14 +49,14 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
                 actBusinessStatus.setBusinessKey(businessKey);
                 actBusinessStatus.setTableName(tableName.toLowerCase());
                 // 只要判断不为null,就更新
-                if (procInstId != null) {
-                    actBusinessStatus.setProcessInstanceId(procInstId);
+                if (processInstanceId != null) {
+                    actBusinessStatus.setProcessInstanceId(processInstanceId);
                 }
                 int insert = baseMapper.insert(actBusinessStatus);
                 // 更新缓存
                 if (insert == 1) {
                     RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, actBusinessStatus, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
-                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + procInstId, actBusinessStatus, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
+                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, actBusinessStatus, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
                 }
                 return insert == 1;
             } else {
@@ -64,14 +64,14 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
                 bs.setStatus(statusEnum.getStatus());
                 bs.setBusinessKey(businessKey);
                 // 只要判断不为null,就更新
-                if (procInstId != null) {
-                    bs.setProcessInstanceId(procInstId);
+                if (processInstanceId != null) {
+                    bs.setProcessInstanceId(processInstanceId);
                 }
                 int update = baseMapper.updateById(bs);
                 // 更新缓存
                 if (update == 1) {
                     RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, bs, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
-                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + procInstId, bs, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
+                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, bs, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
                 }
                 return update == 1;
             }
@@ -84,11 +84,6 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
     @Override
     public boolean updateState(String businessKey, BusinessStatusEnum statusEnum, String procInstId) {
         return updateState(businessKey, statusEnum, procInstId, null);
-    }
-
-    @Override
-    public boolean updateState(String businessKey, BusinessStatusEnum statusEnum) {
-        return updateState(businessKey, statusEnum, null, null);
     }
 
     @Override

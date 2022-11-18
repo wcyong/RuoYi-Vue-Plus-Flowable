@@ -722,7 +722,7 @@ public class WorkFlowUtils {
 
         List<Task> taskList = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
         if (CollectionUtil.isEmpty(taskList)) {
-            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH);
+            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH,processInstanceId);
         }
         for (Task task : taskList) {
             ActNodeAssignee nodeAssignee = actNodeAssignees.stream().filter(e -> task.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);

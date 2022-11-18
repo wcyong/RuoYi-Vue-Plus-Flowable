@@ -354,7 +354,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             boolean end = false;
             if (CollectionUtil.isEmpty(taskList)) {
                 // 更新业务状态已完成 办结流程
-                end = iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH);
+                end = iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH,processInstance.getProcessInstanceId());
             }
             // 任务后执行
             if (CollectionUtil.isNotEmpty(handleAfterList)) {
@@ -391,7 +391,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
                     }
                 } else {
                     // 更新业务状态已完成 办结流程
-                    return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH);
+                    return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH,processInstance.getProcessInstanceId());
                 }
                 // 发送站内信
                 WorkFlowUtils.sendMessage(req.getSendMessage(), processInstance.getProcessInstanceId());
@@ -401,7 +401,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             List<Task> nextTaskList = taskService.createTaskQuery().processInstanceId(task.getProcessInstanceId()).list();
             if (CollectionUtil.isEmpty(nextTaskList)) {
                 // 更新业务状态已完成 办结流程
-                return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH);
+                return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.FINISH,processInstance.getProcessInstanceId());
             }
             for (Task t : nextTaskList) {
                 ActNodeAssignee nodeAssignee = actNodeAssignees.stream().filter(e -> t.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);
@@ -993,7 +993,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             //删除驳回后的流程节点
             if (ObjectUtil.isNotNull(actTaskNode) && actTaskNode.getOrderNo() == 0) {
                 ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
-                iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.BACK);
+                iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.BACK,processInstanceId);
             }
             iActTaskNodeService.deleteBackTaskNode(processInstanceId, backProcessBo.getTargetActivityId());
             //发送站内信
@@ -1331,7 +1331,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
                 }
                 runtimeService.deleteProcessInstance(task.getProcessInstanceId(), "");
             }
-            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.TERMINATION);
+            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.TERMINATION,task.getProcessInstanceId());
         } catch (Exception e) {
             throw new ServiceException(e.getMessage());
         }
