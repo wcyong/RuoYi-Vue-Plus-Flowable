@@ -162,10 +162,14 @@
           this.parentTaskId = row.parentTaskId
           if(row.actProcessDefSetting && row.actProcessDefSetting.businessType === 0){
             getBusinessForm(this.businessKey).then(response => {
-                this.dynamicFormData = response.data;
-                this.dynamicFormEditVisible = true;
-                this.dataViewVisible = false
-                this.currProcessForm = 'dynamicFormEdit'
+                if(response.data){
+                  this.dynamicFormData = response.data;
+                  this.dynamicFormEditVisible = true;
+                  this.dataViewVisible = false
+                  this.currProcessForm = 'dynamicFormEdit'
+                }else{
+                  this.$modal.msgError("当前流程绑定表单有误，请在流程定义设置中修改");
+                }  
             });
           }else{
             if(row.actProcessDefSetting && row.actProcessDefSetting.componentName){
