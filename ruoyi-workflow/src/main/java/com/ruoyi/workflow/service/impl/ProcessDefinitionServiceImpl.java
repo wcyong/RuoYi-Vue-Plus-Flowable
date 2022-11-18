@@ -6,6 +6,7 @@ import cn.hutool.core.util.ObjectUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.domain.ActCategory;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.bo.DefinitionBo;
 import com.ruoyi.workflow.domain.vo.ActProcessDefSettingVo;
@@ -13,6 +14,7 @@ import com.ruoyi.workflow.domain.vo.ActProcessNodeVo;
 import com.ruoyi.workflow.domain.vo.ProcessDefinitionVo;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.mapper.ProcessDefinitionMapper;
+import com.ruoyi.workflow.service.IActCategoryService;
 import com.ruoyi.workflow.service.IActNodeAssigneeService;
 import com.ruoyi.workflow.service.IActProcessDefSetting;
 import com.ruoyi.workflow.service.IProcessDefinitionService;
@@ -24,7 +26,6 @@ import org.flowable.bpmn.model.*;
 import org.flowable.bpmn.model.Process;
 import org.flowable.engine.ProcessMigrationService;
 import org.flowable.engine.repository.Deployment;
-import org.flowable.engine.repository.DeploymentBuilder;
 import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.engine.repository.ProcessDefinitionQuery;
 import org.flowable.task.api.history.HistoricTaskInstance;
@@ -36,6 +37,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
@@ -56,6 +58,8 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
 
     private final IActProcessDefSetting iActProcessDefSetting;
 
+    private final IActCategoryService iActCategoryService;
+
     /**
      * @description: 查询流程定义列表
      * @param: definitionBo
@@ -71,6 +75,9 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
         }
         if (StringUtils.isNotEmpty(definitionBo.getName())) {
             query.processDefinitionNameLike("%" + definitionBo.getName() + "%");
+        }
+        if (StringUtils.isNotEmpty(definitionBo.getCategory())) {
+            query.processDefinitionCategory(definitionBo.getCategory());
         }
         // 分页查询
         List<ProcessDefinitionVo> processDefinitionVoList = new ArrayList<>();
@@ -186,24 +193,26 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             //流程分类
             String category = splitFilename[2];
 
+            ActCategory actCategory = iActCategoryService.queryById(Long.valueOf(category));
+            if (actCategory == null) {
+                throw new ServiceException("流程分类不存在");
+            }
             // 文件后缀名
             String suffix = filename.substring(filename.lastIndexOf(".") + 1).toUpperCase();
             InputStream inputStream = file.getInputStream();
-            DeploymentBuilder deployment = repositoryService.createDeployment();
+            Deployment deployment;
             if (ActConstant.ZIP.equals(suffix)) {
                 // zip
-                deployment.addZipInputStream(new ZipInputStream(inputStream));
+                deployment = repositoryService.createDeployment()
+                    .addZipInputStream(new ZipInputStream(inputStream)).name(processName).key(processKey).category(category).deploy();
             } else {
                 // xml 或 bpmn
-                deployment.addInputStream(filename, inputStream);
+                deployment = repositoryService.createDeployment()
+                    .addInputStream(filename, inputStream).name(processName).key(processKey).category(category).deploy();
             }
-            // 部署名称
-            deployment.name(processName);
-            deployment.key(processKey);
-            deployment.category(category);
-
-            // 开始部署
-            deployment.deploy();
+            // 更新分类
+            ProcessDefinition definition = repositoryService.createProcessDefinitionQuery().deploymentId(deployment.getId()).singleResult();
+            repositoryService.setProcessDefinitionCategory(definition.getId(), category);
 
             return true;
         } catch (IOException e) {
@@ -262,7 +271,7 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
         InputStream inputStream;
         try {
             inputStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(), processDefinition.getResourceName());
-            xml.append(IOUtils.toString(inputStream, ActConstant.UTF_8));
+            xml.append(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -286,15 +295,12 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             processDefinitionMapper.updateDescriptionById(definitionId, description);
             ProcessDefinition processDefinition = repositoryService.createProcessDefinitionQuery()
                 .processDefinitionId(definitionId).singleResult();
+            //将当前为挂起状态更新为激活状态
+            //参数说明：参数1：流程定义id,参数2：是否激活（true是否级联对应流程实例，激活了则对应流程实例都可以审批），
+            //参数3：什么时候激活，如果为null则立即激活，如果为具体时间则到达此时间后激活
             if (processDefinition.isSuspended()) {
-                // 将当前为挂起状态更新为激活状态
-                // 参数说明：参数1：流程定义id,参数2：是否激活（true是否级联对应流程实例，激活了则对应流程实例都可以审批），
-                // 参数3：什么时候激活，如果为null则立即激活，如果为具体时间则到达此时间后激活
                 repositoryService.activateProcessDefinitionById(definitionId, true, null);
             } else {
-                // 将当前为激活状态更新为挂起状态
-                // 参数说明：参数1：流程定义id,参数2：是否挂起（true是否级联对应流程实例，挂起了则对应流程实例都不可以审批），
-                // 参数3：什么时候挂起，如果为null则立即挂起，如果为具体时间则到达此时间后挂起
                 repositoryService.suspendProcessDefinitionById(definitionId, true, null);
             }
             return true;
@@ -330,6 +336,7 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                         firstNode.setNodeId(flowElement.getId());
                         firstNode.setNodeName(flowElement.getName());
                         firstNode.setProcessDefinitionId(processDefinitionId);
+                        firstNode.setNodeType(ActConstant.USER_TASK);
                         firstNode.setIndex(0);
                     }
                 }
@@ -342,6 +349,7 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                 actProcessNodeVo.setNodeId(element.getId());
                 actProcessNodeVo.setNodeName(element.getName());
                 actProcessNodeVo.setProcessDefinitionId(processDefinitionId);
+                actProcessNodeVo.setNodeType(ActConstant.USER_TASK);
                 actProcessNodeVo.setIndex(1);
                 processNodeVoList.add(actProcessNodeVo);
             } else if (element instanceof SubProcess) {
@@ -352,10 +360,18 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                         actProcessNode.setNodeId(flowElement.getId());
                         actProcessNode.setNodeName(flowElement.getName());
                         actProcessNode.setProcessDefinitionId(processDefinitionId);
+                        actProcessNode.setNodeType(ActConstant.USER_TASK);
                         actProcessNode.setIndex(1);
                         processNodeVoList.add(actProcessNode);
                     }
                 }
+            } else if (element instanceof EndEvent) {
+                actProcessNodeVo.setNodeId(element.getId());
+                actProcessNodeVo.setNodeName(element.getName());
+                actProcessNodeVo.setProcessDefinitionId(processDefinitionId);
+                actProcessNodeVo.setNodeType(ActConstant.END_EVENT);
+                actProcessNodeVo.setIndex(1);
+                processNodeVoList.add(actProcessNodeVo);
             }
         }
         ActProcessNodeVo actProcessNodeVo = processNodeVoList.get(0);
@@ -376,6 +392,45 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             GraphicInfo graphicInfo = bpmnModel.getGraphicInfo(processNodeVo.getNodeId());
             processNodeVo.setX(graphicInfo.getX());
         }
+        for (ActProcessNodeVo node : processNodeVoList) {
+            if (ActConstant.END_EVENT.equals(node.getNodeType())) {
+                FlowElement flowElement = bpmnModel.getFlowElement(node.getNodeId());
+
+                List<SequenceFlow> incomingFlows = ((FlowNode) flowElement).getIncomingFlows();
+                for (SequenceFlow incomingFlow : incomingFlows) {
+                    FlowElement sourceFlowElement = incomingFlow.getSourceFlowElement();
+                    if (sourceFlowElement instanceof ParallelGateway) {
+                        List<SequenceFlow> parallelGatewayOutgoingFlow = ((ParallelGateway) sourceFlowElement).getOutgoingFlows();
+                        for (SequenceFlow sequenceFlow : parallelGatewayOutgoingFlow) {
+                            FlowElement element = sequenceFlow.getTargetFlowElement();
+                            if (element instanceof UserTask) {
+                                node.setEnd(true);
+                            }
+                        }
+                    } else if (sourceFlowElement instanceof InclusiveGateway) {
+                        List<SequenceFlow> inclusiveGatewayOutgoingFlow = ((InclusiveGateway) sourceFlowElement).getOutgoingFlows();
+                        for (SequenceFlow sequenceFlow : inclusiveGatewayOutgoingFlow) {
+                            FlowElement element = sequenceFlow.getTargetFlowElement();
+                            if (element instanceof UserTask) {
+                                node.setEnd(true);
+                            }
+                        }
+                    } else if (sourceFlowElement instanceof ExclusiveGateway) {
+                        List<SequenceFlow> exclusiveGatewayOutgoingFlow = ((ExclusiveGateway) sourceFlowElement).getOutgoingFlows();
+                        for (SequenceFlow sequenceFlow : exclusiveGatewayOutgoingFlow) {
+                            FlowElement element = sequenceFlow.getTargetFlowElement();
+                            if (element instanceof UserTask) {
+                                node.setEnd(true);
+                            }
+                        }
+                    } else if (sourceFlowElement instanceof UserTask) {
+                        processNodeVoList.stream().filter(e -> e.getNodeId().equals(sourceFlowElement.getId())).findFirst().ifPresent(e -> e.setEnd(true));
+                    }
+                }
+            }
+        }
+
+        processNodeVoList.removeIf(e -> ActConstant.END_EVENT.equals(e.getNodeType()));
         return processNodeVoList.stream().sorted(Comparator.comparing(ActProcessNodeVo::getX)).collect(Collectors.toList());
     }
 
@@ -396,9 +451,8 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
                 .migrateToProcessDefinition(currentProcessDefinitionId)
                 .validateMigrationOfProcessInstances(fromProcessDefinitionId)
                 .isMigrationValid();
-            // 验证失败
             if (!migrationValid) {
-                throw new ServiceException("流程定义差异过大不满足在途流程的迁移，请修改流程图");
+                throw new ServiceException("流程定义差异过大无法迁移，请修改流程图");
             }
             // 已结束的流程实例不会迁移
             processMigrationService.createProcessInstanceMigrationBuilder()

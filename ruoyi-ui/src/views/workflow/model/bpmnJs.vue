@@ -16,7 +16,6 @@
 import bpmnModeler from '@/components/Bpmn/package/index'
 import {getEditorXml,saveModelXml,add} from "@/api/workflow/model";
 export default {
-  dicts: ['act_category'],
   components: {
     bpmnModeler
   },
@@ -48,8 +47,8 @@ export default {
     getModelDetail() {
       this.categorysBpmn.forEach(element => {
         let param = {
-          id:element.value,
-          name:element.label
+          id:element.categoryName,
+          name:element.categoryName
         }
         this.categorys.push(param)
       });

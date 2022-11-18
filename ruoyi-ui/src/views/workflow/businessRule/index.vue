@@ -167,7 +167,7 @@
 </template>
 
 <script>
-import { listBusinessRule, getBusinessRule, delBusinessRule, addbusinessRule, updateBusinessRule } from "@/api/workflow/businessRule";
+import { listBusinessRule, getBusinessRule, delBusinessRule, addbusinessRule, updateBusinessRule, checkRelation } from "@/api/workflow/businessRule";
 
 export default {
   name: "businessRule",
@@ -304,10 +304,30 @@ export default {
           this.form.businessRuleParams = this.businessRuleParams
           this.buttonLoading = true;
           if (this.form.id != null) {
-            updateBusinessRule(this.form).then(response => {
-              this.$modal.msgSuccess("修改成功");
-              this.open = false;
-              this.getList();
+            checkRelation(this.form.id).then(response => {
+                if(response.msg){
+                    this.$confirm(response.msg, '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning'
+                    }).then(() => {
+                        updateBusinessRule(this.form).then(response => {
+                            this.$modal.msgSuccess("修改成功");
+                            this.open = false;
+                            this.getList();
+                        }).finally(() => {
+                            this.buttonLoading = false;
+                        });
+                    })
+                }else{
+                    updateBusinessRule(this.form).then(response => {
+                        this.$modal.msgSuccess("修改成功");
+                        this.open = false;
+                        this.getList();
+                    }).finally(() => {
+                        this.buttonLoading = false;
+                    });
+                }
             }).finally(() => {
               this.buttonLoading = false;
             });

@@ -48,7 +48,7 @@
             </el-table-column>
             <el-table-column  align="center" prop="businessKey" :show-overflow-tooltip="true" label="流程关联业务ID" width="160"/>
             <el-table-column  align="center" prop="createTime" label="创建时间" width="160"/>
-            <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width">
+            <el-table-column label="操作" align="center" width="220" class-name="small-padding fixed-width">
               <template slot-scope="scope">
                 <el-row :gutter="20" class="mb8">
                     <el-col :span="1.5">
@@ -97,9 +97,10 @@
           :page.sync="queryParams.pageNum"
           :limit.sync="queryParams.pageSize"
           @pagination="getList" />
-        <!-- 驳回 -->
-        <el-dialog title="审批记录" :visible.sync="visible" v-if="visible" width="60%" :close-on-click-modal="false">
-          <history :processInstanceId="processInstanceId" :editMessage="true"></history>
+        <el-dialog title="审批记录" :visible.sync="visible" v-if="visible" width="80%" :close-on-click-modal="false">
+            <div class="historyContainer">
+              <history :processInstanceId="processInstanceId" :editMessage="true"></history>
+            </div>
         </el-dialog>
 
         <!-- 选择人员 -->
@@ -124,7 +125,7 @@
         </el-dialog>
         <!-- 减签结束 -->
 
-        <!-- 流程变量 -->
+        <!-- 流程变量开始 -->
         <el-dialog title="流程变量" :visible.sync="variableVisible" v-if="variableVisible" width="60%" :close-on-click-modal="false">
           <el-card class="box-card">
             <div slot="header" class="clearfix">
@@ -139,6 +140,8 @@
             </div>
           </el-card>
         </el-dialog>
+        <!-- 流程变量结束 -->
+
     </div>
 </template>
 
@@ -375,11 +378,15 @@
   width: inherit;
   line-height: 8px;
 }
-/* 修改滚动条样式 */
-.box-card::-webkit-scrollbar {
+.historyContainer{
+  height: 600px;
+  overflow: auto;
+}
+.historyContainer::-webkit-scrollbar {
 	width: 4px;
 }
-.box-card::-webkit-scrollbar-thumb {
+.historyContainer::-webkit-scrollbar-thumb {
 	border-radius: 10px;
+  height: 5px;
 }
 </style>

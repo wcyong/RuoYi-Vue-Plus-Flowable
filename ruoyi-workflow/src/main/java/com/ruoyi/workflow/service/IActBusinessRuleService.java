@@ -52,4 +52,11 @@ public interface IActBusinessRuleService {
 	 * @return
 	 */
 	Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid);
+
+    /**
+     * 校验是否被关联
+     * @param id
+     * @return
+     */
+    String checkRelation(Long id);
 }

@@ -11,12 +11,12 @@ public class PageEntity {
     /**
      * 当前页码
      */
-    private Integer pageNum;
+    private Integer pageNum = 0;
 
     /**
      * 页容量
      */
-    private Integer pageSize;
+    private Integer pageSize = 10;
 
     public Integer getPageNum() {
         return (pageNum - 1) * pageSize;

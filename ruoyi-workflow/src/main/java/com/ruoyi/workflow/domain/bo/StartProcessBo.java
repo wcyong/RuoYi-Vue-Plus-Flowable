@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @description: 启动流程
@@ -43,6 +44,10 @@ public class StartProcessBo implements Serializable {
     private Map<String, Object> variables;
 
     public Map<String, Object> getVariables() {
-        return variables == null ? new HashMap<>(16) : variables;
+        if(variables == null){
+            return new HashMap<>(16);
+        }
+        variables.entrySet().removeIf(entry -> Objects.isNull(entry.getValue()));
+        return variables;
     }
 }

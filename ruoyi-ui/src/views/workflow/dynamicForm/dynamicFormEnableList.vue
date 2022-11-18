@@ -56,16 +56,12 @@
     <!-- 动态表单编辑 -->
     <div v-if="dynamicFormEditVisible">
        <div class="container-header"><i class="el-dialog__close el-icon el-icon-close" @click="closeDynamicEdit"></i></div>
-       <el-tabs type="border-card">
-        <el-tab-pane label="业务单据" class="container-tab">
-          <dynamicFormEdit
+       <dynamicFormEdit
             :buildData="formData.formDesignerText"
             @draftForm="draftProcessForm(arguments)"
             @submitForm="submitProcessForm(arguments)"
             ref="dynamicFormEditRef"
-          />
-        </el-tab-pane>
-      </el-tabs>
+        />
        <!-- 工作流 -->
        <verify ref="verifyRef" @submitCallback="submitCallback" :taskId="taskId" :taskVariables="taskVariables" :sendMessage="sendMessage"/>
     </div>
@@ -252,13 +248,5 @@ export default {
     height: calc(100vh - 225px);
     overflow-y: auto;
     padding: 10px;
-  }
-  /* 修改滚动条样式 */
-  .container-tab::-webkit-scrollbar {
-    width: 4px;
-  }
-  .container-tab::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background-color: #ccc;
   }
 </style>

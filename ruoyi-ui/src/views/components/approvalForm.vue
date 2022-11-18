@@ -1,23 +1,16 @@
 <template>
-    <el-tabs type="border-card">
-        <el-tab-pane label="业务单据" v-loading="loading" class="container-tab">
-            <component :is="currProcessForm" 
-                :businessKey="businessKey" 
-                :parentTaskId="parentTaskId" 
-                @closeForm="closeForm" 
-                :taskId="taskId" 
-                :buildData="dynamicFormData.formText"
-                v-model="dynamicFormData.formValue"
-                :dynamicFormData="dynamicFormData"
-            ></component>
-        </el-tab-pane>
-        <el-tab-pane label="审批意见" v-if="processInstanceId" class="container-tab">
-            <HistoryRecord :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-        <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
-            <HistoryImage :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-    </el-tabs>
+    <div>
+        <component :is="currProcessForm" 
+            :businessKey="businessKey" 
+            :parentTaskId="parentTaskId" 
+            @closeForm="closeForm" 
+            :taskId="taskId" 
+            :processInstanceId="processInstanceId"
+            :buildData="dynamicFormData.formText"
+            v-model="dynamicFormData.formValue"
+            :dynamicFormData="dynamicFormData"
+        ></component>
+    </div>
 </template>
 
 <script>
@@ -29,10 +22,7 @@ allComponents.keys().forEach(fileName => {
   let componentName = allComponents(fileName)
   components[fileName.replace(/^\.\/(.*)\.\w+$/, '$1')] = componentName.default
 })
-import HistoryRecord from "@/components/Process/HistoryRecord";
-components['HistoryRecord'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryRecord
-import HistoryImage from "@/components/Process/HistoryImage";
-components['HistoryImage'.replace(/^\.\/(.*)\.\w+$/, '$1')] = HistoryImage
+
 export default {
     props: {
       processInstanceId: String, // 流程实例id
@@ -61,18 +51,4 @@ export default {
 
 }
 </script>
-<style scoped>
-.container-tab{
-    height: calc(100vh - 225px);
-    overflow-y: auto;
-    padding: 10px;
-}
-/* 修改滚动条样式 */
-.container-tab::-webkit-scrollbar {
-    width: 4px;
-}
-.container-tab::-webkit-scrollbar-thumb {
-    border-radius: 10px;
-    background-color: #ccc;
-}
-</style>
+

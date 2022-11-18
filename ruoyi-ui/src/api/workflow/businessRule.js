@@ -42,3 +42,11 @@ export function delBusinessRule(id) {
     method: 'delete'
   })
 }
+
+// 校验是否被关联
+export function checkRelation(id) {
+  return request({
+    url: '/workflow/businessRule/checkRelation/' + id,
+    method: 'get'
+  })
+}

@@ -172,5 +172,13 @@ export default {
       url: `/workflow/task/deleteAttachment/${attachmentId}`,
       method: 'delete'
     })
+  },
+  // 终止任务
+  terminationTask(data) {
+    return request({
+      url: `/workflow/task/terminationTask`,
+      method: 'post',
+      data: data
+    })
   }
 }

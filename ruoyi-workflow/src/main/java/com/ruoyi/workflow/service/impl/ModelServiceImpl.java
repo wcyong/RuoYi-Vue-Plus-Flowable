@@ -1,6 +1,8 @@
 package com.ruoyi.workflow.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONObject;
@@ -14,15 +16,14 @@ import com.ruoyi.workflow.common.constant.ActConstant;
 import com.ruoyi.workflow.domain.bo.ModelBo;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.service.IModelService;
+import com.ruoyi.workflow.utils.WorkFlowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.batik.transcoder.TranscoderInput;
 import org.apache.batik.transcoder.TranscoderOutput;
 import org.apache.batik.transcoder.image.PNGTranscoder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.flowable.bpmn.converter.BpmnXMLConverter;
 import org.flowable.bpmn.model.BpmnModel;
-import org.flowable.common.engine.api.FlowableException;
 import org.flowable.editor.constants.ModelDataJsonConstants;
 import org.flowable.engine.repository.*;
 import org.flowable.image.exception.FlowableImageException;
@@ -30,11 +31,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.xml.stream.XMLInputFactory;
-import javax.xml.stream.XMLStreamReader;
 import java.io.*;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +68,8 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             if(StringUtils.isBlank(category)){
                 throw new ServiceException("请选择流程分类！");
             }
+            BpmnModel bpmnModel = WorkFlowUtils.xmlToBpmnModel(xml);
+            WorkFlowUtils.checkBpmnModelMultiVariable(bpmnModel);
             JSONObject jsonObject = JSONUtil.xmlToJson(xml);
             JSONObject definitions = (JSONObject) jsonObject.get("definitions");
             String description = "";
@@ -113,7 +113,7 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             repositoryService.addModelEditorSourceExtra(model.getId(), result);
             return true;
         } catch (Exception e) {
-            throw new FlowableException("Error saving model", e);
+            throw new ServiceException(e.getMessage());
         }
     }
 
@@ -157,6 +157,9 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
         if (StringUtils.isNotEmpty(modelBo.getKey())) {
             query.modelKey(modelBo.getKey());
         }
+        if (StringUtils.isNotEmpty(modelBo.getCategory())) {
+            query.modelCategory(modelBo.getCategory());
+        }
         query.orderByLastUpdateTime().desc();
         //创建时间降序排列
         query.orderByCreateTime().desc();
@@ -196,6 +199,8 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             if(StringUtils.isBlank(category)){
                 throw new ServiceException("请选择流程分类！");
             }
+            BpmnModel bpmnModel = WorkFlowUtils.xmlToBpmnModel(xml);
+            WorkFlowUtils.checkBpmnModelMultiVariable(bpmnModel);
             JSONObject jsonObject = JSONUtil.xmlToJson(xml);
             JSONObject definitions = (JSONObject) jsonObject.get("definitions");
             String description = "";
@@ -237,7 +242,7 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             repositoryService.addModelEditorSourceExtra(model.getId(), result);
             return true;
         }catch (Exception e){
-            throw new FlowableException("Error saving model", e);
+            throw new ServiceException(e.getMessage());
         }
     }
 
@@ -284,6 +289,9 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
             // 更新 部署id 到流程定义模型数据表中
             model.setDeploymentId(deployment.getId());
             repositoryService.saveModel(model);
+            // 更新分类
+            ProcessDefinition definition = repositoryService.createProcessDefinitionQuery().deploymentId(deployment.getId()).singleResult();
+            repositoryService.setProcessDefinitionCategory(definition.getId(), model.getCategory());
             return true;
         }catch (Exception e){
             e.printStackTrace();
@@ -358,18 +366,11 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
     public Boolean convertToModel(String processDefinitionId) {
         ProcessDefinition pd = repositoryService.createProcessDefinitionQuery()
             .processDefinitionId(processDefinitionId).singleResult();
-        InputStream bpmnStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getResourceName());
+        InputStream inputStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getResourceName());
         Model model = repositoryService.createModelQuery().modelKey(pd.getKey()).singleResult();
             try {
-                XMLInputFactory xif = XMLInputFactory.newInstance();
-                InputStreamReader in = new InputStreamReader(bpmnStream, StandardCharsets.UTF_8);
-                XMLStreamReader xtr = xif.createXMLStreamReader(in);
-                BpmnModel bpmnModel = new BpmnXMLConverter().convertToBpmnModel(xtr);
-                BpmnXMLConverter converter = new BpmnXMLConverter();
-                byte[] xmlBytes = converter.convertToXML(bpmnModel);
                 if(ObjectUtil.isNotNull(model)){
-                    repositoryService.addModelEditorSource(model.getId(), xmlBytes);
-                    InputStream inputStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getDiagramResourceName());
+                    repositoryService.addModelEditorSource(model.getId(), IoUtil.readBytes(inputStream));
                     if(inputStream!=null){
                         repositoryService.addModelEditorSourceExtra(model.getId(),IOUtils.toByteArray(inputStream));
                     }
@@ -377,15 +378,14 @@ public class ModelServiceImpl extends WorkflowService implements IModelService {
                     Model modelData = repositoryService.newModel();
                     modelData.setKey(pd.getKey());
                     modelData.setName(pd.getName());
-
+                    modelData.setCategory(pd.getCategory());
                     ObjectNode modelObjectNode = new ObjectMapper().createObjectNode();
                     modelObjectNode.put(ModelDataJsonConstants.MODEL_NAME, pd.getName());
                     modelObjectNode.put(ModelDataJsonConstants.MODEL_REVISION, modelData.getVersion());
                     modelObjectNode.put(ModelDataJsonConstants.MODEL_DESCRIPTION, pd.getDescription());
                     modelData.setMetaInfo(modelObjectNode.toString());
                     repositoryService.saveModel(modelData);
-                    repositoryService.addModelEditorSource(modelData.getId(), xmlBytes);
-                    InputStream inputStream = repositoryService.getResourceAsStream(pd.getDeploymentId(), pd.getDiagramResourceName());
+                    repositoryService.addModelEditorSource(modelData.getId(), IoUtil.readBytes(inputStream));
                     if(inputStream!=null){
                         repositoryService.addModelEditorSourceExtra(modelData.getId(),IOUtils.toByteArray(inputStream));
                     }

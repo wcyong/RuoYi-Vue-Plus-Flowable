@@ -48,7 +48,7 @@
             <el-table-column  align="center" prop="businessKey" :show-overflow-tooltip="true" label="流程关联业务ID" width="150"></el-table-column>
             <el-table-column  align="center" prop="startTime" :show-overflow-tooltip="true" label="流程启动时间" width="150"></el-table-column>
             <el-table-column  align="center" prop="actBusinessStatus.suspendedReason" :show-overflow-tooltip="true" label="挂起或激活原因" width="180"></el-table-column>
-            <el-table-column label="操作" align="center" width="120" class-name="small-padding fixed-width">
+            <el-table-column label="操作" align="center" width="200" class-name="small-padding fixed-width">
             <template slot-scope="scope">
               <el-row :gutter="10" class="mb8">
                 <el-col :span="1.5">
@@ -67,12 +67,20 @@
                 >激活</el-button>
                 </el-col>
                 <el-col :span="1.5">
-                  <el-button size="mini" type="text"  icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
+                    <el-button
+                        type="text"
+                        @click="clickHistList(scope.row)"
+                        size="mini"
+                        icon="el-icon-tickets"
+                    >切换版本</el-button>
                 </el-col>
               </el-row>
               <el-row :gutter="10" class="mb8">
                 <el-col :span="1.5">
-                  <el-button size="mini" type="text"  icon="el-icon-circle-close" @click="invalidRuntimeProcessInst(scope.row)">作废</el-button>
+                  <el-button size="mini" type="text"  icon="el-icon-circle-close" @click="openInvalidRuntimeProcessInst(scope.row)">作废</el-button>
+                </el-col>
+                <el-col :span="1.5">
+                  <el-button size="mini" type="text"  icon="el-icon-delete" @click="handleDelete(scope.row)">删除</el-button>
                 </el-col>
               </el-row>
             </template>
@@ -84,6 +92,7 @@
           :page.sync="queryParams.pageNum"
           :limit.sync="queryParams.pageSize"
           @pagination="getList" />
+        <!-- 挂起或激活流程开始 -->
         <el-dialog
           title="挂起或激活流程"
           :close-on-click-modal="false"
@@ -97,19 +106,73 @@
             <el-button size="small" @click="dialogVisible = false">取 消</el-button>
           </span>
         </el-dialog>
+        <!-- 挂起或激活流程结束 -->
+
+        <!-- 作废申请开始 -->
+        <el-dialog
+          title="作废申请"
+          :close-on-click-modal="false"
+          :visible.sync="invalidVisible"
+          v-if="invalidVisible"
+          width="60%">
+          <el-input  type="textarea" v-model="invalidReason" maxlength="300" placeholder="请输入原因"
+          :autosize="{ minRows: 4 }" show-word-limit ></el-input>
+          <span slot="footer" class="dialog-footer">
+            <el-button type="primary" size="small" v-loading = "buttonLoading" @click="invalidRuntimeProcessInst">确 定</el-button>
+            <el-button size="small" @click="invalidVisible = false">取 消</el-button>
+          </span>
+        </el-dialog>
+        <!-- 作废申请结束 -->
+
+        <!-- 历史数据开始 -->
+        <el-dialog :title="histTitle" :visible.sync="histVisible" width="90%" :close-on-click-modal="false" append-to-body>
+            <el-table v-loading="loading" :data="histList" @selection-change="handleSelectionChange">
+                <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
+                <el-table-column align="center" prop="name" label="流程定义名称"  min-width="160"></el-table-column>
+                <el-table-column align="center" prop="key" label="标识Key"  min-width="120"></el-table-column>
+                <el-table-column align="center" prop="version" label="版本号" width="80" >
+                <template slot-scope="{row}"> v{{row.version}}.0</template>
+                </el-table-column>
+                <el-table-column align="center" prop="suspensionState" label="状态"  min-width="50">
+                <template slot-scope="scope">
+                    <el-tag type="success" v-if="scope.row.suspensionState==1">激活</el-tag>
+                    <el-tag type="danger" v-else>挂起</el-tag>
+                </template>
+                </el-table-column>
+                <el-table-column align="center" prop="deploymentTime" label="部署时间" width="150"></el-table-column>
+                <el-table-column  align="center" prop="description" :show-overflow-tooltip="true" label="挂起或激活原因" width="150"></el-table-column>
+                <el-table-column label="操作" align="center" width="220" class-name="small-padding fixed-width">
+                    <template slot-scope="scope">
+                        <el-button
+                          type="text"
+                          @click="changeDefinition(scope.row)"
+                          size="mini"
+                          icon="el-icon-sort"
+                      >切换</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-dialog>
+        <!-- 历史数据结束 -->
     </div>
 </template>
 
 <script>
   import api from '@/api/workflow/processInst'
+  import {getHistByPage,migrationProcessDefinition} from "@/api/workflow/definition";
 
   export default {
     data () {
       return {
         // 弹窗
         dialogVisible: false,
+        invalidVisible: false,
+        //流程实例id
+        processInstanceId: '',
         // 原因
         reason: '',
+        // 作废原因
+        invalidReason: '',
         //按钮loading
         buttonLoading: false,
         // 遮罩层
@@ -128,6 +191,8 @@
         open: false,
         // 表格数据
         dataList: [],
+        // 历史表格数据
+        histList: [],
         // 查询参数
         queryParams: {
             pageNum: 1,
@@ -136,7 +201,10 @@
             key : undefined
         },
         // 流程实例对象
-        processInstanceData: {}
+        processInstanceData: {},
+        //标题
+        histTitle: '',
+        histVisible: false,
       }
     },
     created() {
@@ -181,14 +249,25 @@
            this.loading = false;
          });
       },
-      invalidRuntimeProcessInst(row){
-        this.$modal.confirm('是否确认作废流程实例ID为"' + row.processInstanceId + '"的数据项？').then(() => {
+      //打开作废申请
+      openInvalidRuntimeProcessInst(row){
+          this.processInstanceId = row.processInstanceId
+          this.invalidVisible = true
+      },
+      //作废申请
+      invalidRuntimeProcessInst(){
+        this.$modal.confirm('是否确认作废流程实例ID为"' + this.processInstanceId + '"的数据项？').then(() => {
            this.loading = true;
-           return api.deleteRuntimeProcessInst(row.processInstanceId);
+           let param = {
+              deleteReason: this.invalidReason,
+              processInstId: this.processInstanceId
+           }
+           return api.deleteRuntimeProcessInst(param);
          }).then(() => {
            this.loading = false;
            this.getList();
            this.$modal.msgSuccess("作废成功");
+           this.invalidVisible = false
          }).finally(() => {
            this.loading = false;
          });
@@ -227,7 +306,33 @@
            this.buttonLoading = false;
          });
 
-      }
+      },
+      //历史版本
+      clickHistList(row) {
+          this.histTitle = '【'+row.name+'】版本'
+          this.histVisible = true
+          this.processDefinitionId = row.processDefinitionId
+          let data = {id:row.processDefinitionId,key:row.processDefinitionKey}
+          this.getHistList(data)
+      },
+      //查询历史列表
+      getHistList(data){
+          this.loading = true;
+          getHistByPage(data).then(response => {
+            this.histList = response.data;
+            this.loading = false;
+          })
+      },
+      //切换流程定义版本
+      changeDefinition(data){
+        this.$modal.confirm('是否确认切换？').then(() => { 
+            migrationProcessDefinition(data.id,this.processDefinitionId).then(response=>{
+                this.$modal.msgSuccess("切换成功");
+                this.histVisible = false
+                this.getList()
+            })
+        })
+      },
     }
   }
 </script>

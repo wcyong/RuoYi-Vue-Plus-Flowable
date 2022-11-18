@@ -1,6 +1,7 @@
 package com.ruoyi.workflow.domain.vo;
 
 import lombok.Data;
+import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.engine.task.Attachment;
 
 import java.io.Serializable;
@@ -73,4 +74,9 @@ public class ActHistoryInfoVo implements Serializable {
      * 审批附件
      */
     private List<Attachment> fileList;
+
+    /**
+     * 流程实例信息
+     */
+    private HistoricProcessInstance historicProcessInstance;
 }

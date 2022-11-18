@@ -1,12 +1,13 @@
 package com.ruoyi.workflow.service.impl;
 
-import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
 import com.ruoyi.workflow.flowable.config.CustomDefaultProcessDiagramGenerator;
 import com.ruoyi.workflow.common.constant.ActConstant;
@@ -28,6 +29,7 @@ import org.flowable.common.engine.impl.identity.Authentication;
 import org.flowable.engine.history.HistoricActivityInstance;
 import org.flowable.engine.history.HistoricProcessInstance;
 import org.flowable.engine.history.HistoricProcessInstanceQuery;
+import org.flowable.engine.repository.ProcessDefinition;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.engine.runtime.ProcessInstanceQuery;
 import org.flowable.engine.task.Attachment;
@@ -36,6 +38,7 @@ import org.flowable.task.api.Task;
 import org.flowable.task.api.TaskQuery;
 import org.flowable.task.api.history.HistoricTaskInstance;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,9 +47,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /**
@@ -61,6 +64,15 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
     private final IActBusinessStatusService iActBusinessStatusService;
     private final IUserService iUserService;
     private final IActTaskNodeService iActTaskNodeService;
+
+    @Value("${flowable.activity-font-name}")
+    private String activityFontName;
+
+    @Value("${flowable.label-font-name}")
+    private String labelFontName;
+
+    @Value("${flowable.annotation-font-name}")
+    private String annotationFontName;
 
     /**
      * @description: 提交申请，启动流程实例
@@ -80,7 +92,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         List<HistoricProcessInstance> instanceList = historyService.createHistoricProcessInstanceQuery().processInstanceBusinessKey(startProcessBo.getBusinessKey()).list();
         TaskQuery taskQuery = taskService.createTaskQuery();
         List<Task> taskResult = taskQuery.processInstanceBusinessKey(startProcessBo.getBusinessKey()).list();
-        if (CollectionUtil.isNotEmpty(instanceList)) {
+        if (CollUtil.isNotEmpty(instanceList)) {
             ActBusinessStatus info = iActBusinessStatusService.getInfoByBusinessKey(startProcessBo.getBusinessKey());
             if (ObjectUtil.isNotEmpty(info)) {
                 BusinessStatusEnum.checkStatus(info.getStatus());
@@ -93,7 +105,12 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         Authentication.setAuthenticatedUserId(LoginHelper.getUserId().toString());
         // 启动流程实例（提交申请）
         Map<String, Object> variables = startProcessBo.getVariables();
-        ProcessInstance pi = runtimeService.startProcessInstanceByKey(startProcessBo.getProcessKey(), startProcessBo.getBusinessKey(), variables);
+        ProcessInstance pi;
+        if (CollUtil.isNotEmpty(variables)) {
+            pi = runtimeService.startProcessInstanceByKey(startProcessBo.getProcessKey(), startProcessBo.getBusinessKey(), variables);
+        } else {
+            pi = runtimeService.startProcessInstanceByKey(startProcessBo.getProcessKey(), startProcessBo.getBusinessKey());
+        }
         // 将流程定义名称 作为 流程实例名称
         runtimeService.setProcessInstanceName(pi.getProcessInstanceId(), pi.getProcessDefinitionName());
         // 申请人执行流程
@@ -120,6 +137,8 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
      */
     @Override
     public List<ActHistoryInfoVo> getHistoryInfoList(String processInstanceId) {
+
+        HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
         //查询任务办理记录
         List<HistoricTaskInstance> list = historyService.createHistoricTaskInstanceQuery().processInstanceId(processInstanceId).orderByHistoricTaskInstanceEndTime().desc().list();
         list.stream().sorted(Comparator.comparing(HistoricTaskInstance::getEndTime, Comparator.nullsFirst(Date::compareTo))).collect(Collectors.toList());
@@ -129,7 +148,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             BeanUtils.copyProperties(historicTaskInstance, actHistoryInfoVo);
             actHistoryInfoVo.setStatus(actHistoryInfoVo.getEndTime() == null ? "待处理" : "已处理");
             List<Comment> taskComments = taskService.getTaskComments(historicTaskInstance.getId());
-            if (CollectionUtil.isNotEmpty(taskComments)) {
+            if (CollUtil.isNotEmpty(taskComments)) {
                 actHistoryInfoVo.setCommentId(taskComments.get(0).getId());
                 String message = taskComments.stream().map(Comment::getFullMessage).collect(Collectors.joining("。"));
                 if (StringUtils.isNotBlank(message)) {
@@ -144,33 +163,28 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             actHistoryInfoVoList.add(actHistoryInfoVo);
         }
         //翻译人员名称
-        if (CollectionUtil.isNotEmpty(actHistoryInfoVoList)) {
-            for (ActHistoryInfoVo actHistoryInfoVo : actHistoryInfoVoList) {
-                if (StringUtils.isNotBlank(actHistoryInfoVo.getAssignee())) {
-                    List<Long> userIds = new ArrayList<>();
-                    Arrays.asList(actHistoryInfoVo.getAssignee().split(",")).forEach(id -> userIds.add(Long.valueOf(id)));
-                    List<SysUser> sysUsers = iUserService.selectListUserByIds(userIds);
-                    if (CollectionUtil.isNotEmpty(sysUsers)) {
-                        actHistoryInfoVo.setNickName(sysUsers.stream().map(SysUser::getNickName).collect(Collectors.joining(",")));
-                    }
-                }
+        if (CollUtil.isNotEmpty(actHistoryInfoVoList)) {
+            List<Long> assigneeList = actHistoryInfoVoList.stream().map(e -> Long.valueOf(e.getAssignee())).collect(Collectors.toList());
+            if (CollUtil.isNotEmpty(assigneeList)) {
+                List<SysUser> sysUsers = iUserService.selectListUserByIds(assigneeList);
+                actHistoryInfoVoList.forEach(e -> {
+                    sysUsers.stream().filter(u -> u.getUserId().toString().equals(e.getAssignee())).findFirst().ifPresent(u -> {
+                        e.setNickName(u.getNickName());
+                    });
+                });
             }
         }
         List<ActHistoryInfoVo> collect = new ArrayList<>();
         //待办理
         List<ActHistoryInfoVo> waitingTask = actHistoryInfoVoList.stream().filter(e -> e.getEndTime() == null).collect(Collectors.toList());
-        waitingTask.forEach(e -> {
-            if (StringUtils.isNotBlank(e.getOwner())) {
-                SysUser sysUser = iUserService.selectUserById(Long.valueOf(e.getOwner()));
-                if (ObjectUtil.isNotEmpty(sysUser)) {
-                    e.setNickName(sysUser.getNickName());
-                }
-            }
-        });
         //已办理
         List<ActHistoryInfoVo> finishTask = actHistoryInfoVoList.stream().filter(e -> e.getEndTime() != null).collect(Collectors.toList());
         collect.addAll(waitingTask);
         collect.addAll(finishTask);
+        if (ObjectUtil.isNotEmpty(historicProcessInstance) && StringUtils.isNotBlank(historicProcessInstance.getDeleteReason())) {
+            ActHistoryInfoVo actHistoryInfoVo = collect.get(0);
+            actHistoryInfoVo.setHistoricProcessInstance(historicProcessInstance);
+        }
         return collect;
     }
 
@@ -237,7 +251,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             highLightedNodeList.addAll(redNodeCollect);
             BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinitionId);
             CustomDefaultProcessDiagramGenerator diagramGenerator = new CustomDefaultProcessDiagramGenerator();
-            inputStream = diagramGenerator.generateDiagram(bpmnModel, "png", highLightedNodeList, highLightedFlows, "宋体", "宋体", "宋体", null, 1.0, true);
+            inputStream = diagramGenerator.generateDiagram(bpmnModel, "png", highLightedNodeList, highLightedFlows, activityFontName, labelFontName, annotationFontName, null, 1.0, true);
             // 响应相关图片
             response.setContentType("image/png");
 
@@ -285,12 +299,12 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         List<String> processInstanceIds = null;
         //任务集合
         List<Task> taskList = null;
-        if (CollectionUtil.isNotEmpty(processInstances)) {
+        if (CollUtil.isNotEmpty(processInstances)) {
             processInstanceIds = processInstances.stream().map(ProcessInstance::getProcessInstanceId).collect(Collectors.toList());
             taskList = taskService.createTaskQuery().processInstanceIdIn(processInstanceIds).list().stream().filter(e -> StringUtils.isBlank(e.getParentTaskId())).collect(Collectors.toList());
-            if (CollectionUtil.isNotEmpty(taskList)) {
+            if (CollUtil.isNotEmpty(taskList)) {
                 List<Long> userIds = taskList.stream().filter(e -> StringUtils.isNotEmpty(e.getAssignee())).map(e -> Long.valueOf(e.getAssignee())).collect(Collectors.toList());
-                if (CollectionUtil.isNotEmpty(userIds)) {
+                if (CollUtil.isNotEmpty(userIds)) {
                     sysUserList = iUserService.selectListUserByIds(userIds);
                 }
             }
@@ -323,14 +337,14 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             }
             processInstRunningVoList.add(processInstRunningVo);
         }
-        if (CollectionUtil.isNotEmpty(processInstRunningVoList) && processInstanceIds != null) {
+        if (CollUtil.isNotEmpty(processInstRunningVoList) && processInstanceIds != null) {
             //设置流程状态
             List<ActBusinessStatus> businessStatusList = iActBusinessStatusService.getInfoByProcessInstIds(new ArrayList<>(processInstanceIds));
             processInstRunningVoList.forEach(e -> businessStatusList.stream().filter(t -> t.getProcessInstanceId().equals(e.getProcessInstanceId())).findFirst().ifPresent(e::setActBusinessStatus));
             //设置流程发起人
             List<Long> userIds = processInstRunningVoList.stream().map(e -> Long.valueOf(e.getStartUserId())).collect(Collectors.toList());
             List<SysUser> sysUsers = iUserService.selectListUserByIds(userIds);
-            if (CollectionUtil.isNotEmpty(sysUsers)) {
+            if (CollUtil.isNotEmpty(sysUsers)) {
                 processInstRunningVoList.forEach(e -> sysUsers.stream().filter(t -> t.getUserId().toString().equals(e.getStartUserId())).findFirst().ifPresent(t -> e.setStartUserNickName(t.getNickName())));
             }
             list = processInstRunningVoList.stream().sorted(Comparator.comparing(ProcessInstRunningVo::getStartTime).reversed()).collect(Collectors.toList());
@@ -374,28 +388,35 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
 
     /**
      * @description: 作废流程实例，不会删除历史记录
-     * @param: processInstId
+     * @param: processInstBo
      * @return: boolean
      * @author: gssong
      * @date: 2021/10/16
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteRuntimeProcessInst(String processInstId) {
+    public boolean deleteRuntimeProcessInst(ProcessInstBo processInstBo) {
         try {
             //1.删除流程实例
-            List<Task> list = taskService.createTaskQuery().processInstanceId(processInstId).list();
+            if (StringUtils.isBlank(processInstBo.getProcessInstId())) {
+                throw new ServiceException("流程实例id不能为空");
+            }
+            List<Task> list = taskService.createTaskQuery().processInstanceId(processInstBo.getProcessInstId()).list();
             List<Task> subTasks = list.stream().filter(e -> StringUtils.isNotBlank(e.getParentTaskId())).collect(Collectors.toList());
-            if (CollectionUtil.isNotEmpty(subTasks)) {
+            if (CollUtil.isNotEmpty(subTasks)) {
                 subTasks.forEach(e -> taskService.deleteTask(e.getId()));
             }
-            runtimeService.deleteProcessInstance(processInstId, LoginHelper.getUserId() + "作废了当前流程申请");
-            ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(processInstId);
+            String deleteReason = LoginHelper.getUsername() + "作废了当前申请！";
+            if (StringUtils.isNotBlank(processInstBo.getDeleteReason())) {
+                deleteReason = LoginHelper.getUsername() + "作废理由:" + processInstBo.getDeleteReason();
+            }
+            runtimeService.deleteProcessInstance(processInstBo.getProcessInstId(), deleteReason);
+            ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(processInstBo.getProcessInstId());
             if (actBusinessStatus == null) {
                 throw new ServiceException("当前流程异常，未生成act_business_status对象");
             }
             //2. 更新业务状态
-            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.INVALID);
+            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.INVALID,processInstBo.getProcessInstId());
         } catch (Exception e) {
             throw new ServiceException(e.getMessage());
         }
@@ -415,7 +436,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             //1.删除运行中流程实例
             List<Task> list = taskService.createTaskQuery().processInstanceId(processInstId).list();
             List<Task> subTasks = list.stream().filter(e -> StringUtils.isNotBlank(e.getParentTaskId())).collect(Collectors.toList());
-            if (CollectionUtil.isNotEmpty(subTasks)) {
+            if (CollUtil.isNotEmpty(subTasks)) {
                 subTasks.forEach(e -> taskService.deleteTask(e.getId()));
             }
             runtimeService.deleteProcessInstance(processInstId, LoginHelper.getUserId() + "删除了当前流程申请");
@@ -528,7 +549,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         }
         BusinessStatusEnum.checkCancel(actBusinessStatus.getStatus());
         List<ActTaskNode> listActTaskNode = iActTaskNodeService.getListByInstanceId(processInstId);
-        if (CollectionUtil.isEmpty(listActTaskNode)) {
+        if (CollUtil.isEmpty(listActTaskNode)) {
             throw new ServiceException("未查询到撤回节点信息");
         }
         ActTaskNode actTaskNode = listActTaskNode.stream().filter(e -> e.getOrderNo() == 0).findFirst().orElse(null);
@@ -547,7 +568,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             runtimeService.createChangeActivityStateBuilder().processInstanceId(processInstanceId).moveActivityIdsToSingleActivityId(taskList.stream().map(Task::getTaskDefinitionKey).collect(Collectors.toList()), actTaskNode.getNodeId()).changeState();
             List<Task> newTaskList = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
             //处理并行会签环节重复节点
-            if (CollectionUtil.isNotEmpty(newTaskList) && newTaskList.size() > 0) {
+            if (CollUtil.isNotEmpty(newTaskList) && newTaskList.size() > 0) {
                 List<Task> taskCollect = newTaskList.stream().filter(e -> e.getTaskDefinitionKey().equals(actTaskNode.getNodeId())).collect(Collectors.toList());
                 if (taskCollect.size() > 1) {
                     taskCollect.remove(0);
@@ -555,17 +576,67 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 }
             }
             List<Task> cancelTaskList = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
-            if (CollectionUtil.isNotEmpty(cancelTaskList)) {
+            if (CollUtil.isNotEmpty(cancelTaskList)) {
                 for (Task task : cancelTaskList) {
                     taskService.setAssignee(task.getId(), LoginHelper.getUserId().toString());
                 }
                 iActTaskNodeService.deleteByInstanceId(processInstId);
             }
-            return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.CANCEL);
+            return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.CANCEL,processInstId);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ServiceException("撤销失败:" + e.getMessage());
         }
+    }
+
+    /**
+     * @description: 获取xml
+     * @param: processInstanceId
+     * @return: java.util.Map<java.lang.String, java.lang.Object>
+     * @author: gssong
+     * @date: 2022/10/25 22:07
+     */
+    @Override
+    public Map<String, Object> getXml(String processInstanceId) {
+        Map<String, Object> map = new HashMap<>();
+        List<Map<String, Object>> taskList = new ArrayList<>();
+        ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+        StringBuilder xml = new StringBuilder();
+        ProcessDefinition processDefinition = repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+        // 获得活动的节点
+        List<HistoricActivityInstance> highLightedFlowList = historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstanceId).orderByHistoricActivityInstanceStartTime().asc().list();
+        for (HistoricActivityInstance tempActivity : highLightedFlowList) {
+            Map<String, Object> task = new HashMap<>();
+            if (!ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType())) {
+                if (tempActivity.getEndTime() == null) {
+                    task.put("key", tempActivity.getActivityId());
+                    task.put("completed", false);
+                } else {
+                    task.put("key", tempActivity.getActivityId());
+                    task.put("completed", true);
+                }
+                taskList.add(task);
+            }
+        }
+        //查询出运行中节点
+        List<Map<String, Object>> runtimeNodeList = taskList.stream().filter(e -> !(Boolean) e.get("completed")).collect(Collectors.toList());
+        if (CollUtil.isNotEmpty(runtimeNodeList)) {
+            Iterator<Map<String, Object>> iterator = taskList.iterator();
+            while (iterator.hasNext()) {
+                Map<String, Object> next = iterator.next();
+                runtimeNodeList.stream().filter(t -> t.get("key").equals(next.get("key")) && (Boolean) next.get("completed")).findFirst().ifPresent(t -> iterator.remove());
+            }
+        }
+        map.put("taskList", taskList);
+        InputStream inputStream;
+        try {
+            inputStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(), processDefinition.getResourceName());
+            xml.append(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+            map.put("xml", xml.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return map;
     }
 
     /**

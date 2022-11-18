@@ -112,7 +112,7 @@ public class ProcessDefinitionController extends BaseController {
     /**
      * 查看xml文件
      * @param: definitionId
-     * @return: com.ruoyi.common.core.domain.R<java.lang.String>
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Object>
      * @author: gssong
      * @date: 2022/5/3 19:25
      */
@@ -147,5 +147,20 @@ public class ProcessDefinitionController extends BaseController {
     public R<List<ActProcessNodeVo>> setting(@NotBlank(message = "流程定义id不能为空") @PathVariable String processDefinitionId) {
         return R.ok(iProcessDefinitionService.setting(processDefinitionId));
     }
+
+    /**
+     * 迁移流程定义
+     * @param: currentProcessDefinitionId
+     * @param: fromProcessDefinitionId
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Boolean>
+     * @author: gssong
+     * @date: 2022/11/1 12:49
+     */
+    @Log(title = "流程定义管理", businessType = BusinessType.UPDATE)
+    @PutMapping("/migrationProcessDefinition/{currentProcessDefinitionId}/{fromProcessDefinitionId}")
+    public R<Boolean> migrationProcessDefinition(@PathVariable String currentProcessDefinitionId,@PathVariable String fromProcessDefinitionId) {
+        return R.ok(iProcessDefinitionService.migrationProcessDefinition(currentProcessDefinitionId,fromProcessDefinitionId));
+    }
+
 
 }

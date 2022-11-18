@@ -29,6 +29,7 @@
             </el-tooltip>
           </div>
           <div>
+            <el-button size="mini" icon="el-icon-view" @click="viewXML()">查看xml</el-button>
             <el-button size="mini" icon="el-icon-download" @click="saveXML(true)">下载xml</el-button>
             <el-button size="mini" icon="el-icon-picture" @click="saveImg('svg', true)">下载svg</el-button>
             <el-button size="mini" type="primary" @click="save">保存模型</el-button>
@@ -44,7 +45,11 @@
         </el-aside>
       </el-container>
     </el-container>
-
+    <el-dialog title="预览XML" :visible.sync="viewXmlVisible" v-if="viewXmlVisible" width="60%" append-to-body>
+        <div class="viewXml">
+            <pre>{{viewXmlStr}}</pre>
+        </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -88,7 +93,9 @@ export default {
     return {
       modeler: null,
       taskList: [],
-      zoom: 1
+      zoom: 1,
+      viewXmlStr: '',
+      viewXmlVisible: false
     }
   },
   watch: {
@@ -276,6 +283,15 @@ export default {
         if (rootElements[i].$type === 'bpmn:Process') return rootElements[i]
       }
     },
+    async viewXML() {
+      try {
+        const { xml } = await this.modeler.saveXML({ format: true })
+        this.viewXmlStr = xml
+        this.viewXmlVisible = true
+      } catch (err) {
+        console.log(err)
+      }
+    },
     async saveXML(download = false) {
       try {
         const { xml } = await this.modeler.saveXML({ format: true })
@@ -418,5 +434,13 @@ export default {
   //   width: 100px;
   //   top: -20px !important;
   // }
+}
+.viewXml{
+    overflow: auto;
+    height: 700px;
+    background: rgb(40,44,52);
+    color: #ccc;
+    font-family:'幼圆';
+    font-weight:500;
 }
 </style>

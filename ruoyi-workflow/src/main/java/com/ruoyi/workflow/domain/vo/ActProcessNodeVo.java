@@ -26,6 +26,11 @@ public class ActProcessNodeVo implements Serializable {
     private String nodeName;
 
     /**
+     * 节点类型
+     */
+    private String nodeType;
+
+    /**
      * 流程定义id
      */
     private String processDefinitionId;
@@ -39,4 +44,9 @@ public class ActProcessNodeVo implements Serializable {
      * x坐标
      */
     private Double x;
+
+    /**
+     * 是否最后一个节点
+     */
+    private Boolean end = false;
 }

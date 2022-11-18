@@ -97,39 +97,20 @@
     <div class="form-container" v-if="dynamicFormEditVisible">
       <div class="form-container-header"><i class="el-dialog__close el-icon el-icon-close" @click="closeDynamicEdit"></i></div>
       <!-- 动态表单编辑开始 -->
-      <el-tabs type="border-card">
-        <el-tab-pane label="业务单据" class="container-tab">
-          <dynamicFormEdit
-              :buildData="form.formText"
-              v-model="form.formValue"
-              @draftForm="draftProcessForm(arguments)"
-              @submitForm="submitProcessForm(arguments)"
-              ref="dynamicFormEditRef"
-          />
-        </el-tab-pane>
-        <el-tab-pane label="审批意见" v-if="processInstanceId" class="container-tab">
-          <HistoryRecord :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-        <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
-          <HistoryImage :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-      </el-tabs>
+      <dynamicFormEdit
+            :buildData="form.formText"
+            v-model="form.formValue"
+            :processInstanceId="processInstanceId"
+            @draftForm="draftProcessForm(arguments)"
+            @submitForm="submitProcessForm(arguments)"
+            ref="dynamicFormEditRef"
+        />
       <!-- 动态表单编辑结束 -->
     </div>
     <div class="form-container" v-if="dynamicFormViewVisible" >
       <div class="form-container-header"><i class="el-dialog__close el-icon el-icon-close" @click="closeDynamicView"></i></div>
       <!-- 动态表单查看开始 -->
-      <el-tabs type="border-card">
-        <el-tab-pane label="业务单据" class="container-tab">
-          <dynamicFormView :buildData="form.formText" v-model="form.formValue"/>
-        </el-tab-pane>
-        <el-tab-pane label="审批意见" v-if="processInstanceId" class="container-tab">
-          <HistoryRecord :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-        <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
-          <HistoryImage :processInstanceId="processInstanceId"/>
-        </el-tab-pane>
-      </el-tabs>
+      <dynamicFormView :buildData="form.formText" :processInstanceId="processInstanceId" v-model="form.formValue"/>
       <!-- 动态表单查看结束-->
     </div>
     <!-- 工作流 -->
@@ -143,16 +124,12 @@ import dynamicFormEdit from './dynamicFormEdit'
 import dynamicFormView from './dynamicFormView'
 import verify from "@/components/Process/Verify";
 import processApi from "@/api/workflow/processInst";
-import HistoryRecord from "@/components/Process/HistoryRecord";
-import HistoryImage from "@/components/Process/HistoryImage";
 export default {
   name: "BusinessForm",
   components:{
     dynamicFormEdit,
     dynamicFormView,
-    verify,
-    HistoryRecord,
-    HistoryImage
+    verify
   },
   data() {
     return {
@@ -370,12 +347,5 @@ export default {
         height: calc(100vh - 225px);
         overflow-y: auto;
         padding: 10px;
-    }
-    /* 修改滚动条样式 */
-    .container-tab::-webkit-scrollbar {
-        width: 4px;
-    }
-    .container-tab::-webkit-scrollbar-thumb {
-        border-radius: 10px;
     }
 </style>

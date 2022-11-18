@@ -69,11 +69,4 @@ export default {
   font-family:'幼圆';
   font-weight:500;
 }
-/* 修改滚动条样式 */
-.xml-data::-webkit-scrollbar {
-	width: 4px;
-}
-.xml-data::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
 </style>

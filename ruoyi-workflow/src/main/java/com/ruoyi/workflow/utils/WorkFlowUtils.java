@@ -2,12 +2,14 @@ package com.ruoyi.workflow.utils;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.JsonUtils;
+import com.ruoyi.common.utils.StreamUtils;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.workflow.domain.*;
 import com.ruoyi.workflow.domain.bo.SendMessage;
@@ -36,9 +38,15 @@ import org.flowable.task.service.impl.persistence.entity.TaskEntity;
 import org.flowable.variable.api.persistence.entity.VariableInstance;
 import org.springframework.util.ReflectionUtils;
 
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.rmi.ServerException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -90,6 +98,56 @@ public class WorkFlowUtils {
     }
 
     /**
+     * @description: xml转为bpmnModel
+     * @param: xml
+     * @return: org.flowable.bpmn.model.BpmnModel
+     * @author: gssong
+     * @date: 2022/10/30 18:25
+     */
+    public static BpmnModel xmlToBpmnModel(String xml) throws IOException {
+        if (xml == null) {
+            throw new ServerException("xml不能为空");
+        }
+        InputStream inputStream = new ByteArrayInputStream(StrUtil.utf8Bytes(xml));
+        XMLInputFactory factory = XMLInputFactory.newInstance();
+        try {
+            XMLStreamReader reader = factory.createXMLStreamReader(inputStream);
+            return new BpmnXMLConverter().convertToBpmnModel(reader);
+        } catch (XMLStreamException e) {
+            throw new ServerException(e.getMessage());
+        }
+    }
+
+    /**
+     * @description: 校验模型会签变量
+     * @param: bpmnModel
+     * @return: void
+     * @author: gssong
+     * @date: 2022/10/30 18:27
+     */
+    public static void checkBpmnModelMultiVariable(BpmnModel bpmnModel) throws ServerException {
+        Collection<FlowElement> flowElements = bpmnModel.getMainProcess().getFlowElements();
+        List<MultiVo> multiVoList = new ArrayList<>();
+        for (FlowElement flowElement : flowElements) {
+            if (flowElement instanceof UserTask && ObjectUtil.isNotEmpty(((UserTask) flowElement).getLoopCharacteristics()) && StringUtils.isNotBlank(((UserTask) flowElement).getLoopCharacteristics().getInputDataItem())) {
+                MultiVo multiVo = new MultiVo();
+                multiVo.setAssigneeList(((UserTask) flowElement).getLoopCharacteristics().getInputDataItem());
+                multiVoList.add(multiVo);
+            }
+        }
+        if (CollectionUtil.isNotEmpty(multiVoList) && multiVoList.size() > 1) {
+            Map<String, List<MultiVo>> assigneeListGroup = StreamUtils.groupByKey(multiVoList, MultiVo::getAssigneeList);
+            for (Map.Entry<String, List<MultiVo>> entry : assigneeListGroup.entrySet()) {
+                List<MultiVo> value = entry.getValue();
+                if (CollectionUtil.isNotEmpty(value) && value.size() > 1) {
+                    String key = entry.getKey();
+                    throw new ServerException("会签人员集合【" + key + "】重复,请重新设置集合KEY");
+                }
+            }
+        }
+    }
+
+    /**
      * @description: 获取下一审批节点信息
      * @param: flowElements 全部节点
      * @param: flowElement 当前节点信息
@@ -130,9 +188,15 @@ public class WorkFlowUtils {
             } else if (outFlowElement instanceof SubProcess) {
                 Collection<FlowElement> subFlowElements = ((SubProcess) outFlowElement).getFlowElements();
                 for (FlowElement element : subFlowElements) {
-                    if (element instanceof UserTask) {
-                        nextNodeBuild(executionEntity, nextNodes, tempNodes, taskId, gateway, sequenceFlow, processNode, tempNode, element);
-                        break;
+                    if (element instanceof StartEvent) {
+                        List<SequenceFlow> startOutgoingFlows = ((StartEvent) element).getOutgoingFlows();
+                        for (SequenceFlow outgoingFlow : startOutgoingFlows) {
+                            FlowElement targetFlowElement = outgoingFlow.getTargetFlowElement();
+                            if (targetFlowElement instanceof UserTask) {
+                                nextNodeBuild(executionEntity, nextNodes, tempNodes, taskId, gateway, sequenceFlow, processNode, tempNode, targetFlowElement);
+                                break;
+                            }
+                        }
                     }
                 }
             } else {
@@ -658,7 +722,7 @@ public class WorkFlowUtils {
 
         List<Task> taskList = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
         if (CollectionUtil.isEmpty(taskList)) {
-            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH);
+            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH,processInstanceId);
         }
         for (Task task : taskList) {
             ActNodeAssignee nodeAssignee = actNodeAssignees.stream().filter(e -> task.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);
@@ -844,8 +908,8 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:25
      */
-    public static void setVariable(String taskId,String variableName,Object value){
-        PROCESS_ENGINE.getTaskService().setVariable(taskId,variableName,value);
+    public static void setVariable(String taskId, String variableName, Object value) {
+        PROCESS_ENGINE.getTaskService().setVariable(taskId, variableName, value);
     }
 
     /**
@@ -856,8 +920,8 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:25
      */
-    public static void setVariables(String taskId, Map<String,Object> variables){
-        PROCESS_ENGINE.getTaskService().setVariables(taskId,variables);
+    public static void setVariables(String taskId, Map<String, Object> variables) {
+        PROCESS_ENGINE.getTaskService().setVariables(taskId, variables);
     }
 
     /**
@@ -867,7 +931,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:26
      */
-    public static Task getCurrentTask(String taskId){
+    public static Task getCurrentTask(String taskId) {
         return PROCESS_ENGINE.getTaskService().createTaskQuery().taskId(taskId).singleResult();
     }
 
@@ -878,7 +942,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:26
      */
-    public static List<Task> getCurrentTaskList(String processInstanceId){
+    public static List<Task> getCurrentTaskList(String processInstanceId) {
         return PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
     }
 
@@ -889,7 +953,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/10/18 12:43
      */
-    public static List<IdentityLink> getCurrentApprover(String taskId){
+    public static List<IdentityLink> getCurrentApprover(String taskId) {
         return PROCESS_ENGINE.getTaskService().getIdentityLinksForTask(taskId);
     }
 }

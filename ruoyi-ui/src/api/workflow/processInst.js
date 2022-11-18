@@ -50,10 +50,11 @@ export default {
   },
 
   // 作废流程实例，不会删除历史记录
-  deleteRuntimeProcessInst(processInstId) {
+  deleteRuntimeProcessInst(data) {
     return request({
-      url: '/workflow/processInstance/deleteRuntimeProcessInst/'+processInstId,
-      method: 'delete'
+      url: '/workflow/processInstance/deleteRuntimeProcessInst',
+      method: 'post',
+      data: data
     })
   },
 
@@ -87,6 +88,14 @@ export default {
       url: '/workflow/processInstance/getProcessInstFinishByPage',
       method: 'get',
       params: query
+    })
+  },
+  
+  // 获取xml
+  getXml(processInstanceId) {
+    return request({
+      url: `/workflow/processInstance/getXml/${processInstanceId}`,
+      method: 'get'
     })
   }
 }

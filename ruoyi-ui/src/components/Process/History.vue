@@ -1,7 +1,10 @@
 <template>
     <div>
       <el-tabs  type="border-card" >
-        <el-tab-pane label="审批意见" v-loading="loading">
+        <el-tab-pane label="审批意见" v-loading="loading" class="container-tab">
+            <el-table v-if="historicProcessInstance.length>0" :data="historicProcessInstance" style="width: 100%" max-height="570" v-loading="loading"> 
+                <el-table-column prop="deleteReason" label="作废理由" align="center" ></el-table-column>
+            </el-table>
             <el-table :data="list" style="width: 100%" max-height="570">
               <el-table-column label="流程审批历史记录" align="center">
                 <el-table-column type="index" label="序号" align="center" width="50"></el-table-column>
@@ -35,10 +38,8 @@
               </el-table-column>
             </el-table>
         </el-tab-pane>
-        <el-tab-pane label="流程进度">
-           <el-image v-if="processInstanceId" :src="url" style="font-size: 20px; margin: 50px;">
-              <div slot="placeholder"><i class="el-icon-loading"></i> 流程审批历史图加载中……</div>
-           </el-image>
+        <el-tab-pane label="流程进度" v-if="processInstanceId" class="container-tab">
+            <HistoryBpmn :processInstanceId="processInstanceId"/>
         </el-tab-pane>
       </el-tabs>
       <el-dialog title="编辑意见" :close-on-click-modal="false" :visible.sync="dialogVisible" v-if="dialogVisible" append-to-body width="60%">
@@ -71,7 +72,7 @@
 <script>
 import apiProcessInst from '@/api/workflow/processInst'
 import taskApi from '@/api/workflow/task'
-
+import HistoryBpmn from "@/components/Process/HistoryBpmn";
 export default {
     props: {
       processInstanceId: String,
@@ -80,16 +81,19 @@ export default {
         default: false
       },
     },
+    components:{
+      HistoryBpmn
+    },
     data() {
       return {
         loading: false,
-        url: null,
         list: [],
         dialogVisible: false,
         commentId: undefined,
         comment: undefined,
         attachmentList: [],
-        taskId: undefined
+        taskId: undefined,
+        historicProcessInstance: []
       }
     },
     watch: {
@@ -99,8 +103,6 @@ export default {
             this.loading = true
             // 审批历史数据
             this.getHistoryInfoList()
-            // 通过流程实例id获取历史流程图
-            this.url = process.env.VUE_APP_BASE_API+'/workflow/processInstance/getHistoryProcessImage?processInstanceId='+newVal
           }
         },
         immediate: true,
@@ -113,6 +115,9 @@ export default {
         async getHistoryInfoList() {
             const { data } = await apiProcessInst.getHistoryInfoList(this.processInstanceId)
             this.list = data
+            if(this.list[0].historicProcessInstance){
+              this.historicProcessInstance.push(this.list[0].historicProcessInstance)
+            }
             this.loading = false
         },
         // 打开编辑意见
@@ -187,12 +192,77 @@ export default {
 
 }
 </script>
-<style>
-/* 修改滚动条样式 */
-.el-table__body-wrapper::-webkit-scrollbar-thumb {
-	border-radius: 10px;
+<style lang="scss">
+.canvas {
+    width: 100%;
+    height: 100%;
 }
-.el-table__body-wrapper::-webkit-scrollbar {
-  width: 5px;
+.view-mode {
+  .el-header, .el-aside, .djs-palette, .bjs-powered-by {
+    display: none;
+  }
+  .el-loading-mask {
+    background-color: initial;
+  }
+  .el-loading-spinner {
+    display: none;
+  }
+}
+.bpmn-el-container{
+  height: 500px;
+}
+.flow-containers {
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    .canvas {
+        width: 100%;
+        width: 100%;
+    }
+    .load {
+        margin-right: 10px;
+    }
+    .el-form-item__label{
+        font-size: 13px;
+    }
+
+    .djs-palette{
+        left: 0px!important;
+        top: 0px;
+        border-top: none;
+    }
+
+    .djs-container svg {
+        min-height: 650px;
+    }
+
+    .highlight.djs-shape .djs-visual > :nth-child(1) {
+        fill: green !important;
+        stroke: green !important;
+        fill-opacity: 0.2 !important;
+    }
+    .highlight.djs-shape .djs-visual > :nth-child(2) {
+        fill: green !important;
+    }
+    .highlight.djs-shape .djs-visual > path {
+        fill: green !important;
+        fill-opacity: 0.2 !important;
+        stroke: green !important;
+    }
+    .highlight.djs-connection > .djs-visual > path {
+        stroke: green !important;
+    }
+    .highlight-todo.djs-connection > .djs-visual > path {
+        stroke: orange !important;
+        stroke-dasharray: 4px !important;
+        fill-opacity: 0.2 !important;
+        marker-end: url(#sequenceflow-end-_E7DFDF-_E7DFDF-803g1kf6zwzmcig1y2ulm5egr);
+    }
+    .highlight-todo.djs-shape .djs-visual > :nth-child(1) {
+        fill: orange !important;
+        stroke: orange !important;
+        stroke-dasharray: 4px !important;
+        fill-opacity: 0.2 !important;
+    }
 }
 </style>

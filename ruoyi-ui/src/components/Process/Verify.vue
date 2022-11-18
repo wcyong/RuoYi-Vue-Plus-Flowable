@@ -58,6 +58,7 @@
         <el-button type="primary" v-if="multiList && multiList.length>0 && setting.deleteMultiInstance" @click="deleteMultiClick()" size="small">减签</el-button>
         <el-button type="primary" v-if="setting.isDelegate" @click="delegateClick()" size="small">委托</el-button>
         <el-button type="primary" v-if="setting.isTransmit" @click="transmitClick()" size="small">转办</el-button>
+        <el-button type="primary" v-if="businessStatus.status==='waiting'" @click="terminationClick()" size="small">终止</el-button>
         <el-button size="small" @click="closeDialog()">取消</el-button>
       </el-form-item>
     </el-form>
@@ -553,7 +554,6 @@ export default {
     deleteMultiSubmit(){
       api.deleteMultiInstanceExecution(this.deleteMultiForm).then(response => {
         if(response.code === 200){
-          // 刷新数据
             this.$message.success("办理成功");
             // 关闭窗口
             this.visible = false;
@@ -573,6 +573,24 @@ export default {
         this.visible = false;
         // 回调事件
         this.$emit("submitCallback")
+    },
+    //终止任务
+    terminationClick(){
+      this.$modal.confirm('是否确认终止流程？').then(() => {
+        this.loading = true;
+        let params = {
+          taskId: this.taskId,
+          comment: this.formData.message
+        }
+        return api.terminationTask(params);
+      }).then(() => {
+        this.loading = false;
+        this.$message.success("办理成功");
+        // 回调事件
+        this.$emit("submitCallback")
+      }).finally(() => {
+        this.loading = false;
+      });
     },
     //重置表单
     reset(){

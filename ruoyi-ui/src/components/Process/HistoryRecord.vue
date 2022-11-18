@@ -1,5 +1,9 @@
 <template>
-    <el-table :data="list" style="width: 100%" max-height="570">
+  <div>
+    <el-table v-if="historicProcessInstance.length>0" :data="historicProcessInstance" style="width: 100%" max-height="570" v-loading="loading"> 
+          <el-table-column prop="deleteReason" label="作废理由" align="center" ></el-table-column>
+    </el-table>
+    <el-table :data="list" style="width: 100%" max-height="570" v-loading="loading"> 
         <el-table-column label="流程审批历史记录" align="center">
             <el-table-column type="index" label="序号" align="center" width="50"></el-table-column>
             <el-table-column prop="name" label="任务名称" align="center" ></el-table-column>
@@ -26,22 +30,20 @@
             <el-table-column prop="runDuration" label="运行时长" align="center" ></el-table-column>
         </el-table-column>
     </el-table>
+  </div>
 </template>
 
 <script>
 import apiProcessInst from '@/api/workflow/processInst'
 export default {
     props: {
-      processInstanceId: String,
-      editMessage: {
-        type: Boolean,
-        default: false
-      },
+      processInstanceId: String
     },
     data() {
       return {
         loading: false,
-        list: []
+        list: [],
+        historicProcessInstance: []
       }
     },
     watch: {
@@ -63,6 +65,9 @@ export default {
         async getHistoryInfoList() {
             const { data } = await apiProcessInst.getHistoryInfoList(this.processInstanceId)
             this.list = data
+            if(this.list[0].historicProcessInstance){
+              this.historicProcessInstance.push(this.list[0].historicProcessInstance)
+            }
             this.loading = false
         },
         // 附件下载
@@ -73,12 +78,5 @@ export default {
 
 }
 </script>
-<style>
-/* 修改滚动条样式 */
-.el-table__body-wrapper::-webkit-scrollbar-thumb {
-	border-radius: 10px;
-}
-.el-table__body-wrapper::-webkit-scrollbar {
-  width: 5px;
-}
+<style scoped>
 </style>
