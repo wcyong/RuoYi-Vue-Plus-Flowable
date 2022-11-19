@@ -447,6 +447,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
             }
             //3.删除业务状态
             iActBusinessStatusService.deleteStateByProcessInstId(processInstId);
+            iActBusinessStatusService.deleteCache(processInstId);
             //4.删除保存的任务节点
             return iActTaskNodeService.deleteByInstanceId(processInstId);
         } catch (Exception e) {
