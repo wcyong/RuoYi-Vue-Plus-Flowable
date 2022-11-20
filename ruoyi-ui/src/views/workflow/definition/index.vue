@@ -149,7 +149,7 @@
                         size="mini"
                         type="text"
                         icon="el-icon-user"
-                        @click="handleUserSetting(scope.row)"
+                        @click="handleUserSetting1(scope.row)"
                         >人员设置</el-button>
                     </el-col>
                     <el-col :span="1.5">
@@ -288,6 +288,9 @@
             <!-- 流程设置 -->
             <process-setting ref="settingRef"/>
 
+            <!-- 流程设置 -->
+            <process-bpmn-setting ref="settingBpmnRef"/>
+
             <!-- 表单设置 -->
             <process-form-list ref="formRef" @callbackFn="getList" :formData="formData"/>
         </el-col>
@@ -301,13 +304,14 @@ import {convertToModel} from "@/api/workflow/model";
 import processDeploy from './components/processDeploy'
 import processPreview from './components/processPreview'
 import processSetting from './components/processSetting'
+import processBpmnSetting from './components/processBpmnSetting'
 import processFormList from './components/processFormList'
 import {copy} from "@/api/workflow/actNodeAssginee";
 import {queryTreeList} from "@/api/workflow/category";
 
 export default {
     name: 'Definition', // 和对应路由表中配置的name值一致
-    components: { processDeploy, processPreview,processSetting,processFormList },
+    components: { processDeploy, processPreview,processSetting,processFormList,processBpmnSetting },
     data() {
         return {
             // 弹窗
@@ -436,7 +440,7 @@ export default {
         this.type = 'xml'
         getXml(id).then(response => {
           this.url = []
-          this.url = response.data
+          this.url = response.data.xml
           this.$refs.previewRef.visible = true
         })
       },
@@ -503,6 +507,12 @@ export default {
         this.$nextTick(() => {
           this.$refs.settingRef.visible = true
           this.$refs.settingRef.init(row.id)
+        })
+      },
+      //打开设置
+      handleUserSetting1(row){
+        this.$nextTick(() => {
+          this.$refs.settingBpmnRef.init(row.id)
         })
       },
       //打开表单

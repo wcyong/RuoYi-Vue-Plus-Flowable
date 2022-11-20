@@ -148,6 +148,23 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
         } else {
             nodeAssignee.setTaskListenerList(new ArrayList<>());
         }
+        BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinitionId);
+        List<Process> processes = bpmnModel.getProcesses();
+        Collection<FlowElement> elements = processes.get(0).getFlowElements();
+
+        for (FlowElement element : elements) {
+            if (element instanceof StartEvent) {
+                List<SequenceFlow> outgoingFlows = ((StartEvent) element).getOutgoingFlows();
+                for (SequenceFlow outgoingFlow : outgoingFlows) {
+                    FlowElement flowElement = outgoingFlow.getTargetFlowElement();
+                    if (flowElement instanceof UserTask && flowElement.getId().equals(nodeId)) {
+                        nodeAssignee.setIndex(0);
+                    }
+                }
+            }else if (element instanceof EndEvent) {
+                nodeAssignee.setEnd(true);
+            }
+        }
         return nodeAssignee;
     }
 

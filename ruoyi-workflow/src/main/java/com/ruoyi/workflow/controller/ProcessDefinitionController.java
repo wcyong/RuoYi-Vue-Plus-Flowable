@@ -17,10 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.constraints.NotBlank;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 流程定义
@@ -117,10 +114,13 @@ public class ProcessDefinitionController extends BaseController {
      * @date: 2022/5/3 19:25
      */
     @GetMapping("/getXml/{definitionId}")
-    public R<Object> getXml(@NotBlank(message = "流程定义id不能为空") @PathVariable String definitionId) {
+    public R<Map<String,Object>> getXml(@NotBlank(message = "流程定义id不能为空") @PathVariable String definitionId) {
+        Map<String, Object> map = new HashMap<>();
         String xmlStr = iProcessDefinitionService.getXml(definitionId);
         List<String> xml = new ArrayList<>(Arrays.asList(xmlStr.split("\n")));
-        return R.ok("操作成功", xml);
+        map.put("xml",xml);
+        map.put("xmlStr",xmlStr);
+        return R.ok(map);
     }
 
     /**

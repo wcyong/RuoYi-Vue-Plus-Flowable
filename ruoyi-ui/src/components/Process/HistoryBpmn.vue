@@ -26,8 +26,11 @@
 </template>
 
 <script>
-import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
+import BpmnViewer from "bpmn-js/lib/Viewer";
+import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas'
+import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
 import processApi from "@/api/workflow/processInst";
+
 export default {
   name: 'WorkflowBpmnModeler',
   props: {
@@ -48,7 +51,9 @@ export default {
       additionalModules:[
         {
           //禁止滚轮滚动
-          zoomScroll: ["value",""]
+          zoomScroll: ["value",""],
+          ZoomScrollModule,
+          MoveCanvasModule
         }
       ]
     })

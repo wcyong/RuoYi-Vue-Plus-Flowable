@@ -193,7 +193,7 @@ public class ProcessDefinitionServiceImpl extends WorkflowService implements IPr
             //流程分类
             String category = splitFilename[2];
 
-            ActCategory actCategory = iActCategoryService.queryById(Long.valueOf(category));
+            ActCategory actCategory = iActCategoryService.queryByCategory(category);
             if (actCategory == null) {
                 throw new ServiceException("流程分类不存在");
             }

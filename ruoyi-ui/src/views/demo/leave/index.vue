@@ -346,11 +346,11 @@ export default {
   },
   methods: {//流程进度
     bpmnProcess(){
-      this.$refs.historyBpmnRef.init(true,this.processInstanceId)
+      this.$refs.historyBpmnRef.init(this.processInstanceId)
     },
     //审批意见
     bpmnRecord(){
-      this.$refs.historyRecordRef.init(true,this.processInstanceId)
+      this.$refs.historyRecordRef.init(this.processInstanceId)
     },
     /** 查询请假业务列表 */
     getList() {

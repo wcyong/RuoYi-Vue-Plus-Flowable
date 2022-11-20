@@ -139,9 +139,15 @@ public class ActNodeAssignee extends BaseEntity{
     private List<TaskListenerVo> taskListenerList;
 
     /**
-     * 下标排序
+     * 下标 0为第一个节点
      */
     @TableField(exist = false)
-    private Integer index;
+    private Integer index = 1;
+
+    /**
+     * 是否最后一个节点
+     */
+    @TableField(exist = false)
+    private Boolean end = false;
 
 }

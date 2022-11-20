@@ -51,8 +51,8 @@ public interface IActCategoryService {
 
     /**
      * 查询
-     * @param id
+     * @param category
      * @return
      */
-    ActCategory queryById(Long id);
+    ActCategory queryByCategory(String category);
 }

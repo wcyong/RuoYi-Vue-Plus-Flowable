@@ -28,7 +28,9 @@
 </template>
 
 <script>
-import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
+import BpmnViewer from "bpmn-js/lib/Viewer";
+import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas'
+import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
 import processApi from "@/api/workflow/processInst";
 export default {
   data() {
@@ -42,9 +44,9 @@ export default {
     }
   },
   methods: {
-    init(bpmnVisible,processInstanceId) {
+    init(processInstanceId) {
       this.loading = true
-      this.bpmnVisible = bpmnVisible
+      this.bpmnVisible = true
       this.$nextTick(()=>{
         if (this.modeler) this.modeler.destroy();
         this.modeler = new BpmnViewer({
@@ -53,7 +55,9 @@ export default {
             {
               //禁止滚轮滚动
               zoomScroll: ["value",""]
-            }
+            },
+            ZoomScrollModule,
+            MoveCanvasModule
           ]
         })
         processApi.getXml(processInstanceId).then(response=>{        

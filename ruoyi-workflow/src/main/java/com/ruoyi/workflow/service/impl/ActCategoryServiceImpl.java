@@ -85,7 +85,9 @@ public class ActCategoryServiceImpl extends ServiceImpl<ActCategoryMapper, ActCa
     }
 
     @Override
-    public ActCategory queryById(Long id) {
-        return actCategoryMapper.selectById(id);
+    public ActCategory queryByCategory(String category) {
+        LambdaQueryWrapper<ActCategory> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(ActCategory::getCategoryName,category);
+        return actCategoryMapper.selectOne(wrapper);
     }
 }
