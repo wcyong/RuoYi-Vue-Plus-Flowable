@@ -29,12 +29,9 @@
     </template>
     
     <script>
-    //import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
     import processUserSetting from './processUserSetting'
     import {getXml} from "@/api/workflow/definition";
-    import BpmnViewer from "bpmn-js/lib/Viewer";
-    import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas'
-    import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
+    import { CustomViewer as BpmnViewer } from "@/components/Bpmn/package/customBpmn";
     export default {
       components: {
         processUserSetting
@@ -58,16 +55,7 @@
           this.$nextTick(()=>{
             if (this.modeler) this.modeler.destroy();
             this.modeler = new BpmnViewer({
-              container: this.$refs.canvas,
-              additionalModules:[
-                {
-                  //禁止滚轮滚动
-                  zoomScroll: ["value",""],
-                },
-                //移动整个画布
-                MoveCanvasModule ,
-                ZoomScrollModule
-              ]
+              container: this.$refs.canvas
             })
             getXml(processDefinitionId).then(response=>{        
               this.xml = response.data.xmlStr
@@ -123,6 +111,10 @@
     </script>
     
     <style lang="scss">
+    @import "../../../../../node_modules/bpmn-js/dist/assets/diagram-js.css";
+    @import "../../../../../node_modules/bpmn-js/dist/assets/bpmn-font/css/bpmn.css";
+    @import "../../../../../node_modules/bpmn-js/dist/assets/bpmn-font/css/bpmn-codes.css";
+    @import "../../../../../node_modules/bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css";
     .canvas {
         width: 100%;
         height: 100%;
@@ -141,7 +133,7 @@
     .bpmn-el-container{
       height: 550px;
     }
-    .djs-element .djs-visual{
+    .djs-element > .djs-hit-all{
         cursor: pointer !important;
     }
     </style>
