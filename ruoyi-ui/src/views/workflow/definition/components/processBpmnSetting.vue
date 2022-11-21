@@ -31,7 +31,9 @@
     <script>
     import processUserSetting from './processUserSetting'
     import {getXml} from "@/api/workflow/definition";
-    import { CustomViewer as BpmnViewer } from "@/components/Bpmn/package/customBpmn";
+    import BpmnViewer from "bpmn-js/lib/Viewer";
+    import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas'
+    import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
     export default {
       components: {
         processUserSetting
@@ -55,7 +57,15 @@
           this.$nextTick(()=>{
             if (this.modeler) this.modeler.destroy();
             this.modeler = new BpmnViewer({
-              container: this.$refs.canvas
+              container: this.$refs.canvas,
+              additionalModules:[
+                {
+                  //禁止滚轮滚动
+                  zoomScroll: ["value",""]
+                },
+                ZoomScrollModule,
+                MoveCanvasModule
+              ]
             })
             getXml(processDefinitionId).then(response=>{        
               this.xml = response.data.xmlStr
