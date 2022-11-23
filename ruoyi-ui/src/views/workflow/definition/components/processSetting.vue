@@ -1,415 +1,356 @@
 <template>
-  <el-dialog title="人员设置" :visible.sync="visible" v-if="visible" width="70%" :close-on-click-modal="false" append-to-body>
-    <div class="container" v-loading="loading">
-       <el-tabs :tab-position="tabPosition" class="tabs" v-model="activeName" @tab-click="changeSteps">
-        <el-tab-pane v-for="(node, index) in nodeList" :key="index" :name="node.id" :label="node.nodeName">
-          <el-form style="height:inherit" ref="form" size="small" label-position="left" :model="form">
-            <el-form-item label="环节名称">
-              <el-tag v-if="nodeName">{{nodeName}}</el-tag><el-tag v-else>无</el-tag>
-            </el-form-item>
-            <el-row>
-              <el-form-item>
-                  <el-col :span="24" style="line-height: 20px">
-                    <el-alert title="每个节点设置，如有修改都请保存一次，跳转节点后数据不会自动保存！" type="warning" show-icon :closable="false"/>
-                  </el-col>
-              </el-form-item>
-            </el-row>
-            <el-form-item v-if="node.index === 1" prop="chooseWay" label="选人方式">
-              <el-radio-group @change="clearSelect(form.chooseWay)" v-model="form.chooseWay">
-                <el-radio border label="person">选择人员</el-radio>
-                <el-radio border label="role">选择角色</el-radio>
-                <el-radio border label="dept">选择部门</el-radio>
-                <el-radio border label="rule">业务规则</el-radio>
-              </el-radio-group>
-            </el-form-item>
-            <el-row v-if="node.index === 1">
-              <el-col class="line" :span="8">
-                <el-form-item label="是否弹窗选人" prop="isShow">
-                  <el-switch v-model="form.isShow"></el-switch>
-                </el-form-item>
-              </el-col>
-              <el-col class="line" :span="8">
-                <el-form-item label="是否能会签" prop="multiple">
-                  <el-switch disabled v-model="form.multiple"></el-switch>
-                </el-form-item>
-              </el-col>
-              <el-col class="line" :span="8">
-                  <el-form-item label="是否能退回" prop="isBack">
-                    <el-switch v-model="form.isBack"></el-switch>
-                  </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row>
-              <el-col class="line" :span="8">
-                <el-form-item label="是否可以委托" prop="isDelegate">
-                  <el-switch v-model="form.isDelegate"></el-switch>
-                </el-form-item>
-              </el-col>
-              <el-col class="line" :span="8">
-                <el-form-item label="是否能转办" prop="isTransmit">
-                  <el-switch v-model="form.isTransmit"></el-switch>
-                </el-form-item>
-              </el-col>
-              <el-col class="line" :span="8">
-                  <el-form-item label="是否能抄送" prop="isCopy">
-                    <el-switch :disabled="node.end" v-model="form.isCopy"></el-switch>
-                  </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row v-if="node.index === 1">
-              <el-col class="line" :span="8">
-                <el-form-item label="是否自动审批" prop="autoComplete">
-                  <el-switch v-model="form.autoComplete"></el-switch>
-                  <el-tooltip class="item" effect="dark" content="当前节点与上一节点审批人相同自动审批，下一节点如果为弹窗选人则默认下一节点全部人员为候选人" placement="top-start">
-                    <i class="el-icon-info" style="cursor: pointer;font-size: 15px;line-height: 15px;vertical-align: middle;padding-left: 10px;"></i>
-                  </el-tooltip>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row v-if="form.multiple">
-              <el-col class="line" :span="8">
-                <el-form-item label-width="100px" label="会签集合" prop="multipleColumn">
-                  <el-tag>{{form.multipleColumn}}</el-tag>
-                </el-form-item>
-              </el-col>
-              <el-col class="line" :span="8">
-                <el-form-item label="是否能加签" prop="addMultiInstance">
-                  <el-switch v-model="form.addMultiInstance"></el-switch>
-                </el-form-item>
-              </el-col>
-              <el-col class="line" :span="8">
-                  <el-form-item label="是否能减签" prop="deleteMultiInstance">
-                    <el-switch v-model="form.deleteMultiInstance"></el-switch>
-                  </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row>
-              <el-col :span="20">
-                <el-form-item label-width="100px" label="节点任务" prop="task">
-                  <el-popover
-                    placement="right"
-                    width="500"
-                    trigger="click">
-                    <el-button type="primary" size="mini" @click="addListener">添加</el-button>
-                    <el-link style="padding-left:15px" type="info" :underline="false">说明：当前任务节点完成前或完成后执行</el-link>
-                    <el-table :data="form.taskListenerList">
-                      <el-table-column label="事件类型" width="150" align="center" prop="paramType" >
-                          <template slot-scope="scope">
-                              <el-select v-model="scope.row.eventType" placeholder="请选择">
-                              <el-option
-                                v-for="item in options"
-                                :key="item.value"
-                                :label="item.label"
-                                :value="item.value">
-                              </el-option>
-                            </el-select>
-                          </template>
-                      </el-table-column>
-                      <el-table-column label="bean名称" align="center" prop="paramType" >
-                          <template slot-scope="scope">
-                              <el-input v-model="scope.row.beanName"/>
-                          </template>
-                      </el-table-column>
-                      <el-table-column label="操作" width="80">
-                          <template slot-scope="scope">
-                              <el-button @click="deleteListener(scope.$index)" type="danger" size="small">删除</el-button>
-                          </template>
-                      </el-table-column>
-                    </el-table>
-                    <el-badge :value="form.taskListenerList.length" slot="reference" class="item">
-                      <el-button type="primary" icon="el-icon-circle-plus-outline">节点任务</el-button>
-                    </el-badge>
-                  </el-popover>
-                </el-form-item>
-              </el-col>
-            </el-row>
-            <el-row v-if="node.index === 1">
-              <el-col :span="20">
-                <el-form-item label-width="100px" label="审批人员" prop="assignee">
-                  <el-input readonly v-model="form.assignee" placeholder="审批人员">
-                    <el-button type="primary" slot="append" @click="openSelect" v-text="btnText"></el-button>
-                    <el-button type="success" slot="append" @click="clearSelect">清空</el-button>
-                  </el-input>
-                  <el-input v-model="form.assigneeId" v-show="false" placeholder="审批人员ID"/>
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-form>
-        </el-tab-pane>
-      </el-tabs>
-      <div style="float:right;position:relative;bottom:20px;">
-        <el-button type="primary" size="small" @click="onSubmit">保存</el-button>
-        <el-button type="danger" size="small" v-if="index === 1" @click="del">重置</el-button>
+  <div>
+    <el-form label-width="110px" :model="formData" :rules="rulesFrom" ref="formDataRef">
+        <el-form-item label="流程定义Key" prop="processDefinitionKey">
+          <el-input v-model="formData.processDefinitionKey" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="流程定义名称" prop="processDefinitionName">
+          <el-input v-model="formData.processDefinitionName" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="表单类型" prop="businessType">
+          <el-radio-group @change="change($event)" v-model="formData.businessType">
+            <el-radio-button :label="1">业务表单</el-radio-button>
+            <el-radio-button :label="0">动态表单</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="表单Key" prop="formKey" v-if="formData.businessType === 0">
+          <el-input v-model="formData.formKey" placeholder="请选择表单" disabled style="width:185px;padding-right: 5px;"/>
+          <el-button type="primary" @click="handerOpenForm" icon="el-icon-search"></el-button>
+        </el-form-item>
+        <el-form-item label="表单名称" prop="formName" v-if="formData.businessType === 0">
+          <el-input v-model="formData.formName" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="表单参数" v-if="formData.businessType === 0">
+          <el-input type="textarea" placeholder="请输入表单参数,动态表单中参数id,多个用英文逗号隔开" v-model="formData.formVariable" @input="change($event)"/>
+        </el-form-item>
+        <el-form-item label="表名称" prop="tableName" v-if="formData.businessType === 1">
+          <el-input v-model="formData.tableName" placeholder="请选择表名称" disabled style="width:185px;padding-right: 5px;"/>
+          <el-button type="primary" @click="handerOpenTable" icon="el-icon-search"></el-button>
+        </el-form-item>
+        <el-form-item label="组件名称" prop="componentName" v-if="formData.businessType === 1">
+          <el-input placeholder="请输入组件名称" v-model="formData.componentName"/>
+        </el-form-item>
+        <el-form-item label="备注" prop="remork" v-if="formData.businessType === 1">
+          <el-input type="textarea" v-model="formData.remork"></el-input>
+        </el-form-item>
+    </el-form>
+    <!-- 动态表单开始 -->
+    <el-dialog title="表单" :visible.sync="formVisible" v-if="formVisible" width="70%" :close-on-click-modal="false" append-to-body>
+      <div class="app-container">
+        <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+          <el-form-item label="表单key" prop="formKey">
+            <el-input
+              v-model="queryParams.formKey"
+              placeholder="请输入表单key"
+              clearable
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item label="表单名称" prop="formName">
+            <el-input
+              v-model="queryParams.formName"
+              placeholder="请输入表单名称"
+              clearable
+              @keyup.enter.native="handleQuery"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+
+        <el-row :gutter="10" class="mb8">
+          <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
+        </el-row>
+
+        <el-table v-loading="loading" :highlight-current-row="true" :data="dynamicFormList" @row-click="handleFormClick">
+          <el-table-column label="主键" align="center" prop="id" v-if="false"/>
+          <el-table-column label="表单key" align="center" prop="formKey" />
+          <el-table-column label="表单名称" align="center" prop="formName" />
+          <el-table-column label="表单备注" align="center" prop="formRemark" />
+        </el-table>
+
+        <pagination
+          v-show="total>0"
+          :total="total"
+          :page.sync="queryParams.pageNum"
+          :limit.sync="queryParams.pageSize"
+          @pagination="getList"
+        />
       </div>
-    </div>
-    <!-- 选择人员 -->
-    <sys-dept-user ref="userRef" @confirmUser="clickUser" :propUserList = 'propUserList'/>
-    <!-- 选择角色 -->
-    <sys-role ref="roleRef" @confirmUser="clickRole" :propRoleList = 'propRoleList'/>
-    <!-- 选择部门 -->
-    <sys-dept ref="deptRef" @confirmUser="clickDept" :propDeptList = 'propDeptList'/>
-    <!-- 选择业务规则 -->
-    <process-Rule ref="processRuleRef" @primary="clickRule" :propDeptList = 'propDeptList'/>
-  </el-dialog>
+    </el-dialog>
+    <!-- 动态表单结束 -->
+    <!-- 导入表开始 -->
+    <el-dialog title="导入表" :visible.sync="tableVisible" width="800px" top="5vh" append-to-body>
+        <el-form :model="tableQueryParams" ref="tableQueryForm" size="small" :inline="true">
+        <el-form-item label="表名称" prop="tableName">
+            <el-input
+            v-model="tableQueryParams.tableName"
+            placeholder="请输入表名称"
+            clearable
+            @keyup.enter.native="handleQuery"
+            />
+        </el-form-item>
+        <el-form-item label="表描述" prop="tableComment">
+            <el-input
+            v-model="tableQueryParams.tableComment"
+            placeholder="请输入表描述"
+            clearable
+            @keyup.enter.native="handleQuery"
+            />
+        </el-form-item>
+        <el-form-item label="数据源名称" prop="dataName">
+            <el-input
+            v-model="tableQueryParams.dataName"
+            placeholder="请输入数据源名称"
+            clearable
+            @keyup.enter.native="handleQuery"
+            />
+        </el-form-item>
+        <el-form-item>
+            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleTableQuery">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetTableQuery">重置</el-button>
+        </el-form-item>
+        </el-form>
+        <el-row>
+            <el-table :highlight-current-row="true" @row-click="handleTableClick" ref="table" :data="dbTableList" height="260px">
+                <el-table-column prop="tableName" label="表名称" :show-overflow-tooltip="true"></el-table-column>
+                <el-table-column prop="tableComment" label="表描述" :show-overflow-tooltip="true"></el-table-column>
+                <el-table-column prop="createTime" label="创建时间"></el-table-column>
+                <el-table-column prop="updateTime" label="更新时间"></el-table-column>
+            </el-table>
+            <pagination
+                v-show="dbTableTotal>0"
+                :total="dbTableTotal"
+                :page.sync="tableQueryParams.pageNum"
+                :limit.sync="tableQueryParams.pageSize"
+                @pagination="getDbList"
+            />
+        </el-row>
+    </el-dialog>
+    <!-- 导入表结束 -->
+    <span class="btn-footer">
+      <el-button type="danger" v-if="this.formData.id" @click="deleteForm()">重 置</el-button>
+      <el-button type="primary" @click="submitForm('formDataRef')">确 定</el-button>
+    </span>
+  </div>
 </template>
 
 <script>
-import  SysDeptUser from "@/views/components/user/sys-dept-user";
-import  SysRole from "@/views/components/role/sys-role";
-import  SysDept from "@/views/components/dept/sys-dept";
-import  ProcessRule from "@/views/workflow/definition/components/processRule";
-import {setting} from "@/api/workflow/definition";
-import {getInfoSetting,add,del} from "@/api/workflow/actNodeAssginee";
-
+import { listDynamicFormEnable} from "@/api/workflow/dynamicForm";
+import { listDbTable } from "@/api/tool/gen";
+import { addProcessDefSetting,checkProcessDefSetting,delProcessDefSetting } from "@/api/workflow/processDefSetting";
 export default {
-    components: {
-       SysDeptUser,
-       SysRole,
-       SysDept,
-       ProcessRule
-    },
-    data() {
-      return {
-        tabPosition: 'left',
-        activeName:'',
-        loading: false,
-        nodeList: [],
-        visible: false,
-        active: null,
-        form: {
-          isShow: true,
-          isBack: false,
-          multiple: false,
-          chooseWay: undefined,
-          isDelegate: false,
-          isTransmit: false,
-          isCopy: false,
-          autoComplete: false,
-          addMultiInstance: false,
-          deleteMultiInstance: false,
-          taskListenerList:[]
-        },
-        // 按钮值
-        btnText:"选择人员",
-        // 流程定义id
-        definitionId: null,
-        // 环节名称
-        nodeName: null,
-        // 下标
-        index: 0,
-        // 人员选择
-        propUserList: [],
-        // 角色选择
-        propRoleList: [],
-        // 部门选择
-        propDeptList: [],
-        options: [{
-          value: 'before',
-          label: '完成前'
-        }, {
-          value: 'after',
-          label: '完成后'
-        }]
-      }
-    },
-    methods: {
-        // 查询流程节点
-        async init(definitionId) {
-           this.loading = true
-           this.definitionId = definitionId
-           this.form.chooseWay = 'person'
-           const data = await setting(definitionId)
-           this.nodeList = data.data
-           this.activeName = '0'
-           this.changeSteps()
-        },
-        //切换节点
-        changeSteps() {
-          this.nodeList[this.activeName]
-          this.form.assignee = undefined
-          this.form.multipleColumn = undefined
-          this.form.multiple = false
-          this.loading = true
-          this.nodeName = this.nodeList[this.activeName].nodeName
-          this.index = this.nodeList[this.activeName].index
-          if(this.nodeList.length > 0 && this.nodeList[this.activeName].nodeId){
-            getInfoSetting(this.definitionId,this.nodeList[this.activeName].nodeId).then(response => {
-                if(response.code === 200){
-                    this.form = response.data
-                    this.form.nodeName = response.data.nodeName
-                    this.loading = false
-                    if(this.form.id === undefined){
-                        this.form.isBack = false
-                    }
-                    if(this.form.chooseWay === "person"){
-                        this.btnText = "选择人员"
-                    }else if(this.form.chooseWay === "role"){
-                        this.btnText = "选择角色"
-                    }else if(this.form.chooseWay === "dept"){
-                        this.btnText = "选择部门"
-                    }else if(this.form.chooseWay === "rule"){
-                        this.btnText = "选择规则"
-                    }
-                    this.$forceUpdate()
-                }
-            })
-          }
-        },
-        //保存设置
-        onSubmit(){
-          if(this.nodeName){
-            this.form.nodeName = this.nodeName
-            this.form.index = this.index
-            add(this.form).then(response => {
-              this.form = response.data
-              this.$modal.msgSuccess("保存成功")
-            })
-          }else{
-            this.$modal.msgError("请选择节点")
-          }
-        },
-        // 删除
-        del(){
-          if(this.form.id){
-             del(this.form.id).then(response => {
-              if(response.code === 200){
-                this.$modal.msgSuccess("重置成功")
-                this.reset()
-              }
-             })
-          }else{
-              this.$modal.msgSuccess("重置成功")
-              this.reset()
-          }
-        },
-        // 重置
-        reset(){
-          this.form.assigneeId =undefined
-          this.form.assignee = undefined
-          this.form.chooseWay = 'person'
-          this.form.processDefinitionId = this.definitionId
-        },
-        // 添加参数
-        addListener(){
-            let param = {
-                eventType:'',
-                beanName:''
-            }
-            this.form.taskListenerList.push(param);
-        },
-        // 删除参数
-        deleteListener(index){
-          this.form.taskListenerList.splice(index,1)
-        },
-        //清空选择的人员
-        clearSelect(chooseWay){
-          this.form.assigneeId = ""
-          this.form.assignee = ""
-          if(chooseWay === "person"){
-            this.btnText = "选择人员"
-          }else if(chooseWay === "role"){
-            this.btnText = "选择角色"
-          }else if(chooseWay === "dept"){
-            this.btnText = "选择部门"
-          }else if(chooseWay === "rule"){
-            this.btnText = "选择规则"
-          }
-        },
-        //选择弹出层
-        async openSelect(){
-          console.log(this.form.assigneeId)
-          if(this.form.chooseWay === 'person'){
-            this.propUserList = [];
-            if(this.form.assigneeId){
-              let userIds = this.form.assigneeId.split( ',' )
-              if(userIds.length>0){
-                this.propUserList = userIds
-              }
-            }
-            this.$refs.userRef.visible = true
-          }else if(this.form.chooseWay === 'role'){
-           this.propRoleList = [];
-            if(this.form.assigneeId){
-              let roleIds = this.form.assigneeId.split( ',' )
-              if(roleIds.length>0){
-                this.propRoleList = roleIds
-              }
-            }
-            this.$refs.roleRef.visible = true
-          }else if(this.form.chooseWay === 'dept'){
-            this.propDeptList = [];
-            if(this.form.assigneeId){
-              let deptIds = this.form.assigneeId.split( ',' )
-              if(deptIds.length>0){
-                this.propDeptList = deptIds
-              }
-            }
-            this.$refs.deptRef.visible = true
-          }else if(this.form.chooseWay === 'rule'){
-            this.$refs.processRuleRef.visible = true
-          }
-        },
-        //选择人员
-        clickUser(userList){
-          let arrAssignee= userList.map(item => {
-            return item.nickName
-          })
-          let arrAssigneeId= userList.map(item => {
-            return item.userId
-          })
-          let resultAssignee = arrAssignee.join(",")
-          let resultAssigneeId = arrAssigneeId.join(",")
-          this.$set(this.form,'assignee',resultAssignee)
-          this.$set(this.form,'assigneeId',resultAssigneeId)
-          this.$refs.userRef.visible = false
-          this.$forceUpdate()
-        },
-        //选择角色
-        clickRole(roleList){
-          let arrAssignee= roleList.map(item => {
-            return item.roleName
-          })
-          let arrAssigneeId= roleList.map(item => {
-            return item.roleId
-          })
-          let resultAssignee = arrAssignee.join(",")
-          let resultAssigneeId = arrAssigneeId.join(",")
-          this.$set(this.form,'assignee',resultAssignee)
-          this.$set(this.form,'assigneeId',resultAssigneeId)
-          this.$refs.roleRef.visible = false
-        },
-        //选择部门
-        clickDept(deptList){
-          let arrAssignee= deptList.map(item => {
-            return item.deptName
-          })
-          let arrAssigneeId= deptList.map(item => {
-            return item.deptId
-          })
-          let resultAssignee = arrAssignee.join(",")
-          let resultAssigneeId = arrAssigneeId.join(",")
-          this.$set(this.form,'assignee',resultAssignee)
-          this.$set(this.form,'assigneeId',resultAssigneeId)
-          this.$refs.deptRef.visible = false
-        },
-        //业务规则
-        clickRule(rule){
-          this.$set(this.form,'assignee',rule.beanName+"."+rule.method)
-          this.$set(this.form,'assigneeId',rule.beanName+"."+rule.method)
-          this.$set(this.form,'businessRuleId',rule.id)
-          this.$refs.processRuleRef.visible = false
-        }
+  props:{
+    dataObj: {
+      type: Object,
+      default:()=>{}
     }
-}
+  },
+  data() {
+    return {
+      // 显示隐藏
+      formVisible: false,
+      tableVisible: false,
+      // 按钮loading
+      buttonLoading: false,
+      // 遮罩层
+      loading: true,
+      // 显示搜索条件
+      showSearch: true,
+      // 总条数
+      total: 0,
+      // 流程单表格数据
+      dynamicFormList: [],
+      // 弹出层标题
+      title: "",
+      // 查询参数
+      queryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        formKey: undefined,
+        formName: undefined,
+      },
+      // 表数据
+      dbTableList: [],
+      // 总条数
+      dbTableTotal: 0,
+      // 查询参数
+      tableQueryParams: {
+        pageNum: 1,
+        pageSize: 10,
+        tableName: undefined,
+        tableComment: undefined,
+        dataName: 'master',
+      },
+      // 表单校验
+      rulesFrom: {
+        processDefinitionKey: [
+          { required: true, message: '流程定义Key不能为空', trigger: 'blur' }
+        ],
+        processDefinitionName: [
+          { required: true, message: '流程定义名称不能为空', trigger: 'blur' }
+        ],
+        formKey: [
+          { required: true, message: '表单Key不能为空', trigger: 'blur' }
+        ],
+        formName: [
+          { required: true, message: '表单名称不能为空', trigger: 'blur' }
+        ],
+        businessType: [
+          { required: true, message: '业务类型不能为空', trigger: 'blur' }
+        ],
+        tableName: [
+          { required: true, message: '表名称不能为空', trigger: 'blur' }
+        ],
+        componentName: [
+          { required: true, message: '组件名称不能为空', trigger: 'blur' }
+        ]
+      },
+      formData: {}
+    };
+  },
+  watch: {
+      // 根据名称筛选分类树
+      dataObj(val) {
+        this.formData = val
+      }
+   },
+  methods: {
+    change(e){
+        this.$forceUpdate(e)
+        this.$refs["formDataRef"].clearValidate()
+    },
+    /** 查询流程单列表 */
+    getList() {
+      this.loading = true;
+      listDynamicFormEnable(this.queryParams).then(response => {
+        this.dynamicFormList = response.rows;
+        this.total = response.total;
+        this.loading = false;
+      });
+    },
+    /** 搜索按钮操作 */
+    handleQuery() {
+      this.queryParams.pageNum = 1;
+      this.getList();
+    },
+    /** 重置按钮操作 */
+    resetQuery() {
+      this.resetForm("queryForm");
+      this.handleQuery();
+    },
+    // 选中数据
+    handleFormClick(row) {
+      this.$set(this.formData,'formId',row.id)
+      this.$set(this.formData,'formKey',row.formKey)
+      this.$set(this.formData,'formName',row.formName)
+      this.formVisible = false;
+    },
+    // 选中数据
+    handleTableClick(row){
+      this.$set(this.formData,'tableName',row.tableName)
+      this.tableVisible = false;
+    },
+    // 打开表单
+    handerOpenForm(){
+      this.getList();
+      this.formVisible = true
+    },
+    // 表数据
+    getDbList(){
+      localStorage.setItem("dataName", this.tableQueryParams.dataName);
+      listDbTable(this.tableQueryParams).then(res => {
+        if (res.code === 200) {
+          this.dbTableList = res.rows;
+          this.dbTableTotal = res.total;
+        }
+      });
+    },
+    /** 打开表弹窗 */
+    handerOpenTable() {
+      this.tableVisible = true;
+      this.getDbList()
+    },
+     /** 搜索按钮操作 */
+    handleTableQuery() {
+      this.tableQueryParams.pageNum = 1;
+      this.getDbList();
+    },
+    /** 重置按钮操作 */
+    resetTableQuery() {
+      this.resetForm("tableQueryForm");
+      this.handleTableQuery();
+    },
+    // 确认
+    submitForm(formName){
+      this.loading = true;
+      this.$refs[formName].validate((valid) => {
+       if (valid) {
+        let param = {}
+        if(this.formData.businessType === 0){
+            param = {
+                processDefinitionId: this.formData.processDefinitionId,
+                businessType: 0,
+                formId: this.formData.formId,
+                id: this.formData.id
+            } 
+        }else{
+            param = {
+                processDefinitionId: this.formData.processDefinitionId,
+                businessType: 1,
+                componentName: this.formData.componentName,
+                tableName: this.formData.tableName,
+                id: this.formData.id
+            } 
+        }
+        checkProcessDefSetting(param).then(response => {
+          if(response.data){
+            this.$confirm(response.msg, '提示', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }).then(() => {
+              this.formData.settingId = response.data
+              addProcessDefSetting(this.formData).then(response => {
+                this.formData = response.data
+                this.$modal.msgSuccess("保存成功");
+                this.loading = false;
+                this.$emit("callbackFn")
+              });
+            })
+          }else{
+              addProcessDefSetting(this.formData).then(response => {
+                this.formData = response.data
+                this.$modal.msgSuccess("保存成功");
+                this.loading = false;
+                this.$emit("callbackFn")
+              });
+          }
+        })
+       }
+      })
+    },
+    //删除设置
+    deleteForm(){
+      if(this.formData.id){
+        this.$modal.confirm('确定删除重置？').then(() => {
+          delProcessDefSetting(this.formData.id).then(response=>{
+            this.$modal.msgSuccess("重置成功");
+          })
+        })
+      }
+    }
+  }
+};
 </script>
 <style scoped>
-    .container {
-        height: 550px;
-    }
-    .tabs{
-        height: 550px;
-    }
+.line{
+  padding-bottom: 20px;
+}
+.btn-footer{
+  float: right;
+  margin-top: 100px;
+}
 </style>
-
-
-

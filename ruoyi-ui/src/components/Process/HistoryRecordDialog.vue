@@ -48,10 +48,10 @@ export default {
     },
     methods: {
         // 查询审批历史记录
-        init(recordVisible,processInstanceId) {
+        init(processInstanceId) {
           this.loading = true
           this.historicProcessInstance = []
-          this.recordVisible = recordVisible
+          this.recordVisible = true
           this.$nextTick(()=>{
             apiProcessInst.getHistoryInfoList(processInstanceId).then(response=>{
               this.list = response.data

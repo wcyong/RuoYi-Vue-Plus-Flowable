@@ -2,8 +2,8 @@ package com.ruoyi.workflow.controller;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Arrays;
 
+import com.ruoyi.workflow.domain.ActProcessDefSetting;
 import lombok.RequiredArgsConstructor;
 
 import javax.servlet.http.HttpServletResponse;
@@ -87,8 +87,8 @@ public class ActProcessDefSettingController extends BaseController {
     @Log(title = "流程定义设置", businessType = BusinessType.INSERT)
     @RepeatSubmit()
     @PostMapping()
-    public R<Void> add(@Validated(AddGroup.class) @RequestBody ActProcessDefSettingBo bo) {
-        return toAjax(iActProcessDefSetting.insertByBo(bo) ? 1 : 0);
+    public R<ActProcessDefSetting> add(@Validated(AddGroup.class) @RequestBody ActProcessDefSettingBo bo) {
+        return R.ok(iActProcessDefSetting.insertByBo(bo));
     }
 
     /**

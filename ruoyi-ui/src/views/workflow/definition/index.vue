@@ -149,16 +149,8 @@
                         size="mini"
                         type="text"
                         icon="el-icon-user"
-                        @click="handleUserSetting1(scope.row)"
+                        @click="handleUserSetting(scope.row)"
                         >人员设置</el-button>
-                    </el-col>
-                    <el-col :span="1.5">
-                    <el-button
-                        size="mini"
-                        type="text"
-                        icon="el-icon-setting"
-                        @click="handleFormSetting(scope.row)"
-                        >设置</el-button>
                     </el-col>
                 </el-row>
                 </template>
@@ -251,14 +243,6 @@
                             >复制节点</el-button>
                           </el-tooltip>
                         </el-col>
-                        <el-col :span="1.5">
-                          <el-button
-                              size="mini"
-                              type="text"
-                              icon="el-icon-setting"
-                              @click="handleFormSetting(scope.row)"
-                              >设置</el-button>
-                          </el-col>
                     </el-row>
                     </template>
                 </el-table-column>
@@ -286,13 +270,7 @@
             <process-preview ref="previewRef" :url="url" :type="type"/>
 
             <!-- 流程设置 -->
-            <process-setting ref="settingRef"/>
-
-            <!-- 流程设置 -->
             <process-bpmn-setting ref="settingBpmnRef"/>
-
-            <!-- 表单设置 -->
-            <process-form-list ref="formRef" @callbackFn="getList" :formData="formData"/>
         </el-col>
     </el-row>
   </div>
@@ -303,15 +281,12 @@ import { getProcessDefSettingByDefId } from "@/api/workflow/processDefSetting";
 import {convertToModel} from "@/api/workflow/model";
 import processDeploy from './components/processDeploy'
 import processPreview from './components/processPreview'
-import processSetting from './components/processSetting'
 import processBpmnSetting from './components/processBpmnSetting'
-import processFormList from './components/processFormList'
 import {copy} from "@/api/workflow/actNodeAssginee";
 import {queryTreeList} from "@/api/workflow/category";
 
 export default {
-    name: 'Definition', // 和对应路由表中配置的name值一致
-    components: { processDeploy, processPreview,processSetting,processFormList,processBpmnSetting },
+    components: { processDeploy, processPreview,processBpmnSetting },
     data() {
         return {
             // 弹窗
@@ -356,8 +331,6 @@ export default {
             // 流程定义对象
             procedefData: {},
             type: '',//png,xml
-            // 表单数据
-            formData: {},
             deptOptions: [],
             defaultProps: {
                 children: "children",
@@ -427,6 +400,7 @@ export default {
            this.loading = false;
            this.getList();
            this.$modal.msgSuccess("删除成功");
+           this.histVisible = false
          }).finally(() => {
            this.loading = false;
          });
@@ -505,31 +479,7 @@ export default {
       //打开设置
       handleUserSetting(row){
         this.$nextTick(() => {
-          this.$refs.settingRef.visible = true
-          this.$refs.settingRef.init(row.id)
-        })
-      },
-      //打开设置
-      handleUserSetting1(row){
-        this.$nextTick(() => {
-          this.$refs.settingBpmnRef.init(row.id)
-        })
-      },
-      //打开表单
-      handleFormSetting(row){
-        this.loading = true
-        getProcessDefSettingByDefId(row.id).then(response => {
-          this.formData = {}
-          if(response.data){
-            this.formData = response.data
-          }else{
-            this.formData.businessType = 0
-          }
-          this.formData.processDefinitionId = row.id
-          this.formData.processDefinitionKey = row.key
-          this.formData.processDefinitionName = row.name         
-          this.loading = false
-          this.$refs.formRef.visible = true
+          this.$refs.settingBpmnRef.init(row)
         })
       },
       //复制节点设置

@@ -1,5 +1,5 @@
 <template>
-    <el-dialog  title="流程定义" :visible.sync="bpmnVisible" v-if="bpmnVisible" width="80%">
+    <el-dialog  title="流程定义" :visible.sync="bpmnVisible" v-if="bpmnVisible" width="90%">
       <div class="containers" v-loading="loading">
         <el-header style="border-bottom: 1px solid rgb(218 218 218);height: auto;">
             <div style="display: flex; padding: 10px 0px; justify-content: space-between;">
@@ -19,10 +19,14 @@
          <div class="flow-containers">
             <el-container class="bpmn-el-container" style="align-items: stretch">
                 <el-main style="padding: 0;">
-                <div ref="canvas" class="canvas" />
+                   <div ref="canvas" class="canvas" />
                 </el-main>
+                <el-aside style="width: 400px;background-color: #f0f2f5">
+                   <processSetting :dataObj="formData"/>
+                </el-aside>
             </el-container>
         </div>
+        <!-- 人员设置 -->
         <processUserSetting ref="processUserSettingRef"/>
       </div>
     </el-dialog>
@@ -30,13 +34,16 @@
     
     <script>
     import processUserSetting from './processUserSetting'
+    import processSetting from './processSetting'
+    import { getProcessDefSettingByDefId } from "@/api/workflow/processDefSetting";
     import {getXml} from "@/api/workflow/definition";
     import BpmnViewer from "bpmn-js/lib/Viewer";
     import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas'
     import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
     export default {
       components: {
-        processUserSetting
+        processUserSetting,
+        processSetting
       },
       data() {
         return {
@@ -46,12 +53,13 @@
           xml:'',
           loading: false,
           bpmnVisible: false,
-          processDefinitionId:''
+          processDefinitionId:'',
+          formData:{}
         }
       },
       methods: {
-        init(processDefinitionId) {
-          this.processDefinitionId = processDefinitionId
+        init(data) {
+          this.processDefinitionId = data.id
           this.loading = true
           this.bpmnVisible = true
           this.$nextTick(()=>{
@@ -67,9 +75,21 @@
                 MoveCanvasModule
               ]
             })
-            getXml(processDefinitionId).then(response=>{        
+            getXml(data.id).then(response=>{        
               this.xml = response.data.xmlStr
               this.createDiagram(this.xml)
+            })
+            getProcessDefSettingByDefId(data.id).then(response => {
+              this.formData = {}
+              if(response.data){
+                this.formData = response.data
+              }else{
+                this.formData.businessType = 0
+              }
+              this.formData.processDefinitionId = data.id
+              this.formData.processDefinitionKey = data.key
+              this.formData.processDefinitionName = data.name         
+              this.loading = false
             })
           })
         },

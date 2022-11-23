@@ -51,7 +51,7 @@ public interface IActProcessDefSetting {
     /**
      * 修改流程定义设置
      */
-    Boolean insertByBo(ActProcessDefSettingBo bo);
+    ActProcessDefSetting insertByBo(ActProcessDefSettingBo bo);
 
     /**
      * 修改流程定义设置

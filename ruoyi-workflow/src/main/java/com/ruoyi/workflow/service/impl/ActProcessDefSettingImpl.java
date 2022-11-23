@@ -130,7 +130,7 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Boolean insertByBo(ActProcessDefSettingBo bo) {
+    public ActProcessDefSetting insertByBo(ActProcessDefSettingBo bo) {
         ActProcessDefSetting add = new ActProcessDefSetting();
         add.setProcessDefinitionId(bo.getProcessDefinitionId());
         add.setProcessDefinitionKey(bo.getProcessDefinitionKey());
@@ -161,7 +161,8 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
         if (1 == bo.getBusinessType() && StringUtils.isBlank(bo.getTableName())) {
             throw new ServiceException("表名不能为空");
         }
-        return baseMapper.insert(add) > 0;
+        baseMapper.insert(add);
+        return add;
     }
 
     /**
