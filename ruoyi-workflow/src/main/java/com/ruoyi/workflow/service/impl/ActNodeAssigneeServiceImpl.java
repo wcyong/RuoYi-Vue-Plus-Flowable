@@ -171,6 +171,15 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                     }
                 }
             }
+            if(element instanceof SubProcess){
+                List<SequenceFlow> outgoingFlows = ((FlowNode) element).getOutgoingFlows();
+                for (SequenceFlow outgoingFlow : outgoingFlows) {
+                    FlowElement flowElement = outgoingFlow.getTargetFlowElement();
+                    if (flowElement instanceof EndEvent) {
+                        nodeAssignee.setEnd(true);
+                    }
+                }
+            }
         }
         return nodeAssignee;
     }
