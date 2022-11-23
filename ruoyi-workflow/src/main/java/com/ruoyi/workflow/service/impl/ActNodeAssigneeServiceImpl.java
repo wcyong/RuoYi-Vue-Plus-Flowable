@@ -161,8 +161,15 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                         nodeAssignee.setIndex(0);
                     }
                 }
-            }else if (element instanceof EndEvent) {
-                nodeAssignee.setEnd(true);
+            }
+            if (element instanceof UserTask && nodeId.equals(element.getId())) {
+                List<SequenceFlow> outgoingFlows = ((FlowNode) element).getOutgoingFlows();
+                for (SequenceFlow outgoingFlow : outgoingFlows) {
+                    FlowElement flowElement = outgoingFlow.getTargetFlowElement();
+                    if (flowElement instanceof EndEvent) {
+                        nodeAssignee.setEnd(true);
+                    }
+                }
             }
         }
         return nodeAssignee;
