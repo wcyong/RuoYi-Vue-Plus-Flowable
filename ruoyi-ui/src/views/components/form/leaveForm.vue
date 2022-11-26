@@ -12,11 +12,11 @@
             <el-form-item label="申请人用户名" prop="username">
               <el-input v-model="form.username" placeholder="请输入申请人用户名" />
             </el-form-item>
-            <el-form-item label="请假时长" prop="duration">
-              <el-input v-model="form.duration" placeholder="请输入请假时长，单位：天" />
+            <el-form-item label="请假时长" prop="duration" :rules="[{ required: fieldMap && fieldMap.duration && fieldMap.duration.required, message: fieldMap && fieldMap.duration && fieldMap.duration.message, trigger: 'blur' }]">
+              <el-input :disabled="fieldMap && fieldMap.duration && fieldMap.duration.edit" v-model="form.duration" placeholder="请输入请假时长，单位：天" />
             </el-form-item>
             <el-form-item label="工作委托人" prop="principal">
-              <el-input v-model="form.principal" placeholder="请输入工作委托人" />
+              <el-input :disabled="fieldMap && fieldMap.principal && fieldMap.principal.edit" v-model="form.principal" placeholder="请输入工作委托人" />
             </el-form-item>
             <el-form-item label="联系电话" prop="contactPhone">
               <el-input v-model="form.contactPhone" placeholder="请输入联系电话" />
@@ -69,7 +69,7 @@
 </template>
 
 <script>
-import { getLeave} from "@/api/demo/leave";
+import { getLeaveByTaskId} from "@/api/demo/leave";
 import verify from "@/components/Process/Verify";
 import HistoryBpmnDialog from "@/components/Process/HistoryBpmnDialog";
 import HistoryRecordDialog from "@/components/Process/HistoryRecordDialog";
@@ -98,41 +98,13 @@ export default {
       form: {},
       // 表单校验
       rules: {
-        id: [
-          { required: true, message: "主键ID不能为空", trigger: "blur" }
-        ],
-        username: [
-          { required: true, message: "申请人用户名不能为空", trigger: "blur" }
-        ],
-        duration: [
-          { required: true, message: "请假时长，单位：天不能为空", trigger: "blur" }
-        ],
-        principal: [
-          { required: true, message: "工作委托人不能为空", trigger: "blur" }
-        ],
-        contactPhone: [
-          { required: true, message: "联系电话不能为空", trigger: "blur" }
-        ],
-        leaveType: [
-          { required: true, message: "请假类型不能为空", trigger: "change" }
-        ],
-        title: [
-          { required: true, message: "标题不能为空", trigger: "blur" }
-        ],
-        leaveReason: [
-          { required: true, message: "请假原因不能为空", trigger: "blur" }
-        ],
-        startDate: [
-          { required: true, message: "请假开始时间不能为空", trigger: "blur" }
-        ],
-        endDate: [
-          { required: true, message: "请假结束时间不能为空", trigger: "blur" }
-        ]
+       
       },
       taskVariables: undefined,
       //消息提醒
       sendMessage: {},
-      processInstanceId:undefined
+      processInstanceId:undefined,
+      fieldMap:{}
     };
   },
   watch: {
@@ -158,24 +130,31 @@ export default {
       this.$emit("closeForm")
     },
     async getById() {
-        const {data} = await getLeave(this.businessKey)
+        const {data} = await getLeaveByTaskId(this.businessKey,this.taskId)
         this.form = data;
+        if(this.form.actNodeAssignee && this.form.actNodeAssignee.fieldMap){
+          this.fieldMap = this.form.actNodeAssignee.fieldMap
+        }
         this.processInstanceId = data.actBusinessStatus.processInstanceId
     },
     /** 提交按钮 */
     submitForm() {
-      getLeave(this.businessKey).then(response => {
-          this.taskVariables = {
-                entity: response.data,
-                userId :1
-          };
-          this.sendMessage = {
-            title:'请假申请',
-            messageContent:'单据【'+this.form.id+"】申请"
-          }
-      });
-      this.$refs.verifyRef.visible = true
-      this.$refs.verifyRef.reset()
+      this.$refs["form"].validate(valid => {
+        if (valid) {
+          getLeaveByTaskId(this.businessKey,this.taskId).then(response => {
+              this.taskVariables = {
+                    entity: response.data,
+                    userId :1
+              };
+              this.sendMessage = {
+                title:'请假申请',
+                messageContent:'单据【'+this.form.id+"】申请"
+              }
+          });
+          this.$refs.verifyRef.visible = true
+          this.$refs.verifyRef.reset()
+        }
+      })
     }
   }
 };

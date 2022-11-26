@@ -1,5 +1,5 @@
 <template>
-  <el-dialog title="人员设置" :visible.sync="visible" v-if="visible" width="50%" :close-on-click-modal="false" append-to-body>
+  <el-dialog title="人员设置" v-dialogDrag :visible.sync="visible" v-if="visible" width="50%" :close-on-click-modal="false" append-to-body>
     <div class="container" v-loading="loading">
       <el-form style="height:inherit" ref="form" size="small" label-position="left" :model="form">
           <el-form-item label="环节名称">
@@ -121,6 +121,15 @@
               </el-form-item>
             </el-col>
           </el-row>
+          <el-row>
+            <el-col :span="20">
+              <el-form-item label-width="100px" label="字段配置">
+                <el-badge :value="form.fieldList.length" class="item">
+                  <el-button type="primary" @click="drawer = true" icon="el-icon-s-help">字段配置</el-button>
+                </el-badge>
+              </el-form-item>
+            </el-col>
+          </el-row>
           <el-row v-if="form.index === 1">
             <el-col :span="20">
               <el-form-item label-width="100px" label="审批人员" prop="assignee">
@@ -146,6 +155,51 @@
     <sys-dept ref="deptRef" @confirmUser="clickDept" :propDeptList = 'propDeptList'/>
     <!-- 选择业务规则 -->
     <process-Rule ref="processRuleRef" @primary="clickRule" :propDeptList = 'propDeptList'/>
+
+    <el-drawer append-to-body title="字段配置" :visible.sync="drawer" direction="rtl" size="55%">
+      <div style="padding:0 10px 0 10px">
+        <div style="padding-bottom:10px;float: right;">
+          <el-button type="primary" size="small" @click="addfield">添加</el-button>
+          <el-button type="danger" size="small" @click="clearField">清空</el-button>
+          <el-button type="success" size="small" @click="drawer=false">确定</el-button>
+        </div>
+        <el-table :data="form.fieldList" border>
+          <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
+          <el-table-column label="字段属性" align="center" prop="field" width="180">
+              <template slot-scope="scope">
+                  <el-input v-model="scope.row.field"/>
+              </template>
+          </el-table-column>
+          <el-table-column label="是否编辑" align="center" prop="edit" width="135">
+              <template slot-scope="scope">
+                  <el-radio-group v-model="scope.row.edit">
+                    <el-radio-button label="false">是</el-radio-button>
+                    <el-radio-button label="true">否</el-radio-button>
+                  </el-radio-group>
+              </template>
+          </el-table-column>
+          <el-table-column label="是否必填" align="center" prop="required" width="135">
+              <template slot-scope="scope">
+                  <el-radio-group v-model="scope.row.required" @change="changeRequired(scope.row.required,scope.$index)">
+                    <el-radio-button label="true">是</el-radio-button>
+                    <el-radio-button label="false">否</el-radio-button>
+                  </el-radio-group>
+              </template>
+          </el-table-column>
+          <el-table-column label="提示信息" align="center" prop="message" >
+              <template slot-scope="scope">
+                  <el-input v-model="scope.row.message" v-show="scope.row.required === 'true'||scope.row.required === true"/>
+              </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="80px">
+              <template slot-scope="scope">
+                  <el-button @click="deleteField(scope.$index)" type="danger" size="small">删除</el-button>
+              </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </el-drawer>
+
   </el-dialog>
 </template>
 
@@ -165,11 +219,8 @@ export default {
     },
     data() {
       return {
-        tabPosition: 'left',
-        activeName:'',
         loading: false,
         visible: false,
-        active: null,
         form: {
           isShow: true,
           isBack: false,
@@ -181,7 +232,8 @@ export default {
           autoComplete: false,
           addMultiInstance: false,
           deleteMultiInstance: false,
-          taskListenerList:[]
+          taskListenerList:[],
+          fieldList:[]
         },
         // 按钮值
         btnText:"选择人员",
@@ -201,7 +253,8 @@ export default {
         }, {
           value: 'after',
           label: '完成后'
-        }]
+        }],
+        drawer: false,
       }
     },
     methods: {
@@ -379,6 +432,35 @@ export default {
           this.$set(this.form,'assigneeId',rule.beanName+"."+rule.method)
           this.$set(this.form,'businessRuleId',rule.id)
           this.$refs.processRuleRef.visible = false
+        },
+        // 添加字段属性
+        addfield(){
+            if(this.form.fieldList === undefined || this.form.fieldList === null) {
+              this.form.fieldList = []
+            }
+            let param = {
+                field:'',
+                edit:'true',
+                required:'true'
+            }
+            this.form.fieldList.push(param);
+            this.$forceUpdate()
+        },
+        // 删除字段属性
+        deleteField(index){
+          this.form.fieldList.splice(index,1)
+        },
+        // 删除字段属性
+        clearField(){
+          this.$modal.confirm('是否清空？').then(() => {
+            this.form.fieldList=[]
+            this.$forceUpdate()
+          })
+        },
+        changeRequired(required,index){
+          if(required === 'false' || required === false){
+            this.form.fieldList[index].message = ''
+          }
         }
     }
 }

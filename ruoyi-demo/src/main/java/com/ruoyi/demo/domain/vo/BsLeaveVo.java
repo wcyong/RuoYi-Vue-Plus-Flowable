@@ -3,6 +3,7 @@ package com.ruoyi.demo.domain.vo;
 import com.alibaba.excel.annotation.ExcelIgnoreUnannotated;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.ruoyi.workflow.domain.ActBusinessStatus;
+import com.ruoyi.workflow.domain.ActNodeAssignee;
 import lombok.Data;
 
 import java.math.BigDecimal;
@@ -87,5 +88,7 @@ public class BsLeaveVo {
      */
     @ExcelProperty(value = "流程状态")
     private ActBusinessStatus actBusinessStatus;
+
+    private ActNodeAssignee actNodeAssignee;
 
 }

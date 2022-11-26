@@ -7,16 +7,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.JsonUtils;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.workflow.common.constant.ActConstant;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.vo.ActProcessNodeVo;
+import com.ruoyi.workflow.domain.vo.FieldList;
 import com.ruoyi.workflow.domain.vo.MultiVo;
 import com.ruoyi.workflow.domain.vo.TaskListenerVo;
 import com.ruoyi.workflow.mapper.ActNodeAssigneeMapper;
 import com.ruoyi.workflow.service.IActNodeAssigneeService;
 import com.ruoyi.workflow.utils.WorkFlowUtils;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.flowable.bpmn.model.*;
 import org.flowable.bpmn.model.Process;
 import org.flowable.engine.RepositoryService;
@@ -80,6 +81,22 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             if (CollectionUtil.isNotEmpty(taskListenerList)) {
                 String jsonString = JsonUtils.toJsonString(taskListenerList);
                 actNodeAssignee.setTaskListener(jsonString);
+            }
+        }
+        actNodeAssignee.setFieldListJson("");
+        if (CollectionUtil.isNotEmpty(actNodeAssignee.getFieldList())) {
+            List<FieldList> fieldListVoList = new ArrayList<>();
+            actNodeAssignee.getFieldList().forEach(e -> {
+                if (StringUtils.isNotBlank(e.getField()) && e.getEdit() != null && e.getRequired() != null) {
+                    if(!e.getRequired()){
+                        e.setMessage("");
+                    }
+                    fieldListVoList.add(e);
+                }
+            });
+            if (CollectionUtil.isNotEmpty(fieldListVoList)) {
+                String jsonString = JsonUtils.toJsonString(fieldListVoList);
+                actNodeAssignee.setFieldListJson(jsonString);
             }
         }
         baseMapper.insert(actNodeAssignee);
@@ -148,6 +165,11 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
         } else {
             nodeAssignee.setTaskListenerList(new ArrayList<>());
         }
+        if (ObjectUtil.isNotEmpty(nodeAssignee) && StringUtils.isNotBlank(nodeAssignee.getFieldListJson())) {
+            nodeAssignee.setFieldList(JsonUtils.parseArray(nodeAssignee.getFieldListJson(), FieldList.class));
+        } else {
+            nodeAssignee.setFieldList(new ArrayList<>());
+        }
         BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinitionId);
         List<Process> processes = bpmnModel.getProcesses();
         Collection<FlowElement> elements = processes.get(0).getFlowElements();
@@ -171,7 +193,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                     }
                 }
             }
-            if(element instanceof SubProcess){
+            if (element instanceof SubProcess) {
                 List<SequenceFlow> outgoingFlows = ((FlowNode) element).getOutgoingFlows();
                 for (SequenceFlow outgoingFlow : outgoingFlows) {
                     FlowElement flowElement = outgoingFlow.getTargetFlowElement();

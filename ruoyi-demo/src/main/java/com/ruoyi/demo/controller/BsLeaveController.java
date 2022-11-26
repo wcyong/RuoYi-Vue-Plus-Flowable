@@ -69,6 +69,12 @@ public class BsLeaveController extends BaseController {
         return R.ok(iBsLeaveService.queryById(id));
     }
 
+    @SaCheckPermission("demo:leave:query")
+    @GetMapping("/{id}/{taskId}")
+    public R<BsLeaveVo> getInfo(@PathVariable String id,@PathVariable String taskId) {
+        return R.ok(iBsLeaveService.queryById(id,taskId));
+    }
+
     /**
      * 新增请假业务
      */

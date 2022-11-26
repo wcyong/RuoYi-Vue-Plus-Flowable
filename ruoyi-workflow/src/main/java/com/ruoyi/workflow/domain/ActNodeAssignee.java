@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.ruoyi.common.core.domain.BaseEntity;
 import com.ruoyi.common.core.validate.AddGroup;
+import com.ruoyi.workflow.domain.vo.FieldList;
 import com.ruoyi.workflow.domain.vo.TaskListenerVo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,6 +13,7 @@ import lombok.EqualsAndHashCode;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 流程节点人员设置对象 act_node_assignee
@@ -133,10 +135,27 @@ public class ActNodeAssignee extends BaseEntity{
     private Boolean autoComplete;
 
     /**
+     * 字段
+     */
+    private String fieldListJson;
+
+    /**
      * 任务监听
      */
     @TableField(exist = false)
     private List<TaskListenerVo> taskListenerList;
+
+    /**
+     * 字段属性集合
+     */
+    @TableField(exist = false)
+    private List<FieldList> fieldList;
+
+    /**
+     * 字段属性
+     */
+    @TableField(exist = false)
+    private Map<String, FieldList> fieldMap;
 
     /**
      * 下标 0为第一个节点

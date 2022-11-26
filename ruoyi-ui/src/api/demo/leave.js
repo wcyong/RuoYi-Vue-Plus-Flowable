@@ -17,6 +17,14 @@ export function getLeave(id) {
   })
 }
 
+// 查询请假业务详细
+export function getLeaveByTaskId(id,taskId) {
+  return request({
+    url: `/demo/leave/${id}/${taskId}`,
+    method: 'get'
+  })
+}
+
 // 新增请假业务
 export function addLeave(data) {
   return request({

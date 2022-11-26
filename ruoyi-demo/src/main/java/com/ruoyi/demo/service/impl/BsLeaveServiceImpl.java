@@ -7,19 +7,26 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ruoyi.common.core.domain.PageQuery;
 import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.demo.domain.BsLeave;
 import com.ruoyi.demo.domain.bo.BsLeaveBo;
 import com.ruoyi.demo.domain.vo.BsLeaveVo;
 import com.ruoyi.demo.mapper.BsLeaveMapper;
 import com.ruoyi.demo.service.IBsLeaveService;
+import com.ruoyi.workflow.domain.ActNodeAssignee;
+import com.ruoyi.workflow.domain.vo.FieldList;
+import com.ruoyi.workflow.service.IActNodeAssigneeService;
 import com.ruoyi.workflow.service.IProcessInstanceService;
 import com.ruoyi.workflow.utils.WorkFlowUtils;
 import lombok.RequiredArgsConstructor;
+import org.flowable.engine.TaskService;
+import org.flowable.task.api.Task;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -34,11 +41,30 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
 
     private final BsLeaveMapper baseMapper;
 
+    private final IActNodeAssigneeService iActNodeAssigneeService;
+
+    private final TaskService taskService;
+
     private final IProcessInstanceService iProcessInstanceService;
     @Override
     public BsLeaveVo queryById(String id){
         BsLeaveVo vo = baseMapper.selectVoById(id);
         WorkFlowUtils.setStatusFileValue(vo,vo.getId());
+        return vo;
+    }
+
+    @Override
+    public BsLeaveVo queryById(String id,String taskId){
+        BsLeaveVo vo = baseMapper.selectVoById(id);
+        WorkFlowUtils.setStatusFileValue(vo,vo.getId());
+        Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+        ActNodeAssignee actNodeAssignee = iActNodeAssigneeService.getInfoSetting(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+        if(StringUtils.isNotBlank(actNodeAssignee.getFieldListJson())){
+            List<FieldList> fieldLists = JsonUtils.parseArray(actNodeAssignee.getFieldListJson(), FieldList.class);
+            Map<String, FieldList> collect = fieldLists.stream().collect(Collectors.toMap(FieldList::getField, Function.identity()));
+            actNodeAssignee.setFieldMap(collect);
+        }
+        vo.setActNodeAssignee(actNodeAssignee);
         return vo;
     }
 

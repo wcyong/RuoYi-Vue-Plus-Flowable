@@ -133,22 +133,22 @@
       <el-button type="primary" size="mini" @click="addParam">添加</el-button>
       <el-table :data="businessRuleParams">
         <el-table-column label="参数类型" align="center" prop="paramType" >
-             <template slot-scope="scope">
+            <template slot-scope="scope">
                 <el-input v-model="scope.row.paramType"/>
             </template>
         </el-table-column>
         <el-table-column label="参数" align="center" prop="param" >
-             <template slot-scope="scope">
+            <template slot-scope="scope">
                 <el-input v-model="scope.row.param"/>
             </template>
         </el-table-column>
         <el-table-column label="排序" align="center" prop="orderNo" >
-             <template slot-scope="scope">
+            <template slot-scope="scope">
                 <el-input type="number" :min="0" @blur="checkOrder(scope.row)" v-model="scope.row.orderNo"/>
             </template>
         </el-table-column>
         <el-table-column label="备注" align="center" prop="remark" >
-             <template slot-scope="scope">
+            <template slot-scope="scope">
                 <el-input v-model="scope.row.remark"/>
             </template>
         </el-table-column>

@@ -22,6 +22,8 @@ public interface IBsLeaveService{
 	 */
 	BsLeaveVo queryById(String id);
 
+    BsLeaveVo queryById(String id,String taskId);
+
 	/**
 	 * 查询列表
 	 */
