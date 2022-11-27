@@ -125,7 +125,7 @@
             <el-col :span="20">
               <el-form-item label-width="100px" label="字段配置">
                 <el-badge :value="form.fieldList.length" class="item">
-                  <el-button type="primary" @click="drawer = true" icon="el-icon-s-help">字段配置</el-button>
+                  <el-button type="primary" @click="openFieldClick" icon="el-icon-s-help">字段配置</el-button>
                 </el-badge>
               </el-form-item>
             </el-col>
@@ -155,51 +155,8 @@
     <sys-dept ref="deptRef" @confirmUser="clickDept" :propDeptList = 'propDeptList'/>
     <!-- 选择业务规则 -->
     <process-Rule ref="processRuleRef" @primary="clickRule" :propDeptList = 'propDeptList'/>
-
-    <el-drawer append-to-body title="字段配置" :visible.sync="drawer" direction="rtl" size="55%">
-      <div style="padding:0 10px 0 10px">
-        <div style="padding-bottom:10px;float: right;">
-          <el-button type="primary" size="small" @click="addfield">添加</el-button>
-          <el-button type="danger" size="small" @click="clearField">清空</el-button>
-          <el-button type="success" size="small" @click="drawer=false">确定</el-button>
-        </div>
-        <el-table :data="form.fieldList" border>
-          <el-table-column align="center" type="index" label="序号" width="50"></el-table-column>
-          <el-table-column label="字段属性" align="center" prop="field" width="180">
-              <template slot-scope="scope">
-                  <el-input v-model="scope.row.field"/>
-              </template>
-          </el-table-column>
-          <el-table-column label="是否编辑" align="center" prop="edit" width="135">
-              <template slot-scope="scope">
-                  <el-radio-group v-model="scope.row.edit">
-                    <el-radio-button label="false">是</el-radio-button>
-                    <el-radio-button label="true">否</el-radio-button>
-                  </el-radio-group>
-              </template>
-          </el-table-column>
-          <el-table-column label="是否必填" align="center" prop="required" width="135">
-              <template slot-scope="scope">
-                  <el-radio-group v-model="scope.row.required" @change="changeRequired(scope.row.required,scope.$index)">
-                    <el-radio-button label="true">是</el-radio-button>
-                    <el-radio-button label="false">否</el-radio-button>
-                  </el-radio-group>
-              </template>
-          </el-table-column>
-          <el-table-column label="提示信息" align="center" prop="message" >
-              <template slot-scope="scope">
-                  <el-input v-model="scope.row.message" v-show="scope.row.required === 'true'||scope.row.required === true"/>
-              </template>
-          </el-table-column>
-          <el-table-column label="操作" align="center" width="80px">
-              <template slot-scope="scope">
-                  <el-button @click="deleteField(scope.$index)" type="danger" size="small">删除</el-button>
-              </template>
-          </el-table-column>
-        </el-table>
-      </div>
-    </el-drawer>
-
+    <!-- 字段配置 -->
+    <processFieldSetting ref="processFieldSettingRef" @fieldClick="fieldClick"/>
   </el-dialog>
 </template>
 
@@ -208,6 +165,7 @@ import  SysDeptUser from "@/views/components/user/sys-dept-user";
 import  SysRole from "@/views/components/role/sys-role";
 import  SysDept from "@/views/components/dept/sys-dept";
 import  ProcessRule from "@/views/workflow/definition/components/processRule";
+import  processFieldSetting from "@/views/workflow/definition/components/processFieldSetting";
 import {getInfoSetting,add,del} from "@/api/workflow/actNodeAssginee";
 
 export default {
@@ -215,7 +173,8 @@ export default {
        SysDeptUser,
        SysRole,
        SysDept,
-       ProcessRule
+       ProcessRule,
+       processFieldSetting
     },
     data() {
       return {
@@ -253,8 +212,7 @@ export default {
         }, {
           value: 'after',
           label: '完成后'
-        }],
-        drawer: false,
+        }]
       }
     },
     methods: {
@@ -351,7 +309,6 @@ export default {
         },
         //选择弹出层
         async openSelect(){
-          console.log(this.form.assigneeId)
           if(this.form.chooseWay === 'person'){
             this.propUserList = [];
             if(this.form.assigneeId){
@@ -433,35 +390,14 @@ export default {
           this.$set(this.form,'businessRuleId',rule.id)
           this.$refs.processRuleRef.visible = false
         },
-        // 添加字段属性
-        addfield(){
-            if(this.form.fieldList === undefined || this.form.fieldList === null) {
-              this.form.fieldList = []
-            }
-            let param = {
-                field:'',
-                edit:'true',
-                required:'true'
-            }
-            this.form.fieldList.push(param);
-            this.$forceUpdate()
+        //字段配置
+        openFieldClick(){
+          this.$refs.processFieldSettingRef.init(this.form.fieldList)
         },
-        // 删除字段属性
-        deleteField(index){
-          this.form.fieldList.splice(index,1)
+        //字段配置确认
+        fieldClick(fieldList){
+          this.form.fieldList = fieldList
         },
-        // 删除字段属性
-        clearField(){
-          this.$modal.confirm('是否清空？').then(() => {
-            this.form.fieldList=[]
-            this.$forceUpdate()
-          })
-        },
-        changeRequired(required,index){
-          if(required === 'false' || required === false){
-            this.form.fieldList[index].message = ''
-          }
-        }
     }
 }
 </script>

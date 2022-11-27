@@ -277,7 +277,6 @@
 </template>
 <script>
 import {list,del,updateProcDefState,getXml,getHistByPage} from "@/api/workflow/definition";
-import { getProcessDefSettingByDefId } from "@/api/workflow/processDefSetting";
 import {convertToModel} from "@/api/workflow/model";
 import processDeploy from './components/processDeploy'
 import processPreview from './components/processPreview'

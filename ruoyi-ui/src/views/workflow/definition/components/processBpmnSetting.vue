@@ -27,13 +27,13 @@
             </el-container>
         </div>
         <!-- 人员设置 -->
-        <processUserSetting ref="processUserSettingRef"/>
+        <processNodeSetting ref="processNodeSettingRef"/>
       </div>
     </el-dialog>
     </template>
     
     <script>
-    import processUserSetting from './processUserSetting'
+    import processNodeSetting from './processNodeSetting'
     import processSetting from './processSetting'
     import { getProcessDefSettingByDefId } from "@/api/workflow/processDefSetting";
     import {getXml} from "@/api/workflow/definition";
@@ -42,7 +42,7 @@
     import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
     export default {
       components: {
-        processUserSetting,
+        processNodeSetting,
         processSetting
       },
       data() {
@@ -109,7 +109,7 @@
 
             eventBus.on("element.click", function(e) {
                 if (e.element.businessObject.$type == "bpmn:UserTask") {
-                    that.$refs.processUserSettingRef.changeSteps(that.processDefinitionId,e.element.businessObject.id,e.element.businessObject.name)
+                    that.$refs.processNodeSettingRef.changeSteps(that.processDefinitionId,e.element.businessObject.id,e.element.businessObject.name)
                 }
             });
         },

@@ -81,66 +81,19 @@
       </div>
     </el-dialog>
     <!-- 动态表单结束 -->
-    <!-- 导入表开始 -->
-    <el-dialog title="导入表" :visible.sync="tableVisible" width="800px" top="5vh" append-to-body>
-        <el-form :model="tableQueryParams" ref="tableQueryForm" size="small" :inline="true">
-        <el-form-item label="表名称" prop="tableName">
-            <el-input
-            v-model="tableQueryParams.tableName"
-            placeholder="请输入表名称"
-            clearable
-            @keyup.enter.native="handleQuery"
-            />
-        </el-form-item>
-        <el-form-item label="表描述" prop="tableComment">
-            <el-input
-            v-model="tableQueryParams.tableComment"
-            placeholder="请输入表描述"
-            clearable
-            @keyup.enter.native="handleQuery"
-            />
-        </el-form-item>
-        <el-form-item label="数据源名称" prop="dataName">
-            <el-input
-            v-model="tableQueryParams.dataName"
-            placeholder="请输入数据源名称"
-            clearable
-            @keyup.enter.native="handleQuery"
-            />
-        </el-form-item>
-        <el-form-item>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleTableQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetTableQuery">重置</el-button>
-        </el-form-item>
-        </el-form>
-        <el-row>
-            <el-table :highlight-current-row="true" @row-click="handleTableClick" ref="table" :data="dbTableList" height="260px">
-                <el-table-column prop="tableName" label="表名称" :show-overflow-tooltip="true"></el-table-column>
-                <el-table-column prop="tableComment" label="表描述" :show-overflow-tooltip="true"></el-table-column>
-                <el-table-column prop="createTime" label="创建时间"></el-table-column>
-                <el-table-column prop="updateTime" label="更新时间"></el-table-column>
-            </el-table>
-            <pagination
-                v-show="dbTableTotal>0"
-                :total="dbTableTotal"
-                :page.sync="tableQueryParams.pageNum"
-                :limit.sync="tableQueryParams.pageSize"
-                @pagination="getDbList"
-            />
-        </el-row>
-    </el-dialog>
-    <!-- 导入表结束 -->
     <span class="btn-footer">
       <el-button type="danger" v-if="this.formData.id" @click="deleteForm()">重 置</el-button>
       <el-button type="primary" @click="submitForm('formDataRef')">确 定</el-button>
     </span>
+    <!-- 业务表 -->
+    <sysTable ref="sysTableRef" @handleTableClick="handleTableClick"/>
   </div>
 </template>
 
 <script>
 import { listDynamicFormEnable} from "@/api/workflow/dynamicForm";
-import { listDbTable } from "@/api/tool/gen";
 import { addProcessDefSetting,checkProcessDefSetting,delProcessDefSetting } from "@/api/workflow/processDefSetting";
+import sysTable from "@/views/workflow/definition/components/sysTable";
 export default {
   props:{
     dataObj: {
@@ -148,11 +101,11 @@ export default {
       default:()=>{}
     }
   },
+  components: { sysTable },
   data() {
     return {
       // 显示隐藏
       formVisible: false,
-      tableVisible: false,
       // 按钮loading
       buttonLoading: false,
       // 遮罩层
@@ -171,18 +124,6 @@ export default {
         pageSize: 10,
         formKey: undefined,
         formName: undefined,
-      },
-      // 表数据
-      dbTableList: [],
-      // 总条数
-      dbTableTotal: 0,
-      // 查询参数
-      tableQueryParams: {
-        pageNum: 1,
-        pageSize: 10,
-        tableName: undefined,
-        tableComment: undefined,
-        dataName: 'master',
       },
       // 表单校验
       rulesFrom: {
@@ -241,6 +182,11 @@ export default {
       this.resetForm("queryForm");
       this.handleQuery();
     },
+    // 打开表单
+    handerOpenForm(){
+      this.getList();
+      this.formVisible = true
+    },
     // 选中数据
     handleFormClick(row) {
       this.$set(this.formData,'formId',row.id)
@@ -251,37 +197,10 @@ export default {
     // 选中数据
     handleTableClick(row){
       this.$set(this.formData,'tableName',row.tableName)
-      this.tableVisible = false;
-    },
-    // 打开表单
-    handerOpenForm(){
-      this.getList();
-      this.formVisible = true
-    },
-    // 表数据
-    getDbList(){
-      localStorage.setItem("dataName", this.tableQueryParams.dataName);
-      listDbTable(this.tableQueryParams).then(res => {
-        if (res.code === 200) {
-          this.dbTableList = res.rows;
-          this.dbTableTotal = res.total;
-        }
-      });
     },
     /** 打开表弹窗 */
     handerOpenTable() {
-      this.tableVisible = true;
-      this.getDbList()
-    },
-     /** 搜索按钮操作 */
-    handleTableQuery() {
-      this.tableQueryParams.pageNum = 1;
-      this.getDbList();
-    },
-    /** 重置按钮操作 */
-    resetTableQuery() {
-      this.resetForm("tableQueryForm");
-      this.handleTableQuery();
+      this.$refs.sysTableRef.handerOpenTable()
     },
     // 确认
     submitForm(formName){

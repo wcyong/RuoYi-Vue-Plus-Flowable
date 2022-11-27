@@ -25,6 +25,11 @@ public class FieldList implements Serializable {
     private Boolean edit;
 
     /**
+     * 是否隐藏
+     */
+    private Boolean hidden;
+
+    /**
      * 是否必填
      */
     private Boolean required;

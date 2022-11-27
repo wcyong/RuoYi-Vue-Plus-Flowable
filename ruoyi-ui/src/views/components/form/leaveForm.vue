@@ -12,10 +12,10 @@
             <el-form-item label="申请人用户名" prop="username">
               <el-input v-model="form.username" placeholder="请输入申请人用户名" />
             </el-form-item>
-            <el-form-item label="请假时长" prop="duration" :rules="[{ required: fieldMap && fieldMap.duration && fieldMap.duration.required, message: fieldMap && fieldMap.duration && fieldMap.duration.message, trigger: 'blur' }]">
+            <el-form-item label="请假时长" v-if="fieldMap && fieldMap.duration && fieldMap.duration.hidden" prop="duration" :rules="[{ required: fieldMap && fieldMap.duration && fieldMap.duration.required, message: fieldMap && fieldMap.duration && fieldMap.duration.message, trigger: 'blur' }]">
               <el-input :disabled="fieldMap && fieldMap.duration && fieldMap.duration.edit" v-model="form.duration" placeholder="请输入请假时长，单位：天" />
             </el-form-item>
-            <el-form-item label="工作委托人" prop="principal">
+            <el-form-item label="工作委托人" v-if="fieldMap && fieldMap.principal && fieldMap.principal.hidden" prop="principal" :rules="[{ required: fieldMap && fieldMap.principal && fieldMap.principal.required, message: fieldMap && fieldMap.principal && fieldMap.principal.message, trigger: 'blur' }]">
               <el-input :disabled="fieldMap && fieldMap.principal && fieldMap.principal.edit" v-model="form.principal" placeholder="请输入工作委托人" />
             </el-form-item>
             <el-form-item label="联系电话" prop="contactPhone">
