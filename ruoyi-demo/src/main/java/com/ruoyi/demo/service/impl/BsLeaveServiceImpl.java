@@ -49,14 +49,14 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
     @Override
     public BsLeaveVo queryById(String id){
         BsLeaveVo vo = baseMapper.selectVoById(id);
-        WorkFlowUtils.setStatusFileValue(vo,vo.getId());
+        WorkFlowUtils.setStatusFieldValue(vo,vo.getId());
         return vo;
     }
 
     @Override
     public BsLeaveVo queryById(String id,String taskId){
         BsLeaveVo vo = baseMapper.selectVoById(id);
-        WorkFlowUtils.setStatusFileValue(vo,vo.getId());
+        WorkFlowUtils.setStatusFieldValue(vo,vo.getId());
         Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
         ActNodeAssignee actNodeAssignee = iActNodeAssigneeService.getInfoSetting(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
         if(StringUtils.isNotBlank(actNodeAssignee.getFieldListJson())){
@@ -75,7 +75,7 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
         List<BsLeaveVo> records = result.getRecords();
         if(CollectionUtil.isNotEmpty(records)){
             List<String> collectIds = records.stream().map(BsLeaveVo::getId).collect(Collectors.toList());
-            WorkFlowUtils.setStatusListFileValue(records,collectIds,"id");
+            WorkFlowUtils.setStatusListFieldValue(records,collectIds,"id");
         }
         result.setRecords(records);
         return TableDataInfo.build(result);

@@ -403,7 +403,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/1/16
      */
-    public static void setStatusFileValue(Object obj, String id) {
+    public static void setStatusFieldValue(Object obj, String id) {
         Class<?> claszz = obj.getClass();
         ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByBusinessKey(id);
         Field businessStatus;
@@ -437,7 +437,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/9/6
      */
-    public static void setStatusListFileValue(Object obj, List<String> idList, String fieldName) {
+    public static void setStatusListFieldValue(Object obj, List<String> idList, String fieldName) {
         List<ActBusinessStatus> actBusinessStatusList = iActBusinessStatusService.getListInfoByBusinessKey(idList);
         if (obj instanceof Collection) {
             Collection<?> collection = (Collection<?>) obj;
@@ -722,7 +722,7 @@ public class WorkFlowUtils {
 
         List<Task> taskList = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
         if (CollectionUtil.isEmpty(taskList)) {
-            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH,processInstanceId);
+            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH, processInstanceId);
         }
         for (Task task : taskList) {
             ActNodeAssignee nodeAssignee = actNodeAssignees.stream().filter(e -> task.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);

@@ -58,7 +58,7 @@ public class ActBusinessFormServiceImpl implements IActBusinessFormService {
     public ActBusinessFormVo queryById(Long id) {
         ActBusinessFormVo vo = baseMapper.selectVoById(id);
         if(vo != null){
-            WorkFlowUtils.setStatusFileValue(vo, String.valueOf(vo.getId()));
+            WorkFlowUtils.setStatusFieldValue(vo, String.valueOf(vo.getId()));
         }
         return vo;
     }
@@ -73,7 +73,7 @@ public class ActBusinessFormServiceImpl implements IActBusinessFormService {
         List<ActBusinessFormVo> records = result.getRecords();
         if (CollectionUtil.isNotEmpty(records)) {
             List<String> collectIds = records.stream().map(e -> String.valueOf(e.getId())).collect(Collectors.toList());
-            WorkFlowUtils.setStatusListFileValue(records, collectIds, "id");
+            WorkFlowUtils.setStatusListFieldValue(records, collectIds, "id");
         }
         return TableDataInfo.build(result);
     }
