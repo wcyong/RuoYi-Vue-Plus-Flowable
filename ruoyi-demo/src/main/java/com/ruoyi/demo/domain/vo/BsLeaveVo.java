@@ -89,6 +89,10 @@ public class BsLeaveVo {
     @ExcelProperty(value = "流程状态")
     private ActBusinessStatus actBusinessStatus;
 
+    /**
+     * 流程节点设置
+     */
+    @ExcelProperty(value = "流程节点设置")
     private ActNodeAssignee actNodeAssignee;
 
 }

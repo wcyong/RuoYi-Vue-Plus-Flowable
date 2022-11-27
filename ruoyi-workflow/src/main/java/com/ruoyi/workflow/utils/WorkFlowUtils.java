@@ -10,10 +10,12 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StreamUtils;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.workflow.domain.*;
 import com.ruoyi.workflow.domain.bo.SendMessage;
 import com.ruoyi.workflow.domain.bo.TaskCompleteBo;
+import com.ruoyi.workflow.domain.vo.FieldList;
 import com.ruoyi.workflow.domain.vo.MultiVo;
 import com.ruoyi.workflow.flowable.cmd.*;
 import com.ruoyi.workflow.common.constant.ActConstant;
@@ -23,7 +25,6 @@ import com.ruoyi.workflow.domain.vo.ProcessNode;
 import com.ruoyi.workflow.service.*;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.flowable.bpmn.converter.BpmnXMLConverter;
 import org.flowable.bpmn.model.*;
 import org.flowable.common.engine.api.delegate.Expression;
@@ -48,6 +49,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.rmi.ServerException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.ruoyi.workflow.common.constant.ActConstant.*;
@@ -73,6 +75,8 @@ public class WorkFlowUtils {
     private static final IActBusinessRuleService iActBusinessRuleService = SpringUtils.getBean(IActBusinessRuleService.class);
 
     private static final IActTaskNodeService iActTaskNodeService = SpringUtils.getBean(IActTaskNodeService.class);
+
+    private static final IActNodeAssigneeService iActNodeAssigneeService = SpringUtils.getBean(IActNodeAssigneeService.class);
 
     /**
      * @description: bpmnModel转为xml
@@ -475,6 +479,40 @@ public class WorkFlowUtils {
                         e.printStackTrace();
                         throw new ServiceException("设置流程状态失败：" + e.getMessage());
                     }
+                }
+            }
+        }
+    }
+
+    /**
+     * @description: 设置流程节点人员设置对象
+     * @param: obj 对象
+     * @param: taskId 任务id
+     * @author: gssong
+     * @date: 2022/11/27
+     */
+    public static void setActNodeAssignee(Object obj, String taskId) {
+        Task task = PROCESS_ENGINE.getTaskService().createTaskQuery().taskId(taskId).singleResult();
+        if (task != null) {
+            ActNodeAssignee actNodeAssignee = iActNodeAssigneeService.getInfoSetting(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
+            if (actNodeAssignee != null && StringUtils.isNotBlank(actNodeAssignee.getFieldListJson())) {
+                List<FieldList> fieldLists = JsonUtils.parseArray(actNodeAssignee.getFieldListJson(), FieldList.class);
+                Map<String, FieldList> collectMap = fieldLists.stream().collect(Collectors.toMap(FieldList::getField, Function.identity()));
+                actNodeAssignee.setFieldMap(collectMap);
+                Class<?> claszz = obj.getClass();
+                Field nodeAssignee;
+                try {
+                    nodeAssignee = claszz.getDeclaredField(ACT_NODE_ASSIGNEE);
+                    nodeAssignee.setAccessible(true);
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                    throw new ServiceException("未找到" + ACT_NODE_ASSIGNEE + "属性：" + e.getMessage());
+                }
+                try {
+                    nodeAssignee.set(obj, actNodeAssignee);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                    throw new ServiceException("设置流程状态失败：" + e.getMessage());
                 }
             }
         }

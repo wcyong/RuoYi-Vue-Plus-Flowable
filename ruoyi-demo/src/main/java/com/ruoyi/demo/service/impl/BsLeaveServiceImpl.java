@@ -46,25 +46,19 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
     private final TaskService taskService;
 
     private final IProcessInstanceService iProcessInstanceService;
+
     @Override
-    public BsLeaveVo queryById(String id){
+    public BsLeaveVo queryById(String id) {
         BsLeaveVo vo = baseMapper.selectVoById(id);
-        WorkFlowUtils.setStatusFieldValue(vo,vo.getId());
+        WorkFlowUtils.setStatusFieldValue(vo, vo.getId());
         return vo;
     }
 
     @Override
-    public BsLeaveVo queryById(String id,String taskId){
+    public BsLeaveVo queryById(String id, String taskId) {
         BsLeaveVo vo = baseMapper.selectVoById(id);
-        WorkFlowUtils.setStatusFieldValue(vo,vo.getId());
-        Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-        ActNodeAssignee actNodeAssignee = iActNodeAssigneeService.getInfoSetting(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
-        if(StringUtils.isNotBlank(actNodeAssignee.getFieldListJson())){
-            List<FieldList> fieldLists = JsonUtils.parseArray(actNodeAssignee.getFieldListJson(), FieldList.class);
-            Map<String, FieldList> collect = fieldLists.stream().collect(Collectors.toMap(FieldList::getField, Function.identity()));
-            actNodeAssignee.setFieldMap(collect);
-        }
-        vo.setActNodeAssignee(actNodeAssignee);
+        WorkFlowUtils.setStatusFieldValue(vo, vo.getId());
+        WorkFlowUtils.setActNodeAssignee(vo, taskId);
         return vo;
     }
 
@@ -73,13 +67,14 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
         LambdaQueryWrapper<BsLeave> lqw = buildQueryWrapper(bo);
         Page<BsLeaveVo> result = baseMapper.selectVoPage(pageQuery.build(), lqw);
         List<BsLeaveVo> records = result.getRecords();
-        if(CollectionUtil.isNotEmpty(records)){
+        if (CollectionUtil.isNotEmpty(records)) {
             List<String> collectIds = records.stream().map(BsLeaveVo::getId).collect(Collectors.toList());
-            WorkFlowUtils.setStatusListFieldValue(records,collectIds,"id");
+            WorkFlowUtils.setStatusListFieldValue(records, collectIds, "id");
         }
         result.setRecords(records);
         return TableDataInfo.build(result);
     }
+
     @Override
     public List<BsLeaveVo> queryList(BsLeaveBo bo) {
         LambdaQueryWrapper<BsLeave> lqw = buildQueryWrapper(bo);
@@ -116,7 +111,7 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
     public Boolean deleteWithValidByIds(Collection<String> ids) {
         for (String id : ids) {
             String processInstanceId = iProcessInstanceService.getProcessInstanceId(id);
-            if(StringUtils.isNotBlank(processInstanceId)){
+            if (StringUtils.isNotBlank(processInstanceId)) {
                 iProcessInstanceService.deleteRuntimeProcessAndHisInst(processInstanceId);
             }
         }

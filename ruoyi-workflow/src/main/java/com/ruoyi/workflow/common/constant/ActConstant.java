@@ -106,6 +106,11 @@ public interface ActConstant {
     String ACT_BUSINESS_STATUS = "actBusinessStatus";
 
     /**
+     * 流程节点对象
+     */
+    String ACT_NODE_ASSIGNEE = "actNodeAssignee";
+
+    /**
      * 流程委派标识
      */
     String PENDING = "PENDING";
