@@ -140,6 +140,11 @@ public class ActNodeAssignee extends BaseEntity{
     private String fieldListJson;
 
     /**
+     * 会签完成的数量
+     */
+    private Integer numberCompleted;
+
+    /**
      * 任务监听
      */
     @TableField(exist = false)

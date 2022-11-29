@@ -48,10 +48,8 @@
         <!-- SMS 配置 -->
         <aliyun.sms.version>2.0.22</aliyun.sms.version>
         <tencent.sms.version>3.1.611</tencent.sms.version>
-	<!--工作流配置-->
+	    <!--工作流配置-->
         <flowable.version>6.7.2</flowable.version>
-        <!--积木报表配置-->
-        <jimureport.version>1.5.2</jimureport.version>
     </properties>
 
     <!-- 依赖声明 -->
@@ -287,27 +285,6 @@
                 <version>${flowable.version}</version>
             </dependency>
 
-            <!-- JimuReport-->
-            <dependency>
-                <groupId>org.jeecgframework.jimureport</groupId>
-                <artifactId>jimureport-spring-boot-starter</artifactId>
-                <version>${jimureport.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>druid</artifactId>
-                        <groupId>com.alibaba</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>xmlbeans</artifactId>
-                        <groupId>org.apache.xmlbeans</groupId>
-                    </exclusion>
-                    <exclusion>
-                        <artifactId>xml-apis</artifactId>
-                        <groupId>xml-apis</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-
             <!-- 定时任务 -->
             <dependency>
                 <groupId>com.ruoyi</groupId>
@@ -371,13 +348,6 @@
                 <version>${ruoyi-vue-plus.version}</version>
             </dependency>
 
-            <!-- 报表模块 -->
-            <dependency>
-                <groupId>com.ruoyi</groupId>
-                <artifactId>ruoyi-report</artifactId>
-                <version>${ruoyi-vue-plus.version}</version>
-            </dependency>
-
         </dependencies>
     </dependencyManagement>
 
@@ -393,7 +363,6 @@
         <module>ruoyi-oss</module>
         <module>ruoyi-sms</module>
         <module>ruoyi-workflow</module>
-        <module>ruoyi-report</module>
     </modules>
     <packaging>pom</packaging>
 

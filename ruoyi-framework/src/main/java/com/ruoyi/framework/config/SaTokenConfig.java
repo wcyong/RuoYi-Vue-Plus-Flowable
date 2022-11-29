@@ -8,7 +8,6 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.framework.config.properties.ExcludeUrlProperties;
 import com.ruoyi.framework.config.properties.SecurityProperties;
-import com.ruoyi.framework.interceptor.JmReportHandlerInterceptor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
@@ -58,7 +57,6 @@ public class SaTokenConfig implements WebMvcConfigurer {
         })).addPathPatterns("/**")
             // 排除不需要拦截的路径
             .excludePathPatterns(securityProperties.getExcludes());
-			registry.addInterceptor(new JmReportHandlerInterceptor()).addPathPatterns("/jmreport/view/**","/jmreport/list/**");
     }
 
     @Bean

@@ -24,6 +24,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="deleteMultiInstance" column="delete_multi_instance"/>
         <result property="taskListener" column="task_listener"/>
         <result property="autoComplete" column="auto_complete"/>
+        <result property="fieldListJson" column="field_list_json"/>
+        <result property="numberCompleted" column="number_completed"/>
         <result property="createTime" column="create_time"/>
         <result property="createBy" column="create_by"/>
         <result property="updateTime" column="update_time"/>

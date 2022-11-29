@@ -136,8 +136,6 @@ security:
     # actuator 监控配置
     - /actuator
     - /actuator/**
-    # 积木报表配置
-    - /jmreport/**
 
 # MyBatisPlus配置
 # https://baomidou.com/config/

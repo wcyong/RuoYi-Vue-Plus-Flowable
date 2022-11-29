@@ -84,12 +84,6 @@
             <artifactId>ruoyi-workflow</artifactId>
         </dependency>
 
-        <!-- 报表模块  -->
-        <dependency>
-            <groupId>com.ruoyi</groupId>
-            <artifactId>ruoyi-report</artifactId>
-        </dependency>
-
     </dependencies>
 
     <build>
