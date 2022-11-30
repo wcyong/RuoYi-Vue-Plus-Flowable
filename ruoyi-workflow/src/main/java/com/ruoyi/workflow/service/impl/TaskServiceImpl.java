@@ -790,13 +790,10 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             if (CollectionUtil.isNotEmpty(assigneeList)) {
                 List<SysUser> userList = iUserService.selectListUserByIds(assigneeList);
                 if (CollectionUtil.isNotEmpty(userList)) {
-                    taskFinishVoList.forEach(e -> {
-                        SysUser sysUser = userList.stream().filter(t -> t.getUserId().compareTo(e.getAssigneeId()) == 0).findFirst().orElse(null);
-                        if (ObjectUtil.isNotEmpty(sysUser)) {
-                            e.setAssignee(sysUser.getNickName());
-                            e.setAssigneeId(sysUser.getUserId());
-                        }
-                    });
+                    taskFinishVoList.forEach(e -> userList.stream().filter(t -> t.getUserId().compareTo(e.getAssigneeId()) == 0).findFirst().ifPresent(u->{
+                        e.setAssignee(u.getNickName());
+                        e.setAssigneeId(u.getUserId());
+                    }));
                 }
             }
         }
@@ -873,25 +870,17 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             if (CollectionUtil.isNotEmpty(assigneeList)) {
                 List<SysUser> userList = iUserService.selectListUserByIds(assigneeList);
                 if (CollectionUtil.isNotEmpty(userList)) {
-                    list.forEach(e -> {
-                        SysUser sysUser = userList.stream().filter(t -> StringUtils.isNotBlank(e.getAssignee()) && t.getUserId().compareTo(e.getAssigneeId()) == 0).findFirst().orElse(null);
-                        if (ObjectUtil.isNotEmpty(sysUser)) {
-                            e.setAssignee(sysUser.getNickName());
-                            e.setAssigneeId(sysUser.getUserId());
-                        }
-                    });
+                    list.forEach(e -> userList.stream().filter(t -> StringUtils.isNotBlank(e.getAssignee()) && t.getUserId().compareTo(e.getAssigneeId()) == 0).findFirst().ifPresent(u->{
+                        e.setAssignee(u.getNickName());
+                        e.setAssigneeId(u.getUserId());
+                    }));
                 }
             }
             //业务id集合
             List<String> businessKeyList = list.stream().map(TaskWaitingVo::getBusinessKey).collect(Collectors.toList());
             List<ActBusinessStatus> infoList = iActBusinessStatusService.getListInfoByBusinessKey(businessKeyList);
             if (CollectionUtil.isNotEmpty(infoList)) {
-                list.forEach(e -> {
-                    ActBusinessStatus businessStatus = infoList.stream().filter(t -> t.getBusinessKey().equals(e.getBusinessKey())).findFirst().orElse(null);
-                    if (ObjectUtil.isNotEmpty(businessStatus)) {
-                        e.setActBusinessStatus(businessStatus);
-                    }
-                });
+                list.forEach(e -> infoList.stream().filter(t -> t.getBusinessKey().equals(e.getBusinessKey())).findFirst().ifPresent(e::setActBusinessStatus));
             }
         }
         return new TableDataInfo<>(list, total);
