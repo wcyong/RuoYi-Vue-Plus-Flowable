@@ -26,9 +26,7 @@
 </template>
 
 <script>
-import BpmnViewer from "bpmn-js/lib/Viewer";
-import MoveCanvasModule from 'diagram-js/lib/navigation/movecanvas'
-import ZoomScrollModule from "diagram-js/lib/navigation/zoomscroll";
+import BpmnViewer from 'bpmn-js/lib/NavigatedViewer';
 import processApi from "@/api/workflow/processInst";
 
 export default {
@@ -52,8 +50,6 @@ export default {
         {
           //禁止滚轮滚动
           zoomScroll: ["value",""],
-          ZoomScrollModule,
-          MoveCanvasModule
         }
       ]
     })
