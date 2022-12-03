@@ -1,5 +1,5 @@
 <template>
-<el-dialog  title="流程进度" :visible.sync="bpmnVisible" v-if="bpmnVisible" width="70%">
+<el-dialog  title="流程进度" :visible.sync="bpmnVisible" v-if="bpmnVisible" append-to-body v-dialogDrag width="70%">
   <div class="containers" v-loading="loading">
     <el-header style="border-bottom: 1px solid rgb(218 218 218);height: auto;">
         <div style="display: flex; padding: 10px 0px; justify-content: space-between;">

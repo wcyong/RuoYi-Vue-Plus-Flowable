@@ -1310,8 +1310,10 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             }
             if (StringUtils.isBlank(taskBo.getComment())) {
                 taskBo.setComment(LoginHelper.getUsername() + "终止了申请");
+            }else{
+                taskBo.setComment(LoginHelper.getUsername() + "终止了申请："+taskBo.getComment());
             }
-            taskService.addComment(task.getId(), task.getProcessInstanceId(), LoginHelper.getUsername() + "终止了申请:" + taskBo.getComment());
+            taskService.addComment(task.getId(), task.getProcessInstanceId(), taskBo.getComment());
             List<Task> list = taskService.createTaskQuery().processInstanceId(task.getProcessInstanceId()).list();
             if (CollectionUtil.isNotEmpty(list)) {
                 List<Task> subTasks = list.stream().filter(e -> StringUtils.isNotBlank(e.getParentTaskId())).collect(Collectors.toList());
