@@ -122,7 +122,7 @@ public class ActTaskNodeServiceImpl extends ServiceImpl<ActTaskNodeMapper, ActTa
     public Boolean saveTaskNode(ActTaskNode actTaskNode) {
         try {
             List<ActTaskNode> list = getListByInstanceId(actTaskNode.getInstanceId());
-            if (list.size() > 0) {
+            if (!list.isEmpty()) {
                 ActTaskNode taskNode = list.stream().filter(e -> e.getNodeId().equals(actTaskNode.getNodeId()) && e.getOrderNo() == 0).findFirst().orElse(null);
                 if (ObjectUtil.isEmpty(taskNode)) {
                     LambdaQueryWrapper<ActTaskNode> queryWrapper = new LambdaQueryWrapper<>();

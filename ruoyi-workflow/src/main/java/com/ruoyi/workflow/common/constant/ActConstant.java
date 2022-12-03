@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.common.constant;
 
+
 /**
  * @description: 工作流常量
  * @author: gssong
@@ -167,5 +168,12 @@ public interface ActConstant {
      * 流程业务状态管理 cache key
      */
     String CACHE_ACT_BUSINESS_STATUS_KEY = CACHE_NAMES + "act_business_status:";
+
+    /**
+     * 流程节点设置管理 cache key
+     */
+    String CACHE_ACT_NODE_ASSIGNEE_KEY = CACHE_NAMES + "act_node_assignee:";
+
+
 
 }

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.common.utils.redis.RedisUtils;
 import com.ruoyi.workflow.common.constant.ActConstant;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.vo.ActProcessNodeVo;
@@ -26,6 +27,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +54,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ActNodeAssignee add(ActNodeAssignee actNodeAssignee) {
+        RedisUtils.deleteObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + actNodeAssignee.getProcessDefinitionId() + "-" + actNodeAssignee.getNodeId());
 
         if (actNodeAssignee.getIndex() == 1 && StringUtils.isBlank(actNodeAssignee.getChooseWay())) {
             throw new ServiceException("请选择选人方式");
@@ -88,7 +91,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             List<FieldList> fieldListVoList = new ArrayList<>();
             actNodeAssignee.getFieldList().forEach(e -> {
                 if (StringUtils.isNotBlank(e.getField()) && e.getEdit() != null && e.getRequired() != null) {
-                    if(!e.getRequired()){
+                    if (!e.getRequired()) {
                         e.setMessage("");
                     }
                     fieldListVoList.add(e);
@@ -127,6 +130,10 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
      */
     @Override
     public ActNodeAssignee getInfoSetting(String processDefinitionId, String nodeId) {
+        ActNodeAssignee cacheActNodeAssignee = RedisUtils.getCacheObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId);
+        if (cacheActNodeAssignee != null) {
+            return cacheActNodeAssignee;
+        }
         LambdaQueryWrapper<ActNodeAssignee> wrapper = Wrappers.lambdaQuery();
         wrapper.eq(ActNodeAssignee::getProcessDefinitionId, processDefinitionId);
         wrapper.eq(ActNodeAssignee::getNodeId, nodeId);
@@ -203,7 +210,19 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                 }
             }
         }
+        setCache(processDefinitionId, nodeId, nodeAssignee);
         return nodeAssignee;
+    }
+
+    /**
+     * 添加缓存
+     * @param processDefinitionId
+     * @param nodeId
+     * @param nodeAssignee
+     */
+    private void setCache(String processDefinitionId, String nodeId, ActNodeAssignee nodeAssignee) {
+        RedisUtils.setCacheObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId,
+            nodeAssignee, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
     }
 
     /**
