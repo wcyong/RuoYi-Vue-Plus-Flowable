@@ -48,6 +48,7 @@ public class ProcessRunningPathUtils {
         assert startElement != null;
         List<SequenceFlow> outgoingFlows = ((StartEvent) startElement).getOutgoingFlows();
         if (outgoingFlows.size() == 1) {
+            buildData(new ProcessNodePath(), null, processInstanceId, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, ActConstant.USER_TASK, processNodePathList);
             getNextNodeList(processNodePathList, flowElements, outgoingFlows.get(0), variables, processInstance.getProcessInstanceId(), null);
         }
         Map<String, List<ProcessNodePath>> listMap = processNodePathList.stream().collect(Collectors.groupingBy(ProcessNodePath::getSourceFlowElementId));
