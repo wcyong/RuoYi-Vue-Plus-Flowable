@@ -127,15 +127,6 @@ export default {
                         } else if (nn.targetRef.$type === 'bpmn:InclusiveGateway') {
                             canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
                             canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
-                        } else if (nn.targetRef.$type === 'bpmn:EndEvent') {
-                            if (!todoTask && endTask.key === n.id) {
-                                canvas.addMarker(nn.id, 'highlight')
-                                canvas.addMarker(nn.targetRef.id, 'highlight')
-                            }
-                            if (!completeTask.completed) {
-                                canvas.addMarker(nn.id, 'highlight-todo')
-                                canvas.addMarker(nn.targetRef.id, 'highlight-todo')
-                            }
                         }
                     })
                 }
@@ -161,9 +152,13 @@ export default {
                     }
                 })
             } else if (n.$type === 'bpmn:SubProcess') {
+                const completeTask = this.taskList.find(m => m.key === n.id)
+                if (completeTask) {
+                    canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                    canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                }
                 this.bpmnNodeList(n.flowElements,canvas)
-            }
-            if (n.$type === 'bpmn:StartEvent') {
+            } else if (n.$type === 'bpmn:StartEvent') {
                 n.outgoing.forEach(nn => {
                     const completeTask = this.taskList.find(m => m.key === nn.targetRef.id)
                     if (completeTask) {
@@ -172,6 +167,13 @@ export default {
                         return
                     }
                 })
+            } else if (n.$type === 'bpmn:EndEvent') {
+                const completeTask = this.taskList.find(m => m.key === n.id)
+                if (completeTask) {
+                    canvas.addMarker(completeTask.key, 'highlight')
+                    canvas.addMarker(n.id, 'highlight')
+                    return
+                }
             }
       })
     }
