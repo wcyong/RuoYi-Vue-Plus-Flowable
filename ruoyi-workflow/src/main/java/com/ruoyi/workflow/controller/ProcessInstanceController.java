@@ -181,7 +181,7 @@ public class ProcessInstanceController extends BaseController {
      * @date: 2022/10/25 22:07
      */
     @GetMapping("/getXml/{processInstanceId}")
-    public R<Map<String,Object>> getXml(@NotBlank(message = "流程定义id不能为空") @PathVariable String processInstanceId) {
+    public R<Map<String,Object>> getXml(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstanceId) {
         return R.ok("操作成功", iProcessInstanceService.getXml(processInstanceId));
     }
 

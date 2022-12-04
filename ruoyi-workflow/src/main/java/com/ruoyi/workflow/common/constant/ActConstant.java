@@ -34,7 +34,12 @@ public interface ActConstant {
     /**
      * 包含网关
      */
-    String INCLUSIVE_GATEWAY = "InclusiveGateway";
+    String INCLUSIVE_GATEWAY = "inclusiveGateway";
+
+    /**
+     * 子流程
+     */
+    String SUB_PROCESS = "SubProcess";
 
     /**
      * 结束节点

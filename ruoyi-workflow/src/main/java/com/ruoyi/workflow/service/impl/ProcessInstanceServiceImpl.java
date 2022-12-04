@@ -608,7 +608,11 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         List<HistoricActivityInstance> highLightedFlowList = historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstanceId).orderByHistoricActivityInstanceStartTime().asc().list();
         for (HistoricActivityInstance tempActivity : highLightedFlowList) {
             Map<String, Object> task = new HashMap<>();
-            if (!ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType())) {
+            if (!ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType()) &&
+                !ActConstant.PARALLEL_GATEWAY.equals(tempActivity.getActivityType())&&
+                !ActConstant.EXCLUSIVE_GATEWAY.equals(tempActivity.getActivityType())&&
+                !ActConstant.INCLUSIVE_GATEWAY.equals(tempActivity.getActivityType())
+             ) {
                 if (tempActivity.getEndTime() == null) {
                     task.put("key", tempActivity.getActivityId());
                     task.put("completed", false);

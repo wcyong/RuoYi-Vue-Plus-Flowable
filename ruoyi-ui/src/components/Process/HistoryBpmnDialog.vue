@@ -121,6 +121,12 @@ export default {
                         } else if (nn.targetRef.$type === 'bpmn:ExclusiveGateway') {
                             canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
                             canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                        } else if (nn.targetRef.$type === 'bpmn:ParallelGateway') {
+                            canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                            canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                        } else if (nn.targetRef.$type === 'bpmn:InclusiveGateway') {
+                            canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                            canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
                         } else if (nn.targetRef.$type === 'bpmn:EndEvent') {
                             if (!todoTask && endTask.key === n.id) {
                                 canvas.addMarker(nn.id, 'highlight')
@@ -134,6 +140,20 @@ export default {
                     })
                 }
             } else if (n.$type === 'bpmn:ExclusiveGateway') {
+                n.outgoing.forEach(nn => {
+                    const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
+                    if (targetTask) {
+                        canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
+                    }
+                })
+            }  else if (n.$type === 'bpmn:ParallelGateway') {
+                n.outgoing.forEach(nn => {
+                    const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
+                    if (targetTask) {
+                        canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
+                    }
+                })
+            }   else if (n.$type === 'bpmn:InclusiveGateway') {
                 n.outgoing.forEach(nn => {
                     const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
                     if (targetTask) {
