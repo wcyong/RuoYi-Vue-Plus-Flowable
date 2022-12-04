@@ -9,6 +9,7 @@ import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
+import com.ruoyi.workflow.domain.vo.ProcessNodePath;
 import com.ruoyi.workflow.flowable.config.CustomDefaultProcessDiagramGenerator;
 import com.ruoyi.workflow.common.constant.ActConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
@@ -21,6 +22,7 @@ import com.ruoyi.workflow.domain.vo.ProcessInstFinishVo;
 import com.ruoyi.workflow.domain.vo.ProcessInstRunningVo;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.service.*;
+import com.ruoyi.workflow.utils.ProcessRunningPathUtils;
 import com.ruoyi.workflow.utils.WorkFlowUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
@@ -416,7 +418,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 throw new ServiceException("当前流程异常，未生成act_business_status对象");
             }
             //2. 更新业务状态
-            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.INVALID,processInstBo.getProcessInstId());
+            return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.INVALID, processInstBo.getProcessInstId());
         } catch (Exception e) {
             throw new ServiceException(e.getMessage());
         }
@@ -583,7 +585,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 }
                 iActTaskNodeService.deleteByInstanceId(processInstId);
             }
-            return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.CANCEL,processInstId);
+            return iActBusinessStatusService.updateState(processInstance.getBusinessKey(), BusinessStatusEnum.CANCEL, processInstId);
         } catch (Exception e) {
             e.printStackTrace();
             throw new ServiceException("撤销失败:" + e.getMessage());
@@ -609,17 +611,12 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         for (HistoricActivityInstance tempActivity : highLightedFlowList) {
             Map<String, Object> task = new HashMap<>();
             if (!ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType()) &&
-                !ActConstant.PARALLEL_GATEWAY.equals(tempActivity.getActivityType())&&
-                !ActConstant.EXCLUSIVE_GATEWAY.equals(tempActivity.getActivityType())&&
+                !ActConstant.PARALLEL_GATEWAY.equals(tempActivity.getActivityType()) &&
+                !ActConstant.EXCLUSIVE_GATEWAY.equals(tempActivity.getActivityType()) &&
                 !ActConstant.INCLUSIVE_GATEWAY.equals(tempActivity.getActivityType())
-             ) {
-                if (tempActivity.getEndTime() == null) {
-                    task.put("key", tempActivity.getActivityId());
-                    task.put("completed", false);
-                } else {
-                    task.put("key", tempActivity.getActivityId());
-                    task.put("completed", true);
-                }
+            ) {
+                task.put("key", tempActivity.getActivityId());
+                task.put("completed", tempActivity.getEndTime() != null);
                 taskList.add(task);
             }
         }
@@ -631,6 +628,39 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
                 Map<String, Object> next = iterator.next();
                 runtimeNodeList.stream().filter(t -> t.get("key").equals(next.get("key")) && (Boolean) next.get("completed")).findFirst().ifPresent(t -> iterator.remove());
             }
+        }
+        map.put("taskList", taskList);
+        InputStream inputStream;
+        try {
+            inputStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(), processDefinition.getResourceName());
+            xml.append(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+            map.put("xml", xml.toString());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return map;
+    }
+
+    /**
+     * @description: 获取可执行流程节点
+     * @param: processInstanceId
+     * @return: java.util.Map<java.lang.String,java.lang.Object>
+     * @author: gssong
+     * @date: 2022/12/4 18:02
+     */
+    @Override
+    public Map<String, Object> getExecutableNode(String processInstanceId) {
+        Map<String, Object> map = new HashMap<>();
+        List<Map<String, Object>> taskList = new ArrayList<>();
+        StringBuilder xml = new StringBuilder();
+        HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+        ProcessDefinition processDefinition = repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
+        List<ProcessNodePath> processNodeList = ProcessRunningPathUtils.getProcessNodeList(processInstanceId);
+        for (ProcessNodePath processNodePath : processNodeList) {
+            Map<String, Object> task = new HashMap<>();
+            task.put("key", processNodePath.getNodeId());
+            task.put("completed", true);
+            taskList.add(task);
         }
         map.put("taskList", taskList);
         InputStream inputStream;

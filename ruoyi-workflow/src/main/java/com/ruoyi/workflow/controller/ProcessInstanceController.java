@@ -180,9 +180,21 @@ public class ProcessInstanceController extends BaseController {
      * @author: gssong
      * @date: 2022/10/25 22:07
      */
-    @GetMapping("/getXml/{processInstanceId}")
+    @GetMapping("/getXml1/{processInstanceId}")
     public R<Map<String,Object>> getXml(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstanceId) {
         return R.ok("操作成功", iProcessInstanceService.getXml(processInstanceId));
     }
 
+
+    /**
+     * 获取可执行流程节点
+     * @param: processInstanceId
+     * @return: com.ruoyi.common.core.domain.R<java.util.Map<java.lang.String,java.lang.Object>>
+     * @author: gssong
+     * @date: 2022/12/4 18:00
+     */
+    @GetMapping("/getXml/{processInstanceId}")
+    public R<Map<String,Object>> getExecutableNode(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstanceId) {
+        return R.ok("操作成功", iProcessInstanceService.getExecutableNode(processInstanceId));
+    }
 }

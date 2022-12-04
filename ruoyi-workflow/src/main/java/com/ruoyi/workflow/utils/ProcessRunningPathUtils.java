@@ -122,7 +122,10 @@ public class ProcessRunningPathUtils {
                         }
                     }
                 }
+                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
                 getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
+            } else if (currentFlowElement instanceof EndEvent) {
+                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
             }
         }
 

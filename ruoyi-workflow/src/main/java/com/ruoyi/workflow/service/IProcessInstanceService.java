@@ -102,4 +102,11 @@ public interface IProcessInstanceService {
      * @return
      */
     Map<String,Object> getXml(String processInstanceId);
+
+    /**
+     * 获取可执行流程节点
+     * @param processInstanceId
+     * @return
+     */
+    Map<String,Object> getExecutableNode(String processInstanceId);
 }

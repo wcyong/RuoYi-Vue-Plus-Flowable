@@ -110,8 +110,6 @@ export default {
         flowElements.forEach(n => {
             if (n.$type === 'bpmn:UserTask') {
                 const completeTask = this.taskList.find(m => m.key === n.id)
-                const todoTask = this.taskList.find(m => !m.completed)
-                const endTask = this.taskList[this.taskList.length - 1]
                 if (completeTask) {
                     canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
                     n.outgoing?.forEach(nn => {
