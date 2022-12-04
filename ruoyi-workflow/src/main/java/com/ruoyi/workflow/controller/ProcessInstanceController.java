@@ -182,7 +182,7 @@ public class ProcessInstanceController extends BaseController {
      */
     @GetMapping("/getXml/{processInstanceId}")
     public R<Map<String,Object>> getXml(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstanceId) {
-        return R.ok("操作成功", iProcessInstanceService.getXml(processInstanceId));
+        return R.ok(iProcessInstanceService.getXml(processInstanceId));
     }
 
 
@@ -195,6 +195,6 @@ public class ProcessInstanceController extends BaseController {
      */
     @GetMapping("/getExecutableNode/{processInstanceId}")
     public R<Map<String,Object>> getExecutableNode(@NotBlank(message = "流程实例id不能为空") @PathVariable String processInstanceId) {
-        return R.ok("操作成功", iProcessInstanceService.getExecutableNode(processInstanceId));
+        return R.ok( iProcessInstanceService.getExecutableNode(processInstanceId));
     }
 }
