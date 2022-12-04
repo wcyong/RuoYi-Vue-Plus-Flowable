@@ -108,11 +108,21 @@ public class ProcessRunningPathUtils {
                 //包含网关
             } else if (currentFlowElement instanceof InclusiveGateway) {
                 getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.INCLUSIVE_GATEWAY);
-            } else if (currentFlowElement instanceof EndEvent) {
-                FlowElement subProcess = WorkFlowUtils.getSubProcess(flowElements, currentFlowElement);
-                if (subProcess != null) {
-                    getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.END_EVENT);
+            } else if (currentFlowElement instanceof SubProcess) {
+                Collection<FlowElement> subFlowElements = ((SubProcess) currentFlowElement).getFlowElements();
+                for (FlowElement element : subFlowElements) {
+                    if (element instanceof StartEvent) {
+                        List<SequenceFlow> startOutgoingFlows = ((StartEvent) element).getOutgoingFlows();
+                        for (SequenceFlow subOutgoingFlow : startOutgoingFlows) {
+                            FlowElement subTargetFlowElement = subOutgoingFlow.getTargetFlowElement();
+                            if (subTargetFlowElement instanceof UserTask) {
+                                nextNodeBuild(processNodePathList, subFlowElements, subTargetFlowElement, subOutgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
+                                break;
+                            }
+                        }
+                    }
                 }
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
             }
         }
 
