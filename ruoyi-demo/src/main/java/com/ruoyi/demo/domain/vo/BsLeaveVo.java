@@ -6,6 +6,7 @@ import com.ruoyi.workflow.domain.ActBusinessStatus;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import lombok.Data;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 
@@ -19,9 +20,10 @@ import java.util.Date;
  */
 @Data
 @ExcelIgnoreUnannotated
-public class BsLeaveVo {
+public class BsLeaveVo implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
 
     /**
      * 主键ID
