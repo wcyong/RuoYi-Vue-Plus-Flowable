@@ -354,6 +354,9 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             }
         }
         if (CollectionUtil.isNotEmpty(actNodeAssigneeList)) {
+            actNodeAssigneeList.forEach(e->{
+                RedisUtils.deleteObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + e.getProcessDefinitionId() + "-" + e.getNodeId());
+            });
             return saveBatch(actNodeAssigneeList);
         }
         return false;
