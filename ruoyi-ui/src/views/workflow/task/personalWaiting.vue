@@ -2,10 +2,19 @@
     <div class="app-container">
         <div v-if="dataViewVisible">
             <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="100px">
-                <el-form-item label="流程名称" prop="name">
+                <el-form-item label="流程名称" prop="processDefinitionName">
                     <el-input
-                    v-model="queryParams.name"
+                    v-model="queryParams.processDefinitionName"
                     placeholder="请输入流程名称"
+                    clearable
+                    size="small"
+                    @keyup.enter.native="handleQuery"
+                    />
+                </el-form-item>
+                <el-form-item label="任务名称" prop="taskName">
+                    <el-input
+                    v-model="queryParams.taskName"
+                    placeholder="请输入任务名称"
                     clearable
                     size="small"
                     @keyup.enter.native="handleQuery"
@@ -108,7 +117,8 @@
         queryParams: {
             pageNum: 1,
             pageSize: 10,
-            name: undefined
+            taskName: undefined,
+            processDefinitionName: undefined
         },
         // 任务id
         taskId:undefined,

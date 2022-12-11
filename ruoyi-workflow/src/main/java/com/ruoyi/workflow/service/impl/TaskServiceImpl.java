@@ -106,6 +106,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         if (StringUtils.isNotEmpty(req.getTaskName())) {
             query.taskNameLikeIgnoreCase("%" + req.getTaskName() + "%");
         }
+        if (StringUtils.isNotEmpty(req.getProcessDefinitionName())) {
+            query.processDefinitionNameLike("%" + req.getProcessDefinitionName() + "%");
+        }
         List<Task> taskList = query.listPage(req.getPageNum(), req.getPageSize());
         if (CollectionUtil.isEmpty(taskList)) {
             return new TableDataInfo<>();
@@ -823,6 +826,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             .orderByTaskCreateTime().asc();
         if (StringUtils.isNotEmpty(req.getTaskName())) {
             query.taskNameLikeIgnoreCase("%" + req.getTaskName() + "%");
+        }
+        if (StringUtils.isNotEmpty(req.getProcessDefinitionName())) {
+            query.processDefinitionNameLike("%" + req.getProcessDefinitionName() + "%");
         }
         List<Task> taskList = query.listPage(req.getPageNum(), req.getPageSize());
         if (CollectionUtil.isEmpty(taskList)) {
