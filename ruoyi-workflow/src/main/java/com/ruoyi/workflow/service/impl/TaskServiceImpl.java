@@ -565,8 +565,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         map.put("backNodeList", taskNodeList);
         //当前流程实例状态
         ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(task.getProcessInstanceId());
-        if (ObjectUtil.isEmpty(actBusinessStatus)) {
-        } else {
+        if (!ObjectUtil.isEmpty(actBusinessStatus)) {
             map.put("businessStatus", actBusinessStatus);
         }
         //委托流程
