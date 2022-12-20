@@ -10,7 +10,10 @@ import com.ruoyi.workflow.domain.ActBusinessStatus;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.mapper.ActBusinessStatusMapper;
 import com.ruoyi.workflow.service.IActBusinessStatusService;
+import com.ruoyi.workflow.service.IActProcessNodeAssigneeService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
@@ -25,6 +28,8 @@ import java.util.List;
 @Service
 public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusMapper, ActBusinessStatus> implements IActBusinessStatusService {
 
+    @Autowired
+    private IActProcessNodeAssigneeService iActProcessNodeAssigneeService;
 
     /**
      * @description: 修改业务状态
@@ -103,9 +108,11 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
     }
 
     @Override
+    @Transactional
     public boolean deleteStateByBusinessKey(String businessKey) {
         int delete = baseMapper.delete(new LambdaQueryWrapper<ActBusinessStatus>().eq(ActBusinessStatus::getBusinessKey, businessKey));
         ActBusinessStatus actBusinessStatus = getInfoByBusinessKey(businessKey);
+        iActProcessNodeAssigneeService.deleteByProcessInstanceId(actBusinessStatus.getProcessInstanceId());
         if (actBusinessStatus != null) {
             RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey);
             RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getProcessInstanceId());
@@ -114,9 +121,11 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
     }
 
     @Override
+    @Transactional
     public boolean deleteStateByProcessInstId(String processInstanceId) {
         int delete = baseMapper.delete(new LambdaQueryWrapper<ActBusinessStatus>().eq(ActBusinessStatus::getProcessInstanceId, processInstanceId));
         ActBusinessStatus actBusinessStatus = getInfoByProcessInstId(processInstanceId);
+        iActProcessNodeAssigneeService.deleteByProcessInstanceId(processInstanceId);
         if (actBusinessStatus != null) {
             RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
             RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getBusinessKey());

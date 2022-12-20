@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.utils;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -745,6 +746,58 @@ public class WorkFlowUtils {
      */
     public static List<IdentityLink> getCandidateUser(String taskId) {
         return PROCESS_ENGINE.getTaskService().getIdentityLinksForTask(taskId);
+    }
+
+    /**
+     * @description: 自动办理任务
+     * @param: processInstanceId 流程实例id
+     * @param: businessKey 业务id
+     * @param: processNodeAssigneeList 流程人员
+     * @param: actNodeAssignees 流程定义设置
+     * @return: void
+     * @author: gssong
+     * @date: 2022/12/19 13:53
+     */
+    public static boolean autoComplete(String processInstanceId, String businessKey, List<ActProcessNodeAssignee> processNodeAssigneeList, List<ActNodeAssignee> actNodeAssignees){
+        List<Task> taskList = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
+        if (CollectionUtil.isEmpty(taskList)) {
+            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH, processInstanceId);
+        }
+        List<Task> list = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId)
+            .taskCandidateOrAssigned(LoginHelper.getUserId().toString()).list();
+        if (CollectionUtil.isEmpty(list)) {
+            return false;
+        }
+        for (Task task : list) {
+            ActNodeAssignee nodeAssignee = actNodeAssignees.stream().filter(e -> task.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);
+            if (ObjectUtil.isNull(nodeAssignee)) {
+                throw new ServiceException("请检查【" + task.getName() + "】节点配置");
+            }
+            if (!nodeAssignee.getAutoComplete()) {
+                return false;
+            }
+            PROCESS_ENGINE.getTaskService().addComment(task.getId(), task.getProcessInstanceId(), "流程引擎满足条件自动办理");
+            PROCESS_ENGINE.getTaskService().complete(task.getId());
+            recordExecuteNode(task, actNodeAssignees);
+        }
+        List<Task> tasks = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
+        if(CollUtil.isNotEmpty(tasks)){
+            for (Task task : tasks) {
+                processNodeAssigneeList.stream().filter(e -> e.getNodeId().equals(task.getTaskDefinitionKey()) && !e.getMultiple()).findFirst()
+                    .ifPresent(e -> {
+                        String[] userIds = e.getAssigneeId().split(",");
+                        if(userIds.length == 1){
+                            PROCESS_ENGINE.getTaskService().setAssignee(task.getId(), userIds[0]);
+                        }else{
+                            for (String userId : userIds) {
+                                PROCESS_ENGINE.getTaskService().addCandidateUser(task.getId(), userId);
+                            }
+                        }
+                    });
+            }
+        }
+        autoComplete(processInstanceId, businessKey, processNodeAssigneeList, actNodeAssignees);
+        return true;
     }
 
     /**

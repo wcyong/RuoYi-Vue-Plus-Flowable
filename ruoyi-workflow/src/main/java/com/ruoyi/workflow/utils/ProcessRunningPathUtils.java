@@ -3,6 +3,7 @@ package com.ruoyi.workflow.utils;
 import cn.hutool.core.collection.CollectionUtil;
 import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.domain.vo.MultiVo;
 import com.ruoyi.workflow.domain.vo.ProcessNodePath;
 import com.ruoyi.workflow.flowable.cmd.ExpressCheckCmd;
 import lombok.AccessLevel;
@@ -48,7 +49,9 @@ public class ProcessRunningPathUtils {
         assert startElement != null;
         List<SequenceFlow> outgoingFlows = ((StartEvent) startElement).getOutgoingFlows();
         if (outgoingFlows.size() == 1) {
-            buildData(new ProcessNodePath(), null, processInstanceId, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, ActConstant.USER_TASK, processNodePathList);
+            ProcessNodePath processNodePath = new ProcessNodePath();
+            processNodePath.setFirst(true);
+            buildData(processNodePath, null, processInstanceId, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, ActConstant.USER_TASK, processNodePathList);
             getNextNodeList(processNodePathList, flowElements, outgoingFlows.get(0), variables, processInstance.getProcessInstanceId(), null);
         }
         Map<String, List<ProcessNodePath>> listMap = processNodePathList.stream().collect(Collectors.groupingBy(ProcessNodePath::getSourceFlowElementId));
@@ -77,6 +80,13 @@ public class ProcessRunningPathUtils {
         for (ProcessNodePath processNodePath : buildList) {
             GraphicInfo graphicInfo = bpmnModel.getGraphicInfo(processNodePath.getNodeId());
             processNodePath.setX(graphicInfo.getX());
+            MultiVo multiInstance = WorkFlowUtils.isMultiInstance(list.get(0).getProcessDefinitionId(), processNodePath.getNodeId());
+            if (multiInstance != null) {
+                processNodePath.setMultiple(true);
+                processNodePath.setMultipleColumn(multiInstance.getAssigneeList());
+            }else{
+                processNodePath.setMultiple(false);
+            }
         }
         return buildList.stream().sorted(Comparator.comparing(ProcessNodePath::getX)).collect(Collectors.toList());
     }

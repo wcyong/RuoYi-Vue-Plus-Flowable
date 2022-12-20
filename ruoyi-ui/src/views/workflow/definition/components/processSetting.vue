@@ -13,8 +13,14 @@
             <el-radio-button :label="0">动态表单</el-radio-button>
           </el-radio-group>
         </el-form-item>
+        <el-form-item label="提交选择人" prop="defaultProcess">
+          <el-radio-group @change="change($event)" v-model="formData.defaultProcess">
+            <el-radio-button :label="true">是</el-radio-button>
+            <el-radio-button :label="false">否</el-radio-button>
+          </el-radio-group>
+        </el-form-item>
         <el-form-item label="表单Key" prop="formKey" v-if="formData.businessType === 0">
-          <el-input v-model="formData.formKey" placeholder="请选择表单" disabled style="width:185px;padding-right: 5px;"/>
+          <el-input v-model="formData.formKey" placeholder="请选择表单" disabled style="width:180px;padding-right: 5px;"/>
           <el-button type="primary" @click="handerOpenForm" icon="el-icon-search"></el-button>
         </el-form-item>
         <el-form-item label="表单名称" prop="formName" v-if="formData.businessType === 0">
@@ -24,7 +30,7 @@
           <el-input type="textarea" placeholder="请输入表单参数,动态表单中参数id,多个用英文逗号隔开" v-model="formData.formVariable" @input="change($event)"/>
         </el-form-item>
         <el-form-item label="表名称" prop="tableName" v-if="formData.businessType === 1">
-          <el-input v-model="formData.tableName" placeholder="请选择表名称" disabled style="width:185px;padding-right: 5px;"/>
+          <el-input v-model="formData.tableName" placeholder="请选择表名称" disabled style="width:180px;padding-right: 5px;"/>
           <el-button type="primary" @click="handerOpenTable" icon="el-icon-search"></el-button>
         </el-form-item>
         <el-form-item label="组件名称" prop="componentName" v-if="formData.businessType === 1">
@@ -127,6 +133,9 @@ export default {
       },
       // 表单校验
       rulesFrom: {
+        defaultProcess: [
+          { required: true, message: '流程设置', trigger: 'blur' }
+        ],
         processDefinitionKey: [
           { required: true, message: '流程定义Key不能为空', trigger: 'blur' }
         ],
@@ -213,7 +222,8 @@ export default {
                 processDefinitionId: this.formData.processDefinitionId,
                 businessType: 0,
                 formId: this.formData.formId,
-                id: this.formData.id
+                id: this.formData.id,
+                defaultProcess: this.formData.defaultProcess
             } 
         }else{
             param = {
@@ -221,7 +231,8 @@ export default {
                 businessType: 1,
                 componentName: this.formData.componentName,
                 tableName: this.formData.tableName,
-                id: this.formData.id
+                id: this.formData.id,
+                defaultProcess: this.formData.defaultProcess
             } 
         }
         checkProcessDefSetting(param).then(response => {
@@ -270,6 +281,6 @@ export default {
 }
 .btn-footer{
   float: right;
-  margin-top: 100px;
+  margin-top: 20px;
 }
 </style>

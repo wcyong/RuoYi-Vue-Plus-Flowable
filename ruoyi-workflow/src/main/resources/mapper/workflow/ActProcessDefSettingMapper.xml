@@ -13,6 +13,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="formKey" column="form_key"/>
         <result property="formName" column="form_name"/>
         <result property="formVariable" column="form_variable"/>
+        <result property="remark" column="remark"/>
+        <result property="defaultProcess" column="default_process"/>
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
         <result property="createBy" column="create_by"/>

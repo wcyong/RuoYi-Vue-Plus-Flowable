@@ -55,7 +55,7 @@
           <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
         </el-row>
 
-        <el-table v-loading="loading" height="300" :data="userList" ref="multipleTable" :row-key="getRowKey" @selection-change="handleSelectionChange">
+        <el-table v-loading="loading" height="300" border :data="userList" ref="multipleTable" :row-key="getRowKey" @selection-change="handleSelectionChange">
           <el-table-column type="selection" :reserve-selection="true" width="50" align="center" />
           <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" />
           <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns[1].visible" :show-overflow-tooltip="true" />
@@ -289,7 +289,7 @@ export default {
 </script>
 <style scoped>
   .app-container{
-    height: 570px;
+    height: 500px;
   }
   .item{
     border-bottom: 1px solid #eff3fa;
@@ -299,7 +299,7 @@ export default {
     font-size: 13px;
   }
   .left-container{
-    height: 570px;
+    height: 500px;
     overflow-y: scroll;
   }
   .item-font{

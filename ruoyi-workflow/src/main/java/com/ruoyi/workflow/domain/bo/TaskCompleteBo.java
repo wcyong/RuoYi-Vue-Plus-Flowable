@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.domain.bo;
 
+import com.ruoyi.workflow.domain.vo.ProcessNodePath;
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
 
@@ -42,6 +43,16 @@ public class TaskCompleteBo {
      * 消息对象
      */
     private SendMessage sendMessage;
+
+    /**
+     * true 为申请人选择全部人员  false为审批节点选人
+     */
+    private Boolean defaultProcess;
+
+    /**
+     * 流程节点信息
+     */
+    private List<ProcessNodePath> processNodeList;
 
     /**
      * 下一个节点审批，key: 节点id, value：审批人集合,多个人使用英文逗号分隔

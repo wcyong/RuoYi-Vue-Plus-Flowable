@@ -91,5 +91,10 @@ public class ActProcessDefSettingBo extends BaseEntity {
      */
     private Long settingId;
 
+    /**
+     * true 为申请人选择全部人员  false为审批节点选人
+     */
+    private Boolean defaultProcess;
+
 
 }

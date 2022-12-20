@@ -6,7 +6,9 @@ import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
+import com.ruoyi.common.utils.BeanCopyUtils;
 import com.ruoyi.common.utils.StringUtils;
+import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
 import com.ruoyi.workflow.domain.vo.ProcessNodePath;
@@ -66,6 +68,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
     private final IActBusinessStatusService iActBusinessStatusService;
     private final IUserService iUserService;
     private final IActTaskNodeService iActTaskNodeService;
+    private final IActNodeAssigneeService iActNodeAssigneeService;
 
     @Value("${flowable.activity-font-name}")
     private String activityFontName;
@@ -166,7 +169,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         }
         //翻译人员名称
         if (CollUtil.isNotEmpty(actHistoryInfoVoList)) {
-            List<Long> assigneeList = actHistoryInfoVoList.stream().map(e -> Long.valueOf(e.getAssignee())).collect(Collectors.toList());
+            List<Long> assigneeList = actHistoryInfoVoList.stream().filter(e -> StringUtils.isNotBlank(e.getAssignee())).map(e -> Long.valueOf(e.getAssignee())).collect(Collectors.toList());
             if (CollUtil.isNotEmpty(assigneeList)) {
                 List<SysUser> sysUsers = iUserService.selectListUserByIds(assigneeList);
                 actHistoryInfoVoList.forEach(e -> {
@@ -644,7 +647,7 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
     /**
      * @description: 获取可执行流程节点
      * @param: processInstanceId
-     * @return: java.util.Map<java.lang.String,java.lang.Object>
+     * @return: java.util.Map<java.lang.String, java.lang.Object>
      * @author: gssong
      * @date: 2022/12/4 18:02
      */
@@ -656,12 +659,46 @@ public class ProcessInstanceServiceImpl extends WorkflowService implements IProc
         HistoricProcessInstance processInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
         ProcessDefinition processDefinition = repositoryService.getProcessDefinition(processInstance.getProcessDefinitionId());
         List<ProcessNodePath> processNodeList = ProcessRunningPathUtils.getProcessNodeList(processInstanceId);
+
+        List<ActNodeAssignee> actNodeAssignees = iActNodeAssigneeService.getInfoByProcessDefinitionId(processDefinition.getId());
+
         for (ProcessNodePath processNodePath : processNodeList) {
             Map<String, Object> task = new HashMap<>();
             task.put("key", processNodePath.getNodeId());
             task.put("completed", true);
             taskList.add(task);
         }
+        List<ProcessNodePath> processNodePaths = new ArrayList<>();
+        if (CollUtil.isNotEmpty(actNodeAssignees)) {
+            for (ProcessNodePath processNodePath : processNodeList) {
+                actNodeAssignees.stream().filter(e -> e.getNodeId().equals(processNodePath.getNodeId())).findFirst()
+                    .ifPresent(e -> {
+                        ProcessNodePath node = new ProcessNodePath();
+                        BeanCopyUtils.copy(processNodePath, node);
+                        node.setAssignee(e.getAssignee());
+                        node.setAssigneeId(e.getAssigneeId());
+                        node.setChooseWay(e.getChooseWay());
+                        if (processNodePath.getFirst()) {
+                            SysUser sysUser = iUserService.selectUserById(Long.valueOf(processInstance.getStartUserId()));
+                            node.setAssignee(sysUser.getNickName());
+                            node.setAssigneeId(sysUser.getUserId().toString());
+                            node.setChooseWay(ActConstant.WORKFLOW_PERSON);
+                            node.setTransactor(sysUser.getNickName());
+                            node.setTransactorId(sysUser.getUserId().toString());
+                        }
+                        if (!ActConstant.WORKFLOW_PERSON.equals(node.getChooseWay())) {
+                            node.setTransactor("");
+                        }
+                        if (StringUtils.isNotBlank(node.getAssigneeId()) && !node.getAssigneeId().contains(",")) {
+                            node.setDisabled(true);
+                            node.setTransactor(node.getAssignee());
+                            node.setTransactorId(node.getAssigneeId());
+                        }
+                        processNodePaths.add(node);
+                    });
+            }
+        }
+        map.put("processNodeList", processNodePaths);
         map.put("taskList", taskList);
         InputStream inputStream;
         try {

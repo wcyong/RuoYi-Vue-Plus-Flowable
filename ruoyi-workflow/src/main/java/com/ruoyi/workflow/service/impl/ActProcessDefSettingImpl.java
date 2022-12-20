@@ -136,6 +136,7 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
         add.setProcessDefinitionKey(bo.getProcessDefinitionKey());
         add.setProcessDefinitionName(bo.getProcessDefinitionName());
         add.setBusinessType(bo.getBusinessType());
+        add.setDefaultProcess(bo.getDefaultProcess());
         add.setRemark(bo.getRemark());
         if (0 == bo.getBusinessType()) {
             add.setFormId(bo.getFormId());

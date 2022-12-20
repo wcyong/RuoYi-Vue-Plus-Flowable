@@ -20,6 +20,7 @@ import com.ruoyi.workflow.domain.bo.*;
 import com.ruoyi.workflow.domain.vo.*;
 import com.ruoyi.workflow.flowable.cmd.AddSequenceMultiInstanceCmd;
 import com.ruoyi.workflow.flowable.cmd.AttachmentCmd;
+import com.ruoyi.workflow.utils.CompleteTaskUtils;
 import com.ruoyi.workflow.flowable.cmd.DeleteSequenceMultiInstanceCmd;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.mapper.TaskMapper;
@@ -87,6 +88,8 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
 
     private final IActProcessDefSetting iActProcessDefSetting;
 
+    private final IProcessInstanceService iProcessInstanceService;
+
 
     /**
      * @description: 查询当前用户的待办任务
@@ -124,7 +127,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         //查询流程定义设置
         List<ActProcessDefSettingVo> processDefSettingLists = iActProcessDefSetting.getProcessDefSettingByDefIds(processDefinitionIds);
         //办理人
-        List<Long> assignees = taskList.stream().map(e -> Long.valueOf(e.getAssignee())).filter(ObjectUtil::isNotEmpty).collect(Collectors.toList());
+        List<Long> assignees = taskList.stream().filter(e -> StringUtils.isNotBlank(e.getAssignee())).map(e -> Long.valueOf(e.getAssignee())).collect(Collectors.toList());
         //流程发起人
         List<Long> userIds = processInstanceList.stream().map(e -> Long.valueOf(e.getStartUserId())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(assignees)) {
@@ -218,7 +221,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         //查询流程定义设置
         List<ActProcessDefSettingVo> processDefSettingLists = iActProcessDefSetting.getProcessDefSettingByDefIds(processDefinitionIds);
         //办理人
-        List<Long> assignees = taskList.stream().map(e -> Long.valueOf(e.getAssignee())).filter(ObjectUtil::isNotEmpty).collect(Collectors.toList());
+        List<Long> assignees = taskList.stream().filter(e -> StringUtils.isNotBlank(e.getAssignee())).map(e -> Long.valueOf(e.getAssignee())).collect(Collectors.toList());
         //流程发起人
         List<Long> userIds = processInstanceList.stream().map(e -> Long.valueOf(e.getStartUserId())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(assignees)) {
@@ -291,7 +294,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         Task task = taskService.createTaskQuery().taskId(req.getTaskId()).taskAssignee(getUserId().toString()).singleResult();
 
         if (ObjectUtil.isNull(task)) {
-            throw new ServiceException("任务不存在或您不是当前审批人");
+            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
 
         if (task.isSuspended()) {
@@ -310,6 +313,11 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
                 actHiTaskInst.setStartTime(new Date());
                 iActHiTaskInstService.updateById(actHiTaskInst);
                 return true;
+            }
+            //流程定义设置
+            ActProcessDefSettingVo setting = iActProcessDefSetting.getProcessDefSettingByDefId(task.getProcessDefinitionId());
+            if (setting != null && setting.getDefaultProcess()) {
+                return CompleteTaskUtils.execute(req);
             }
 
             ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceId(task.getProcessInstanceId()).singleResult();
@@ -647,6 +655,20 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             map.put("list", nextNodeList);
         }
         map.put("processInstanceId", task.getProcessInstanceId());
+        //流程定义设置
+        ActProcessDefSettingVo setting = iActProcessDefSetting.getProcessDefSettingByDefId(task.getProcessDefinitionId());
+        if (setting != null && setting.getDefaultProcess()) {
+            Map<String, Object> executableNode = iProcessInstanceService.getExecutableNode(task.getProcessInstanceId());
+            map.putAll(executableNode);
+            map.put("defaultProcess", true);
+            map.put("list", Collections.emptyList());
+            if (BusinessStatusEnum.WAITING.getStatus().equals(actBusinessStatus.getStatus())) {
+                map.put("processNodeList", Collections.emptyList());
+            }
+        } else {
+            map.put("defaultProcess", false);
+            map.put("processNodeList", Collections.emptyList());
+        }
         return map;
     }
 
@@ -844,7 +866,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         //查询流程定义设置
         List<ActProcessDefSettingVo> processDefSettingLists = iActProcessDefSetting.getProcessDefSettingByDefIds(processDefinitionIds);
         //办理人
-        List<Long> assignees = taskList.stream().map(e -> Long.valueOf(e.getAssignee())).filter(ObjectUtil::isNotEmpty).collect(Collectors.toList());
+        List<Long> assignees = taskList.stream().filter(e -> StringUtils.isNotBlank(e.getAssignee())).map(e -> Long.valueOf(e.getAssignee())).filter(ObjectUtil::isNotEmpty).collect(Collectors.toList());
         //流程发起人
         List<Long> userIds = processInstanceList.stream().map(e -> Long.valueOf(e.getStartUserId())).collect(Collectors.toList());
         if (CollUtil.isNotEmpty(assignees)) {

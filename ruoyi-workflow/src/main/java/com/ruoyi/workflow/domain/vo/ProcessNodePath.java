@@ -23,7 +23,6 @@ public class ProcessNodePath implements Serializable {
      */
     private String nodeName;
 
-
     /**
      * 网关或者用户任务
      */
@@ -88,5 +87,25 @@ public class ProcessNodePath implements Serializable {
      * x坐标
      */
     private Double x;
+
+    /**
+     * 第一个节点
+     */
+    private Boolean first = false;
+
+    /**
+     * 办理人
+     */
+    private String  transactor;
+
+    /**
+     * 办理人id
+     */
+    private String transactorId;
+
+    /**
+     * 是否禁用
+     */
+    private Boolean disabled;
 
 }
