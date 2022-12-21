@@ -45,7 +45,7 @@ public class TaskCompleteBo {
     private SendMessage sendMessage;
 
     /**
-     * true 为申请人选择全部人员  false为审批节点选人
+     * true 为审批节点选人 false 为申请人选择全部人员
      */
     private Boolean defaultProcess;
 

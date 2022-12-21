@@ -316,7 +316,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             }
             //流程定义设置
             ActProcessDefSettingVo setting = iActProcessDefSetting.getProcessDefSettingByDefId(task.getProcessDefinitionId());
-            if (setting != null && setting.getDefaultProcess()) {
+            if (setting != null && !setting.getDefaultProcess()) {
                 return CompleteTaskUtils.execute(req);
             }
 
@@ -657,7 +657,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         map.put("processInstanceId", task.getProcessInstanceId());
         //流程定义设置
         ActProcessDefSettingVo setting = iActProcessDefSetting.getProcessDefSettingByDefId(task.getProcessDefinitionId());
-        if (setting != null && setting.getDefaultProcess()) {
+        if (setting != null && !setting.getDefaultProcess()) {
             Map<String, Object> executableNode = iProcessInstanceService.getExecutableNode(task.getProcessInstanceId());
             map.putAll(executableNode);
             map.put("defaultProcess", true);

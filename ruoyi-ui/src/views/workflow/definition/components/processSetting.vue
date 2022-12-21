@@ -13,10 +13,10 @@
             <el-radio-button :label="0">动态表单</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="提交选择人" prop="defaultProcess">
+        <el-form-item label="选人方式" prop="defaultProcess">
           <el-radio-group @change="change($event)" v-model="formData.defaultProcess">
-            <el-radio-button :label="true">是</el-radio-button>
-            <el-radio-button :label="false">否</el-radio-button>
+            <el-radio-button :label="true">审批者选人</el-radio-button>
+            <el-radio-button :label="false">提交者选人</el-radio-button>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="表单Key" prop="formKey" v-if="formData.businessType === 0">

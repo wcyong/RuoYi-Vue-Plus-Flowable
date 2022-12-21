@@ -51,7 +51,7 @@ public class ProcessRunningPathUtils {
         if (outgoingFlows.size() == 1) {
             ProcessNodePath processNodePath = new ProcessNodePath();
             processNodePath.setFirst(true);
-            buildData(processNodePath, null, processInstanceId, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, ActConstant.USER_TASK, processNodePathList);
+            buildData(processNodePath, null, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, ActConstant.USER_TASK, processNodePathList);
             getNextNodeList(processNodePathList, flowElements, outgoingFlows.get(0), variables, processInstance.getProcessInstanceId(), null);
         }
         Map<String, List<ProcessNodePath>> listMap = processNodePathList.stream().collect(Collectors.groupingBy(ProcessNodePath::getSourceFlowElementId));
@@ -84,7 +84,7 @@ public class ProcessRunningPathUtils {
             if (multiInstance != null) {
                 processNodePath.setMultiple(true);
                 processNodePath.setMultipleColumn(multiInstance.getAssigneeList());
-            }else{
+            } else {
                 processNodePath.setMultiple(false);
             }
         }
@@ -161,12 +161,12 @@ public class ProcessRunningPathUtils {
         FlowElement sourceFlowElement = sequenceFlow.getSourceFlowElement();
         //排他网关
         if (ActConstant.EXCLUSIVE_GATEWAY.equals(gateway)) {
-            buildData(processNodePath, conditionExpression, processInstanceId, variableMap, currentFlowElement, sourceFlowElement, ActConstant.EXCLUSIVE_GATEWAY, processNodePathList);
+            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, ActConstant.EXCLUSIVE_GATEWAY, processNodePathList);
             //包含网关
         } else if (ActConstant.INCLUSIVE_GATEWAY.equals(gateway)) {
-            buildData(processNodePath, conditionExpression, processInstanceId, variableMap, currentFlowElement, sourceFlowElement, ActConstant.INCLUSIVE_GATEWAY, processNodePathList);
+            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, ActConstant.INCLUSIVE_GATEWAY, processNodePathList);
         } else {
-            buildData(processNodePath, conditionExpression, processInstanceId, variableMap, currentFlowElement, sourceFlowElement, ActConstant.USER_TASK, processNodePathList);
+            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, ActConstant.USER_TASK, processNodePathList);
         }
         getNextNodeList(processNodePathList, flowElements, sequenceFlow, variableMap, processInstanceId, null);
     }
@@ -175,7 +175,6 @@ public class ProcessRunningPathUtils {
      * @description: 构建数据
      * @param: processNodePath 数据对象
      * @param: conditionExpression 网关条件
-     * @param: processInstanceId 流程实例id
      * @param: variableMap 流程变量
      * @param: currentFlowElement 当前节点
      * @param: sourceFlowElement 当前节点的上一节点(用户节点或者网关)
@@ -185,7 +184,7 @@ public class ProcessRunningPathUtils {
      * @author: gssong
      * @date: 2022/8/23 20:26
      */
-    private static void buildData(ProcessNodePath processNodePath, String conditionExpression, String processInstanceId, Map<String, Object> variableMap, FlowElement currentFlowElement, FlowElement sourceFlowElement, String gateway, List<ProcessNodePath> processNodePathList) {
+    private static void buildData(ProcessNodePath processNodePath, String conditionExpression, Map<String, Object> variableMap, FlowElement currentFlowElement, FlowElement sourceFlowElement, String gateway, List<ProcessNodePath> processNodePathList) {
         if (ActConstant.USER_TASK.equals(gateway)) {
             processNodePath.setExpression(true);
             processNodePath.setExpressionStr(true);
@@ -194,7 +193,7 @@ public class ProcessRunningPathUtils {
             Boolean condition = false;
             processNodePath.setExpressionStr(false);
             if (StringUtils.isNotBlank(conditionExpression)) {
-                ExpressCheckCmd expressCheckCmd = new ExpressCheckCmd(processInstanceId, conditionExpression, variableMap);
+                ExpressCheckCmd expressCheckCmd = new ExpressCheckCmd(conditionExpression, variableMap);
                 condition = PROCESS_ENGINE.getManagementService().executeCommand(expressCheckCmd);
                 processNodePath.setExpressionStr(true);
             }

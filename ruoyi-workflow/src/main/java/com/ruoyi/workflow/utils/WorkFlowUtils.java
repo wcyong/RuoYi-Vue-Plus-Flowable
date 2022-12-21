@@ -977,7 +977,7 @@ public class WorkFlowUtils {
                         if (StringUtils.isBlank(conditionExpression)) {
                             nodeListId.add(element.getId());
                         } else {
-                            ExpressCheckCmd expressCmd = new ExpressCheckCmd(task.getProcessInstanceId(), conditionExpression, variables);
+                            ExpressCheckCmd expressCmd = new ExpressCheckCmd(conditionExpression, variables);
                             Boolean condition = PROCESS_ENGINE.getManagementService().executeCommand(expressCmd);
                             if (condition) {
                                 nodeListId.add(element.getId());
