@@ -52,7 +52,7 @@ public class ProcessRunningPathUtils {
             ProcessNodePath processNodePath = new ProcessNodePath();
             processNodePath.setFirst(true);
             buildData(processNodePath, null, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, ActConstant.USER_TASK, processNodePathList);
-            getNextNodeList(processNodePathList, flowElements, outgoingFlows.get(0), variables, processInstance.getProcessInstanceId(), null);
+            getNextNodeList(processNodePathList, flowElements, outgoingFlows.get(0), variables, null);
         }
         Map<String, List<ProcessNodePath>> listMap = processNodePathList.stream().collect(Collectors.groupingBy(ProcessNodePath::getSourceFlowElementId));
         List<ProcessNodePath> buildList = new ArrayList<>();
@@ -97,28 +97,27 @@ public class ProcessRunningPathUtils {
      * @param: flowElements 全部节点
      * @param: sequenceFlow 节点出口连线
      * @param: variables 流程变量
-     * @param: processInstanceId 流程实例id
      * @param: gateway 网关
      * @return: void
      * @author: gssong
      * @date: 2022/8/23 19:40
      */
-    private static void getNextNodeList(List<ProcessNodePath> processNodePathList, Collection<FlowElement> flowElements, SequenceFlow sequenceFlow, Map<String, Object> variables, String processInstanceId, String gateway) {
+    private static void getNextNodeList(List<ProcessNodePath> processNodePathList, Collection<FlowElement> flowElements, SequenceFlow sequenceFlow, Map<String, Object> variables,String gateway) {
         FlowElement targetFlowElement = sequenceFlow.getTargetFlowElement();
         List<SequenceFlow> outgoingFlows = ((FlowNode) targetFlowElement).getOutgoingFlows();
         for (SequenceFlow outgoingFlow : outgoingFlows) {
             FlowElement currentFlowElement = outgoingFlow.getTargetFlowElement();
             if (currentFlowElement instanceof UserTask) {
-                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, processInstanceId, gateway);
+                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, gateway);
                 // 排他网关
             } else if (currentFlowElement instanceof ExclusiveGateway) {
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.EXCLUSIVE_GATEWAY);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.EXCLUSIVE_GATEWAY);
                 //并行网关
             } else if (currentFlowElement instanceof ParallelGateway) {
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.PARALLEL_GATEWAY);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.PARALLEL_GATEWAY);
                 //包含网关
             } else if (currentFlowElement instanceof InclusiveGateway) {
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.INCLUSIVE_GATEWAY);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.INCLUSIVE_GATEWAY);
             } else if (currentFlowElement instanceof SubProcess) {
                 Collection<FlowElement> subFlowElements = ((SubProcess) currentFlowElement).getFlowElements();
                 for (FlowElement element : subFlowElements) {
@@ -127,16 +126,16 @@ public class ProcessRunningPathUtils {
                         for (SequenceFlow subOutgoingFlow : startOutgoingFlows) {
                             FlowElement subTargetFlowElement = subOutgoingFlow.getTargetFlowElement();
                             if (subTargetFlowElement instanceof UserTask) {
-                                nextNodeBuild(processNodePathList, subFlowElements, subTargetFlowElement, subOutgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
+                                nextNodeBuild(processNodePathList, subFlowElements, subTargetFlowElement, subOutgoingFlow, variables, ActConstant.SUB_PROCESS);
                                 break;
                             }
                         }
                     }
                 }
-                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
+                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, ActConstant.SUB_PROCESS);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.SUB_PROCESS);
             } else if (currentFlowElement instanceof EndEvent) {
-                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, processInstanceId, ActConstant.SUB_PROCESS);
+                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, ActConstant.SUB_PROCESS);
             }
         }
 
@@ -149,13 +148,12 @@ public class ProcessRunningPathUtils {
      * @param: currentFlowElement 当前节点
      * @param: sequenceFlow 节点出口连线
      * @param: variableMap 流程变量
-     * @param: processInstanceId 流程实例id
      * @param: gateway 网关
      * @return: void
      * @author: gssong
      * @date: 2022/8/23 20:11
      */
-    private static void nextNodeBuild(List<ProcessNodePath> processNodePathList, Collection<FlowElement> flowElements, FlowElement currentFlowElement, SequenceFlow sequenceFlow, Map<String, Object> variableMap, String processInstanceId, String gateway) {
+    private static void nextNodeBuild(List<ProcessNodePath> processNodePathList, Collection<FlowElement> flowElements, FlowElement currentFlowElement, SequenceFlow sequenceFlow, Map<String, Object> variableMap, String gateway) {
         String conditionExpression = sequenceFlow.getConditionExpression();
         ProcessNodePath processNodePath = new ProcessNodePath();
         FlowElement sourceFlowElement = sequenceFlow.getSourceFlowElement();
@@ -168,7 +166,7 @@ public class ProcessRunningPathUtils {
         } else {
             buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, ActConstant.USER_TASK, processNodePathList);
         }
-        getNextNodeList(processNodePathList, flowElements, sequenceFlow, variableMap, processInstanceId, null);
+        getNextNodeList(processNodePathList, flowElements, sequenceFlow, variableMap, null);
     }
 
     /**
