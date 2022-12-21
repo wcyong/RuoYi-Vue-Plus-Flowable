@@ -293,10 +293,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         // 1.查询任务
         Task task = taskService.createTaskQuery().taskId(req.getTaskId()).taskAssignee(getUserId().toString()).singleResult();
 
-        if (ObjectUtil.isNull(task)) {
+        if (ObjectUtil.isEmpty(task)) {
             throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
-
         if (task.isSuspended()) {
             throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
         }
@@ -958,11 +957,11 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
 
         Task task = taskService.createTaskQuery().taskId(backProcessBo.getTaskId()).taskAssignee(getUserId().toString()).singleResult();
         String processInstanceId = task.getProcessInstanceId();
+        if (ObjectUtil.isEmpty(task)) {
+            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+        }
         if (task.isSuspended()) {
             throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
-        }
-        if (ObjectUtil.isNull(task)) {
-            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
         try {
             //判断是否有多个任务
@@ -1083,6 +1082,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         if (ObjectUtil.isEmpty(task)) {
             throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
+        if (task.isSuspended()) {
+            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+        }
         try {
             TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
             taskService.addComment(newTask.getId(), task.getProcessInstanceId(), "【" + LoginHelper.getUsername() + "】委派给【" + delegateBo.getDelegateUserName() + "】");
@@ -1117,6 +1119,9 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
             .taskCandidateOrAssigned(LoginHelper.getUserId().toString()).singleResult();
         if (ObjectUtil.isEmpty(task)) {
             throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+        }
+        if (task.isSuspended()) {
+            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
         }
         try {
             TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
@@ -1250,7 +1255,7 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
     public Boolean updateAssignee(UpdateAssigneeBo updateAssigneeBo) {
         List<Task> list = taskService.createNativeTaskQuery().sql("select * from act_ru_task where id_ in " + getInParam(updateAssigneeBo.getTaskIdList())).list();
         if (CollectionUtil.isEmpty(list)) {
-            throw new ServiceException("办理失败，任务不存在");
+            throw new ServiceException("查询失败，任务不存在");
         }
         try {
             for (Task task : list) {
@@ -1361,7 +1366,10 @@ public class TaskServiceImpl extends WorkflowService implements ITaskService {
         try {
             Task task = taskService.createTaskQuery().taskId(taskBo.getTaskId()).singleResult();
             if (ObjectUtil.isEmpty(task)) {
-                throw new ServiceException("当前任务不存在");
+                throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+            }
+            if (task.isSuspended()) {
+                throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
             }
             ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(task.getProcessInstanceId());
             if (actBusinessStatus == null) {
