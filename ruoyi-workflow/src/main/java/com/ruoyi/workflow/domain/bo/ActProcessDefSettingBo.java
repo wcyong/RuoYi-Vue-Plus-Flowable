@@ -46,40 +46,16 @@ public class ActProcessDefSettingBo extends BaseEntity {
     private String processDefinitionName;
 
     /**
-     * 业务类型，0动态表单，1业务单据
-     */
-    @NotNull(message = "业务类型不能为空", groups = { AddGroup.class, EditGroup.class })
-    private Integer businessType;
-
-    /**
      * 表名
      */
+    @NotBlank(message = "表名称不能为空", groups = { AddGroup.class, EditGroup.class })
     private String tableName;
 
     /**
      * 组件名称
      */
+    @NotBlank(message = "组件名称不能为空", groups = { AddGroup.class, EditGroup.class })
     private String componentName;
-
-    /**
-     * 表单id
-     */
-    private Long formId;
-
-    /**
-     * 表单key
-     */
-    private String formKey;
-
-    /**
-     * 表单名称
-     */
-    private String formName;
-
-    /**
-     * 动态表单中参数id,多个用英文逗号隔开
-     */
-    private String formVariable;
 
     /**
      * 备注

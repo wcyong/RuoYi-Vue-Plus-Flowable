@@ -13,7 +13,7 @@ import com.ruoyi.demo.domain.bo.BsLeaveBo;
 import com.ruoyi.demo.domain.vo.BsLeaveVo;
 import com.ruoyi.demo.mapper.BsLeaveMapper;
 import com.ruoyi.demo.service.IBsLeaveService;
-import com.ruoyi.workflow.service.IProcessInstanceService;
+import com.ruoyi.workflow.service.IActProcessInstanceService;
 import com.ruoyi.workflow.utils.WorkFlowUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
 
     private final BsLeaveMapper baseMapper;
 
-    private final IProcessInstanceService iProcessInstanceService;
+    private final IActProcessInstanceService iActProcessInstanceService;
 
     @Override
     public BsLeaveVo queryById(String id) {
@@ -99,9 +99,9 @@ public class BsLeaveServiceImpl implements IBsLeaveService {
     @Transactional(rollbackFor = Exception.class)
     public Boolean deleteWithValidByIds(Collection<String> ids) {
         for (String id : ids) {
-            String processInstanceId = iProcessInstanceService.getProcessInstanceId(id);
+            String processInstanceId = iActProcessInstanceService.getProcessInstanceId(id);
             if (StringUtils.isNotBlank(processInstanceId)) {
-                iProcessInstanceService.deleteRuntimeProcessAndHisInst(processInstanceId);
+                iActProcessInstanceService.deleteRuntimeProcessAndHisInst(processInstanceId);
             }
         }
         return baseMapper.deleteBatchIds(ids) > 0;

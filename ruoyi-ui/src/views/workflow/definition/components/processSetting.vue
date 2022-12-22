@@ -7,86 +7,23 @@
         <el-form-item label="流程定义名称" prop="processDefinitionName">
           <el-input v-model="formData.processDefinitionName" disabled></el-input>
         </el-form-item>
-        <el-form-item label="表单类型" prop="businessType">
-          <el-radio-group @change="change($event)" v-model="formData.businessType">
-            <el-radio-button :label="1">业务表单</el-radio-button>
-            <el-radio-button :label="0">动态表单</el-radio-button>
-          </el-radio-group>
-        </el-form-item>
         <el-form-item label="选人方式" prop="defaultProcess">
           <el-radio-group @change="change($event)" v-model="formData.defaultProcess">
             <el-radio-button :label="true">审批者选人</el-radio-button>
             <el-radio-button :label="false">提交者选人</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="表单Key" prop="formKey" v-if="formData.businessType === 0">
-          <el-input v-model="formData.formKey" placeholder="请选择表单" disabled style="width:180px;padding-right: 5px;"/>
-          <el-button type="primary" @click="handerOpenForm" icon="el-icon-search"></el-button>
-        </el-form-item>
-        <el-form-item label="表单名称" prop="formName" v-if="formData.businessType === 0">
-          <el-input v-model="formData.formName" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="表单参数" v-if="formData.businessType === 0">
-          <el-input type="textarea" placeholder="请输入表单参数,动态表单中参数id,多个用英文逗号隔开" v-model="formData.formVariable" @input="change($event)"/>
-        </el-form-item>
-        <el-form-item label="表名称" prop="tableName" v-if="formData.businessType === 1">
+        <el-form-item label="表名称" prop="tableName">
           <el-input v-model="formData.tableName" placeholder="请选择表名称" disabled style="width:180px;padding-right: 5px;"/>
           <el-button type="primary" @click="handerOpenTable" icon="el-icon-search"></el-button>
         </el-form-item>
-        <el-form-item label="组件名称" prop="componentName" v-if="formData.businessType === 1">
+        <el-form-item label="组件名称" prop="componentName">
           <el-input placeholder="请输入组件名称" v-model="formData.componentName"/>
         </el-form-item>
-        <el-form-item label="备注" prop="remork" v-if="formData.businessType === 1">
+        <el-form-item label="备注" prop="remork">
           <el-input type="textarea" v-model="formData.remork"></el-input>
         </el-form-item>
     </el-form>
-    <!-- 动态表单开始 -->
-    <el-dialog title="表单" :visible.sync="formVisible" v-if="formVisible" width="70%" :close-on-click-modal="false" append-to-body>
-      <div class="app-container">
-        <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
-          <el-form-item label="表单key" prop="formKey">
-            <el-input
-              v-model="queryParams.formKey"
-              placeholder="请输入表单key"
-              clearable
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item label="表单名称" prop="formName">
-            <el-input
-              v-model="queryParams.formName"
-              placeholder="请输入表单名称"
-              clearable
-              @keyup.enter.native="handleQuery"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
-            <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
-          </el-form-item>
-        </el-form>
-
-        <el-row :gutter="10" class="mb8">
-          <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
-        </el-row>
-
-        <el-table v-loading="loading" :highlight-current-row="true" :data="dynamicFormList" @row-click="handleFormClick">
-          <el-table-column label="主键" align="center" prop="id" v-if="false"/>
-          <el-table-column label="表单key" align="center" prop="formKey" />
-          <el-table-column label="表单名称" align="center" prop="formName" />
-          <el-table-column label="表单备注" align="center" prop="formRemark" />
-        </el-table>
-
-        <pagination
-          v-show="total>0"
-          :total="total"
-          :page.sync="queryParams.pageNum"
-          :limit.sync="queryParams.pageSize"
-          @pagination="getList"
-        />
-      </div>
-    </el-dialog>
-    <!-- 动态表单结束 -->
     <span class="btn-footer">
       <el-button type="danger" v-if="this.formData.id" @click="deleteForm()">重 置</el-button>
       <el-button type="primary" @click="submitForm('formDataRef')">确 定</el-button>
@@ -97,7 +34,6 @@
 </template>
 
 <script>
-import { listDynamicFormEnable} from "@/api/workflow/dynamicForm";
 import { addProcessDefSetting,checkProcessDefSetting,delProcessDefSetting } from "@/api/workflow/processDefSetting";
 import sysTable from "@/views/workflow/definition/components/sysTable";
 export default {
@@ -120,8 +56,6 @@ export default {
       showSearch: true,
       // 总条数
       total: 0,
-      // 流程单表格数据
-      dynamicFormList: [],
       // 弹出层标题
       title: "",
       // 查询参数
@@ -171,15 +105,6 @@ export default {
     change(e){
         this.$forceUpdate(e)
         this.$refs["formDataRef"].clearValidate()
-    },
-    /** 查询流程单列表 */
-    getList() {
-      this.loading = true;
-      listDynamicFormEnable(this.queryParams).then(response => {
-        this.dynamicFormList = response.rows;
-        this.total = response.total;
-        this.loading = false;
-      });
     },
     /** 搜索按钮操作 */
     handleQuery() {

@@ -84,19 +84,7 @@
                 </template>
                 </el-table-column>
                 <el-table-column  align="center" prop="deploymentTime" label="部署时间" :show-overflow-tooltip="true" width="100"></el-table-column>
-                <el-table-column  align="center" prop="actProcessDefSettingVo.businessType" label="表单" width="80">
-                <template slot-scope="scope">
-                    <el-tag type="success" v-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===0">动态表单</el-tag>
-                    <el-tag type="primary" v-else-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===1">业务表单</el-tag>
-                </template>
-                </el-table-column>
-                <el-table-column  align="center" label="表单Key/组件名称" width="140">
-                <template slot-scope="scope">
-                    <span v-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===0">{{scope.row.actProcessDefSettingVo.formKey}}</span>
-                    <span v-if="scope.row.actProcessDefSettingVo && scope.row.actProcessDefSettingVo.businessType===1">{{scope.row.actProcessDefSettingVo.componentName}}</span>
-                </template>
-                </el-table-column>
-                
+                <el-table-column  align="center" label="组件名称" prop="actProcessDefSettingVo.componentName" width="140"></el-table-column>
                 <el-table-column  align="center" prop="description" :show-overflow-tooltip="true" label="挂起或激活原因" width="120"></el-table-column>
                 <el-table-column label="操作" align="center" fixed="right" width="240" class-name="small-padding fixed-width">
                 <template slot-scope="scope">

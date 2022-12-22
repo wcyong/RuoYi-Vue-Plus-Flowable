@@ -9,10 +9,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="processDefinitionId" column="process_definition_id"/>
         <result property="processDefinitionKey" column="process_definition_key"/>
         <result property="processDefinitionName" column="process_definition_name"/>
-        <result property="formId" column="form_id"/>
-        <result property="formKey" column="form_key"/>
-        <result property="formName" column="form_name"/>
-        <result property="formVariable" column="form_variable"/>
+        <result property="tableName" column="table_name"/>
+        <result property="componentName" column="component_name"/>
         <result property="remark" column="remark"/>
         <result property="defaultProcess" column="default_process"/>
         <result property="createTime" column="create_time"/>
