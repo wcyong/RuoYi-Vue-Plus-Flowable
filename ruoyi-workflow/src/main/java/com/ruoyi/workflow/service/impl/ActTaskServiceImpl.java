@@ -3,6 +3,7 @@ package com.ruoyi.workflow.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -769,7 +770,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
                 ActBusinessRuleVo actBusinessRuleVo = iActBusinessRuleService.queryById(nodeAssignee.getBusinessRuleId());
                 List<String> ruleAssignList = WorkFlowUtils.ruleAssignList(actBusinessRuleVo, processNode.getTaskId(), processNode.getNodeName());
                 processNode.setChooseWay(nodeAssignee.getChooseWay());
-                processNode.setAssignee("");
+                processNode.setAssignee(StrUtil.EMPTY);
                 processNode.setAssigneeId(String.join(",", ruleAssignList));
                 processNode.setIsShow(nodeAssignee.getIsShow());
                 processNode.setBusinessRuleId(nodeAssignee.getBusinessRuleId());
@@ -1387,7 +1388,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
                 if (CollectionUtil.isNotEmpty(subTasks)) {
                     subTasks.forEach(e -> taskService.deleteTask(e.getId()));
                 }
-                runtimeService.deleteProcessInstance(task.getProcessInstanceId(), "");
+                runtimeService.deleteProcessInstance(task.getProcessInstanceId(), StrUtil.EMPTY);
             }
             return iActBusinessStatusService.updateState(actBusinessStatus.getBusinessKey(), BusinessStatusEnum.TERMINATION, task.getProcessInstanceId());
         } catch (Exception e) {

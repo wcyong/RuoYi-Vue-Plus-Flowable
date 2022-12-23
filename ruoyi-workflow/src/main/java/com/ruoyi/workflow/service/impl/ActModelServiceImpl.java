@@ -170,7 +170,7 @@ public class ActModelServiceImpl extends WorkflowService implements IActModelSer
                 if (!isNull) {
                     e.setMetaInfo((String) JSONUtil.parseObj(e.getMetaInfo()).get(ModelDataJsonConstants.MODEL_DESCRIPTION));
                 } else {
-                    e.setMetaInfo("");
+                    e.setMetaInfo(StrUtil.EMPTY);
                 }
             });
         }

@@ -11,7 +11,7 @@
         <el-table-column label="操作" align="center" width="100">
           <template slot-scope="scope">
             <el-button
-              size="mini" type="primary" :disabled="scope.row.disabled"
+              size="mini" type="primary" :disabled="!scope.row.disabled"
               @click="handleChooseUser(scope.$index,scope.row)">选择</el-button>
           </template>
         </el-table-column>

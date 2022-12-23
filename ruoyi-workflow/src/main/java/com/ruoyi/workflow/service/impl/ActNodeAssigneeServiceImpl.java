@@ -2,6 +2,7 @@ package com.ruoyi.workflow.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -72,7 +73,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
         if (!actNodeAssignee.getMultiple()) {
             actNodeAssignee.setAddMultiInstance(false);
             actNodeAssignee.setDeleteMultiInstance(false);
-            actNodeAssignee.setMultipleColumn("");
+            actNodeAssignee.setMultipleColumn(StrUtil.EMPTY);
         }
         if (CollectionUtil.isNotEmpty(actNodeAssignee.getTaskListenerList())) {
             List<TaskListenerVo> taskListenerList = new ArrayList<>();
@@ -86,13 +87,13 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                 actNodeAssignee.setTaskListener(jsonString);
             }
         }
-        actNodeAssignee.setFieldListJson("");
+        actNodeAssignee.setFieldListJson(StrUtil.EMPTY);
         if (CollectionUtil.isNotEmpty(actNodeAssignee.getFieldList())) {
             List<FieldList> fieldListVoList = new ArrayList<>();
             actNodeAssignee.getFieldList().forEach(e -> {
                 if (StringUtils.isNotBlank(e.getField()) && e.getEdit() != null && e.getRequired() != null) {
                     if (!e.getRequired()) {
-                        e.setMessage("");
+                        e.setMessage(StrUtil.EMPTY);
                     }
                     fieldListVoList.add(e);
                 }
@@ -163,7 +164,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             }
         } else {
             nodeAssignee.setMultiple(false);
-            nodeAssignee.setMultipleColumn("");
+            nodeAssignee.setMultipleColumn(StrUtil.EMPTY);
             nodeAssignee.setAddMultiInstance(false);
             nodeAssignee.setDeleteMultiInstance(false);
         }
@@ -345,10 +346,10 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
 
                 ActNodeAssignee actNodeAssignee = new ActNodeAssignee();
                 BeanUtils.copyProperties(oldNodeAssignee, actNodeAssignee);
-                actNodeAssignee.setId("");
+                actNodeAssignee.setId(StrUtil.EMPTY);
                 actNodeAssignee.setProcessDefinitionId(processDefinition.getId());
                 if (!actNodeAssignee.getMultiple()) {
-                    actNodeAssignee.setMultipleColumn("");
+                    actNodeAssignee.setMultipleColumn(StrUtil.EMPTY);
                 }
                 actNodeAssigneeList.add(actNodeAssignee);
             }

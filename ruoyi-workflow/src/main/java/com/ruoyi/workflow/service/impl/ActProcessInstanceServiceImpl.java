@@ -2,6 +2,7 @@ package com.ruoyi.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
@@ -11,7 +12,7 @@ import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
-import com.ruoyi.workflow.domain.vo.ProcessNodePath;
+import com.ruoyi.workflow.domain.vo.*;
 import com.ruoyi.workflow.flowable.config.CustomDefaultProcessDiagramGenerator;
 import com.ruoyi.workflow.common.constant.ActConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
@@ -19,9 +20,6 @@ import com.ruoyi.workflow.domain.ActBusinessStatus;
 import com.ruoyi.workflow.domain.ActTaskNode;
 import com.ruoyi.workflow.domain.bo.ProcessInstFinishBo;
 import com.ruoyi.workflow.domain.bo.ProcessInstRunningBo;
-import com.ruoyi.workflow.domain.vo.ActHistoryInfoVo;
-import com.ruoyi.workflow.domain.vo.ProcessInstFinishVo;
-import com.ruoyi.workflow.domain.vo.ProcessInstRunningVo;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.service.*;
 import com.ruoyi.workflow.utils.ProcessRunningPathUtils;
@@ -69,6 +67,7 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
     private final IUserService iUserService;
     private final IActTaskNodeService iActTaskNodeService;
     private final IActNodeAssigneeService iActNodeAssigneeService;
+    private final IActBusinessRuleService iActBusinessRuleService;
 
     @Value("${flowable.activity-font-name}")
     private String activityFontName;
@@ -525,10 +524,10 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
         ActBusinessStatus infoByBusinessKey = iActBusinessStatusService.getInfoByBusinessKey(businessKey);
         if (ObjectUtil.isNotEmpty(infoByBusinessKey) && (infoByBusinessKey.getStatus().equals(BusinessStatusEnum.FINISH.getStatus()) || infoByBusinessKey.getStatus().equals(BusinessStatusEnum.INVALID.getStatus()))) {
             HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
-            processInstanceId = ObjectUtil.isNotEmpty(historicProcessInstance) ? historicProcessInstance.getId() : "";
+            processInstanceId = ObjectUtil.isNotEmpty(historicProcessInstance) ? historicProcessInstance.getId() : StrUtil.EMPTY;
         } else {
             ProcessInstance processInstance = runtimeService.createProcessInstanceQuery().processInstanceBusinessKey(businessKey).singleResult();
-            processInstanceId = ObjectUtil.isNotEmpty(processInstance) ? processInstance.getProcessInstanceId() : "";
+            processInstanceId = ObjectUtil.isNotEmpty(processInstance) ? processInstance.getProcessInstanceId() : StrUtil.EMPTY;
         }
         return processInstanceId;
     }
@@ -668,6 +667,8 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
             task.put("completed", true);
             taskList.add(task);
         }
+        List<Task> list = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
+        Map<String, Object> variables = runtimeService.getVariables(list.get(0).getExecutionId());
         List<ProcessNodePath> processNodePaths = new ArrayList<>();
         if (CollUtil.isNotEmpty(actNodeAssignees)) {
             for (ProcessNodePath processNodePath : processNodeList) {
@@ -677,7 +678,19 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                         BeanCopyUtils.copy(processNodePath, node);
                         node.setAssignee(e.getAssignee());
                         node.setAssigneeId(e.getAssigneeId());
+                        node.setTransactor(e.getAssignee());
+                        node.setTransactorId(e.getAssigneeId());
                         node.setChooseWay(e.getChooseWay());
+                        if(ActConstant.WORKFLOW_RULE.equals(e.getChooseWay())){
+                            ActBusinessRuleVo actBusinessRuleVo = iActBusinessRuleService.queryById(e.getBusinessRuleId());
+                            if(actBusinessRuleVo == null){
+                                throw new ServiceException("规则不存在");
+                            }
+                            List<String> assignList = WorkFlowUtils.ruleAssignList(actBusinessRuleVo, processNodePath.getNodeName(), variables);
+                            node.setChooseWay(ActConstant.WORKFLOW_PERSON);
+                            node.setAssigneeId(String.join(",",assignList));
+                            node.setAssignee(String.join(",",assignList));
+                        }
                         if (processNodePath.getFirst()) {
                             SysUser sysUser = iUserService.selectUserById(Long.valueOf(processInstance.getStartUserId()));
                             node.setAssignee(sysUser.getNickName());
@@ -686,14 +699,11 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                             node.setTransactor(sysUser.getNickName());
                             node.setTransactorId(sysUser.getUserId().toString());
                         }
-                        if (!ActConstant.WORKFLOW_PERSON.equals(node.getChooseWay())) {
-                            node.setTransactor("");
+                        if (e.getIsShow()) {
+                            node.setTransactor(StrUtil.EMPTY);
+                            node.setTransactorId(StrUtil.EMPTY);
                         }
-                        if (StringUtils.isNotBlank(node.getAssigneeId()) && !node.getAssigneeId().contains(",")) {
-                            node.setDisabled(true);
-                            node.setTransactor(node.getAssignee());
-                            node.setTransactorId(node.getAssigneeId());
-                        }
+                        node.setDisabled(e.getIsShow());
                         processNodePaths.add(node);
                     });
             }

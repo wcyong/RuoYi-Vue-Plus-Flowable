@@ -322,6 +322,86 @@ public class WorkFlowUtils {
     /**
      * @description: 查询业务规则中的人员id
      * @param: businessRule 业务规则对象
+     * @param: taskName 任务名称
+     * @param: variables 业务变量
+     * @return: 执行业务规则查询人员
+     * @return: java.util.List<java.lang.String>
+     * @author: gssong
+     * @date: 2022/4/11 13:35
+     */
+    public static List<String> ruleAssignList(ActBusinessRuleVo businessRule, String taskName,Map<String,Object> variables) {
+        try {
+            //返回值
+            Object obj;
+            //方法名称
+            String methodName = businessRule.getMethod();
+            //全类名
+            Object beanName = SpringUtils.getBean(businessRule.getBeanName());
+            if (StringUtils.isNotBlank(businessRule.getParam())) {
+                List<ActBusinessRuleParam> businessRuleParams = JsonUtils.parseArray(businessRule.getParam(), ActBusinessRuleParam.class);
+                Class[] paramClass = new Class[businessRuleParams.size()];
+                List<Object> params = new ArrayList<>();
+                for (int i = 0; i < businessRuleParams.size(); i++) {
+                    if (variables.containsKey(businessRuleParams.get(i).getParam())) {
+                        String variable = (String) variables.get(businessRuleParams.get(i).getParam());
+                        switch (businessRuleParams.get(i).getParamType()) {
+                            case ActConstant.PARAM_STRING:
+                                paramClass[i] = String.valueOf(variable).getClass();
+                                params.add(String.valueOf(variable));
+                                break;
+                            case ActConstant.PARAM_SHORT:
+                                paramClass[i] = Short.valueOf(variable).getClass();
+                                params.add(Short.valueOf(variable));
+                                break;
+                            case ActConstant.PARAM_INTEGER:
+                                paramClass[i] = Integer.valueOf(variable).getClass();
+                                params.add(Integer.valueOf(variable));
+                                break;
+                            case ActConstant.PARAM_LONG:
+                                paramClass[i] = Long.valueOf(variable).getClass();
+                                params.add(Long.valueOf(variable));
+                                break;
+                            case ActConstant.PARAM_FLOAT:
+                                paramClass[i] = Float.valueOf(variable).getClass();
+                                params.add(Float.valueOf(variable));
+                                break;
+                            case ActConstant.PARAM_DOUBLE:
+                                paramClass[i] = Double.valueOf(variable).getClass();
+                                params.add(Double.valueOf(variable));
+                                break;
+                            case ActConstant.PARAM_BOOLEAN:
+                                paramClass[i] = Boolean.valueOf(variable).getClass();
+                                params.add(Boolean.valueOf(variable));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                if (ObjectUtil.isEmpty(paramClass) && CollectionUtil.isNotEmpty(businessRuleParams)) {
+                    String variableParams = businessRuleParams.stream().map(ActBusinessRuleParam::getParam).collect(Collectors.joining(","));
+                    throw new ServiceException("【" + variableParams + "】流程变量不存在");
+                }
+                Method method = ReflectionUtils.findMethod(beanName.getClass(), methodName, paramClass);
+                assert method != null;
+                obj = ReflectionUtils.invokeMethod(method, beanName, params.toArray());
+            } else {
+                Method method = ReflectionUtils.findMethod(beanName.getClass(), methodName);
+                assert method != null;
+                obj = ReflectionUtils.invokeMethod(method, beanName);
+            }
+            if (obj == null) {
+                throw new ServiceException("【" + taskName + "】任务环节未配置审批人,请确认传值是否正确,检查：【" + businessRule.getBeanName() + "】Bean容器中【" + methodName + "】方法");
+            }
+            return Arrays.asList(obj.toString().split(","));
+        } catch (Exception e) {
+            throw new ServiceException(e.getMessage());
+        }
+    }
+
+    /**
+     * @description: 查询业务规则中的人员id
+     * @param: businessRule 业务规则对象
      * @param: taskId 任务id
      * @param: taskName 任务名称
      * @return: 执行业务规则查询人员

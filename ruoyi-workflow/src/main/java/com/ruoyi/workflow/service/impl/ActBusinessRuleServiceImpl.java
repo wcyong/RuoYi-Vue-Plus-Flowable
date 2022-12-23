@@ -3,6 +3,7 @@ package com.ruoyi.workflow.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ruoyi.common.core.domain.PageQuery;
 import com.ruoyi.common.exception.ServiceException;
@@ -116,7 +117,7 @@ public class ActBusinessRuleServiceImpl implements IActBusinessRuleService {
             List<ProcessDefinition> list = repositoryService.createProcessDefinitionQuery().processDefinitionIds(collect).list();
             return "当前规则已被【"+list.stream().map(ProcessDefinition::getName).collect(Collectors.joining(","))+"】使用，是否确认修改？";
         }
-        return "";
+        return StrUtil.EMPTY;
     }
 
     private List<ActNodeAssignee> getActNodeAssignees(Collection<Long> ids) {
