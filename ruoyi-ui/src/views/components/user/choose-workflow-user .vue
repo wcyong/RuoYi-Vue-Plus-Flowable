@@ -1,28 +1,31 @@
 <template>
 <el-dialog title="用户" :visible.sync="visible" @close="close"  width="60%" append-to-body v-dialogDrag :close-on-click-modal="false">
   <div class="app-container">
-    <el-row :gutter="20">
-      <!--部门/角色数据-->
-      <div class="item-font" v-if="this.dataObj.chooseWay === 'role'">角色名称</div>
-      <div class="item-font" v-if="this.dataObj.chooseWay === 'dept'">部门名称</div>
-      <el-col :span="4" class="left-container" :xs="24" v-if="this.dataObj.chooseWay === 'role'">
-        <div v-for="(item,index) in roleList" :key="index" class="item">
-            <div @click="handdle(item,index)" class="selected" v-if="item.roleName.length < 13" >{{item.roleName}}({{item.roleKey}})</div>
-            <el-tooltip v-else effect="dark" :content="item.roleName" placement="bottom-end">
-                <div @click="handdle(item,index)">{{`${item.roleName.substring(0, 13)}...`}}</div>
-            </el-tooltip>
-        </div>
-      </el-col>
-      <el-col :span="4" class="left-container" :xs="24" v-else-if="this.dataObj.chooseWay === 'dept'">
-        <div v-for="(item,index) in deptList" :key="index" class="item">
-            <div @click="handdle(item,index)" :class="currentIndex === index ? 'selected' : ''" v-if="item.deptName.length < 13" >{{item.deptName}}</div>
-            <el-tooltip v-else effect="dark" :content="item.deptName" placement="bottom-end">
-                <div @click="handdle(item,index)">{{`${item.deptName.substring(0, 13)}...`}}</div>
-            </el-tooltip>
-        </div>
+    <el-row :gutter="20" >
+      <!--部门数据-->
+      <el-col :span="4" :xs="24">
+        <!--部门/角色数据-->
+        <div class="item-font" v-if="this.dataObj.chooseWay === 'role'">角色名称</div>
+        <div class="item-font" v-if="this.dataObj.chooseWay === 'dept'">部门名称</div>
+        <template class="left-container" v-if="this.dataObj.chooseWay === 'role'">
+          <div v-for="(item,index) in roleList" :key="index" class="item">
+              <div @click="handdle(item,index)" class="selected" v-if="item.roleName.length < 13" >{{item.roleName}}({{item.roleKey}})</div>
+              <el-tooltip v-else effect="dark" :content="item.roleName" placement="bottom-end">
+                  <div @click="handdle(item,index)">{{`${item.roleName.substring(0, 13)}...`}}</div>
+              </el-tooltip>
+          </div>
+        </template>
+        <template class="left-container" v-else-if="this.dataObj.chooseWay === 'dept'">
+          <div v-for="(item,index) in deptList" :key="index" class="item">
+              <div @click="handdle(item,index)" :class="currentIndex === index ? 'selected' : ''" v-if="item.deptName.length < 13" >{{item.deptName}}</div>
+              <el-tooltip v-else effect="dark" :content="item.deptName" placement="bottom-end">
+                  <div @click="handdle(item,index)">{{`${item.deptName.substring(0, 13)}...`}}</div>
+              </el-tooltip>
+          </div>
+        </template>
       </el-col>
       <!--用户数据-->
-      <el-col :span="20" :xs="24">
+      <el-col :span="span" :xs="24">
         <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
           <el-form-item label="归属部门" prop="deptId">
             <treeselect v-model="queryParams.deptId" style="width: 240px" :options="deptOptions" :show-count="true" placeholder="请选择归属部门" />
@@ -55,7 +58,7 @@
           <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
         </el-row>
 
-        <el-table v-loading="loading" height="300" border :data="userList" ref="multipleTable" :row-key="getRowKey" @selection-change="handleSelectionChange">
+        <el-table v-loading="loading" height="250px" border :data="userList" ref="multipleTable" :row-key="(row) => {return row.userId}" @selection-change="handleSelectionChange">
           <el-table-column type="selection" :reserve-selection="true" width="50" align="center" />
           <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" />
           <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns[1].visible" :show-overflow-tooltip="true" />
@@ -81,8 +84,8 @@
   </div>
   <!-- 选中的用户 -->
   <div>
-    <el-tag v-for="user in chooseUserList" :key="user.userName" style="margin:2px"
-    closable @close="handleCloseTag(user)" >{{user.userName}} </el-tag>
+    <el-tag v-for="(user,index) in chooseUserList" :key="user.userName" style="margin:2px"
+    closable @close="handleCloseTag(user,index)" >{{user.userName}} </el-tag>
   </div>
   <div slot="footer" class="dialog-footer">
         <el-button :loading="buttonLoading" type="primary" @click="confirmUser">确认</el-button>
@@ -160,10 +163,9 @@ export default {
       ],
       // 保存选择的用户
       chooseUserList: [],
-      getRowKey(row) {
-        return row.userId
-      },
-      currentIndex:-1
+      currentIndex:-1,
+      span: 24,
+      flag: false
     };
   },
   watch: {
@@ -178,6 +180,12 @@ export default {
             });
             this.getTreeselect();
             this.getList()
+            this.flag = true
+            if(this.dataObj.chooseWay === 'role' || this.dataObj.chooseWay === 'dept'){
+              this.span = 20
+            }else{
+              this.span = 24
+            }
         }
     },
   },
@@ -185,6 +193,12 @@ export default {
     /** 查询用户列表 */
     getList() {
       this.loading = true;
+      if(this.chooseUserList.length > 0 ){
+        let param = this.chooseUserList.map((item) => {
+          return item.userId;
+        });
+        this.queryParams.ids = param
+      }
       getWorkflowUserListByPage(this.queryParams).then(response => {
         if(response.data){
             let res = response.data.page
@@ -193,10 +207,10 @@ export default {
                 this.total = res.total;
             }
             //反选
-            if(response.data.list){
+            if(this.flag && response.data.list){
                 this.chooseUserList = response.data.list
                 response.data.list.forEach(row => {
-                this.$refs.multipleTable.toggleRowSelection(row,true);
+                  this.$refs.multipleTable.toggleRowSelection(row,true);
                 })
             }
             if(this.dataObj.chooseWay === 'role'){
@@ -238,6 +252,7 @@ export default {
     },
     /** 搜索按钮操作 */
     handleQuery() {
+      this.flag = false
       this.queryParams.pageNum = 1;
       this.getList();
     },
@@ -251,9 +266,14 @@ export default {
     // 多选框选中数据
     handleSelectionChange(val) {
         if(this.multiple){
+          val.forEach(row => {
+            this.$refs.multipleTable.toggleRowSelection(row,true);
+          });
           this.chooseUserList = val.filter((element,index,self)=>{
              return self.findIndex(x=>x.userId===element.userId) === index
           })
+          console.log(val)
+          console.log(this.chooseUserList)
         }else{
           this.chooseUserList = val
           if (val.length > 1) {
@@ -266,14 +286,22 @@ export default {
         }
     },
     // 删除tag
-    handleCloseTag(user){
-      this.chooseUserList.splice(this.chooseUserList.indexOf(user), 1);
-       this.$refs.multipleTable.toggleRowSelection(user,false)
-       this.userList.forEach((row,index)=>{
-          if(user.userId === row.userId){
-             this.$refs.multipleTable.toggleRowSelection(this.userList[index],false)
+    handleCloseTag(user,index){
+       this.chooseUserList.splice(index, 1);
+       if(this.queryParams.ids.length > 0){
+        this.queryParams.ids.forEach((e,uIndex) => {
+          if(user.userId === e.userId){
+            this.queryParams.ids.splice(uIndex, 1);
           }
-       })
+        })
+        console.log(this.queryParams.ids)
+       }
+       this.$refs.multipleTable.toggleRowSelection(user,false)
+      //  this.userList.forEach((row,index)=>{
+      //     if(user.userId === row.userId){
+      //        this.$refs.multipleTable.toggleRowSelection(this.userList[index],false)
+      //     }
+      //  })
     },
     // 确认
     confirmUser(){

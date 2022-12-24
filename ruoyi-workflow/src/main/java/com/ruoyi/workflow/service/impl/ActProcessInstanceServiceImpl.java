@@ -681,15 +681,15 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                         node.setTransactor(e.getAssignee());
                         node.setTransactorId(e.getAssigneeId());
                         node.setChooseWay(e.getChooseWay());
-                        if(ActConstant.WORKFLOW_RULE.equals(e.getChooseWay())){
+                        if (ActConstant.WORKFLOW_RULE.equals(e.getChooseWay())) {
                             ActBusinessRuleVo actBusinessRuleVo = iActBusinessRuleService.queryById(e.getBusinessRuleId());
-                            if(actBusinessRuleVo == null){
+                            if (actBusinessRuleVo == null) {
                                 throw new ServiceException("规则不存在");
                             }
                             List<String> assignList = WorkFlowUtils.ruleAssignList(actBusinessRuleVo, processNodePath.getNodeName(), variables);
                             node.setChooseWay(ActConstant.WORKFLOW_PERSON);
-                            node.setAssigneeId(String.join(",",assignList));
-                            node.setAssignee(String.join(",",assignList));
+                            node.setAssigneeId(String.join(",", assignList));
+                            node.setAssignee(String.join(",", assignList));
                         }
                         if (processNodePath.getFirst()) {
                             SysUser sysUser = iUserService.selectUserById(Long.valueOf(processInstance.getStartUserId()));
@@ -702,6 +702,30 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                         if (e.getIsShow()) {
                             node.setTransactor(StrUtil.EMPTY);
                             node.setTransactorId(StrUtil.EMPTY);
+                        }
+                        if ((ActConstant.WORKFLOW_ROLE.equals(e.getChooseWay()) || ActConstant.WORKFLOW_DEPT.equals(e.getChooseWay())) && !e.getIsShow()) {
+                            if (ActConstant.WORKFLOW_ROLE.equals(e.getChooseWay())) {
+                                List<Long> roleIds = Arrays.stream(node.getAssigneeId().split(",")).map(Long::valueOf).collect(Collectors.toList());
+                                List<SysUser> userList = iUserService.getUserListByRoleIds(roleIds);
+                                if (CollUtil.isEmpty(userList)) {
+                                    throw new ServiceException("【" + node.getNodeName() + "】环节审批人员不存在");
+                                }
+                                String userIds = userList.stream().map(u -> u.getUserId().toString()).collect(Collectors.joining(","));
+                                String nickNames = userList.stream().map(SysUser::getNickName).collect(Collectors.joining(","));
+                                node.setAssigneeId(userIds);
+                                node.setAssignee(nickNames);
+                            }
+                            if (ActConstant.WORKFLOW_DEPT.equals(e.getChooseWay())) {
+                                List<Long> deptIds = Arrays.stream(node.getAssigneeId().split(",")).map(Long::valueOf).collect(Collectors.toList());
+                                List<SysUser> userList = iUserService.getUserListByDeptIds(deptIds);
+                                if (CollUtil.isEmpty(userList)) {
+                                    throw new ServiceException("【" + node.getNodeName() + "】环节审批人员不存在");
+                                }
+                                String userIds = userList.stream().map(u -> u.getUserId().toString()).collect(Collectors.joining(","));
+                                String nickNames = userList.stream().map(SysUser::getNickName).collect(Collectors.joining(","));
+                                node.setAssigneeId(userIds);
+                                node.setAssignee(nickNames);
+                            }
                         }
                         node.setDisabled(e.getIsShow());
                         processNodePaths.add(node);

@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -292,5 +293,40 @@ public class UserServiceImpl implements IUserService {
         LambdaQueryWrapper<SysDept> queryWrapper = Wrappers.lambdaQuery();
         queryWrapper.eq(SysDept::getStatus, UserStatus.OK.getCode());
         return deptMapper.selectDeptList(queryWrapper);
+    }
+
+    /**
+     * @description: 按照部门id查人员
+     * @param: deptIds
+     * @return: java.util.List<com.ruoyi.common.core.domain.entity.SysUser>
+     * @author: gssong
+     * @date: 2022/12/24 13:32
+     */
+    @Override
+    public List<SysUser> getUserListByDeptIds(List<Long> deptIds) {
+        LambdaQueryWrapper<SysUser> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(SysUser::getDeptId, deptIds);
+        return userMapper.selectList(wrapper);
+    }
+
+    /**
+     * @description: 按照角色id查人员
+     * @param: roleIds
+     * @return: java.util.List<com.ruoyi.common.core.domain.entity.SysUser>
+     * @author: gssong
+     * @date: 2022/12/24 13:35
+     */
+    @Override
+    public List<SysUser> getUserListByRoleIds(List<Long> roleIds) {
+        LambdaQueryWrapper<SysUserRole> userRoleLambdaQueryWrapper = Wrappers.lambdaQuery();
+        userRoleLambdaQueryWrapper.in(SysUserRole::getRoleId, roleIds);
+        List<SysUserRole> sysUserRoles = userRoleMapper.selectList(userRoleLambdaQueryWrapper);
+        if (CollUtil.isNotEmpty(sysUserRoles)) {
+            List<Long> userIds = sysUserRoles.stream().map(SysUserRole::getUserId).collect(Collectors.toList());
+            LambdaQueryWrapper<SysUser> wrapper = Wrappers.lambdaQuery();
+            wrapper.in(SysUser::getUserId, userIds);
+            return userMapper.selectList(wrapper);
+        }
+        return Collections.emptyList();
     }
 }

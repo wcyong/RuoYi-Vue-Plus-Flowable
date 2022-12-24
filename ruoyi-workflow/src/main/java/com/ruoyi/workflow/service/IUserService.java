@@ -74,4 +74,16 @@ public interface IUserService {
      * @return
      */
     List<SysDept> getDeptList();
+
+    /**
+     * 按照部门id查人员
+     * @return
+     */
+    List<SysUser> getUserListByDeptIds(List<Long> deptIds);
+
+    /**
+     * 按照角色id查人员
+     * @return
+     */
+    List<SysUser> getUserListByRoleIds(List<Long> roleIds);
 }
