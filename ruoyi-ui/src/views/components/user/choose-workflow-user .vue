@@ -84,8 +84,7 @@
   </div>
   <!-- 选中的用户 -->
   <div>
-    <el-tag v-for="(user,index) in chooseUserList" :key="user.userName" style="margin:2px"
-    closable @close="handleCloseTag(user,index)" >{{user.userName}} </el-tag>
+    <el-tag v-for="(user) in chooseUserList" :key="user.userName" style="margin:2px">{{user.userName}} </el-tag>
   </div>
   <div slot="footer" class="dialog-footer">
         <el-button :loading="buttonLoading" type="primary" @click="confirmUser">确认</el-button>
@@ -164,8 +163,7 @@ export default {
       // 保存选择的用户
       chooseUserList: [],
       currentIndex:-1,
-      span: 24,
-      flag: false
+      span: 24
     };
   },
   watch: {
@@ -180,7 +178,6 @@ export default {
             });
             this.getTreeselect();
             this.getList()
-            this.flag = true
             if(this.dataObj.chooseWay === 'role' || this.dataObj.chooseWay === 'dept'){
               this.span = 20
             }else{
@@ -193,25 +190,12 @@ export default {
     /** 查询用户列表 */
     getList() {
       this.loading = true;
-      if(this.chooseUserList.length > 0 ){
-        let param = this.chooseUserList.map((item) => {
-          return item.userId;
-        });
-        this.queryParams.ids = param
-      }
       getWorkflowUserListByPage(this.queryParams).then(response => {
         if(response.data){
             let res = response.data.page
             if(res){
                 this.userList = res.rows;
                 this.total = res.total;
-            }
-            //反选
-            if(this.flag && response.data.list){
-                this.chooseUserList = response.data.list
-                response.data.list.forEach(row => {
-                  this.$refs.multipleTable.toggleRowSelection(row,true);
-                })
             }
             if(this.dataObj.chooseWay === 'role'){
                 this.roleList = response.data.roleList
@@ -252,7 +236,6 @@ export default {
     },
     /** 搜索按钮操作 */
     handleQuery() {
-      this.flag = false
       this.queryParams.pageNum = 1;
       this.getList();
     },
@@ -272,8 +255,6 @@ export default {
           this.chooseUserList = val.filter((element,index,self)=>{
              return self.findIndex(x=>x.userId===element.userId) === index
           })
-          console.log(val)
-          console.log(this.chooseUserList)
         }else{
           this.chooseUserList = val
           if (val.length > 1) {
@@ -284,24 +265,6 @@ export default {
             this.chooseUserList = null
           }
         }
-    },
-    // 删除tag
-    handleCloseTag(user,index){
-       this.chooseUserList.splice(index, 1);
-       if(this.queryParams.ids.length > 0){
-        this.queryParams.ids.forEach((e,uIndex) => {
-          if(user.userId === e.userId){
-            this.queryParams.ids.splice(uIndex, 1);
-          }
-        })
-        console.log(this.queryParams.ids)
-       }
-       this.$refs.multipleTable.toggleRowSelection(user,false)
-      //  this.userList.forEach((row,index)=>{
-      //     if(user.userId === row.userId){
-      //        this.$refs.multipleTable.toggleRowSelection(this.userList[index],false)
-      //     }
-      //  })
     },
     // 确认
     confirmUser(){
