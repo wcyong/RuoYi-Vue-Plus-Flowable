@@ -60,7 +60,7 @@
 
         <el-table v-loading="loading" height="250px" border :data="userList" ref="multipleTable" :row-key="(row) => {return row.userId}" @selection-change="handleSelectionChange">
           <el-table-column type="selection" :reserve-selection="true" width="50" align="center" />
-          <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" />
+          <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" :show-overflow-tooltip="true"/>
           <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns[1].visible" :show-overflow-tooltip="true" />
           <el-table-column label="用户昵称" align="center" key="nickName" prop="nickName" v-if="columns[2].visible" :show-overflow-tooltip="true" />
           <el-table-column label="部门" align="center" key="deptName" prop="dept.deptName" v-if="columns[3].visible" :show-overflow-tooltip="true" />
@@ -84,11 +84,11 @@
   </div>
   <!-- 选中的用户 -->
   <div>
-    <el-tag v-for="(user) in chooseUserList" :key="user.userName" style="margin:2px">{{user.userName}} </el-tag>
+    <el-tag v-for="(user,index) in chooseUserList" :key="user.userId" closable @close="handleCloseTag(user,index)" style="margin:2px">{{user.userName}} </el-tag>
   </div>
   <div slot="footer" class="dialog-footer">
         <el-button :loading="buttonLoading" type="primary" @click="confirmUser">确认</el-button>
-        <el-button @click="cancel">取 消</el-button>
+        <el-button @click="close">取 消</el-button>
   </div>
 </el-dialog>
 </template>
@@ -169,13 +169,13 @@ export default {
   watch: {
     visible(val) {
         if(val){
+            this.$nextTick(()=>{
+              this.$refs.multipleTable.clearSelection();
+            })
             this.queryParams.params = this.dataObj.assigneeId
             this.queryParams.paramIds = this.dataObj.assigneeId
             this.queryParams.type = this.dataObj.chooseWay
             this.queryParams.ids = this.dataObj.ids
-            this.$nextTick(() => {
-                this.$refs.multipleTable.clearSelection();
-            });
             this.getTreeselect();
             this.getList()
             if(this.dataObj.chooseWay === 'role' || this.dataObj.chooseWay === 'dept'){
@@ -196,6 +196,13 @@ export default {
             if(res){
                 this.userList = res.rows;
                 this.total = res.total;
+            }
+            //反选
+            if(response.data.list){
+              this.chooseUserList = response.data.list
+              response.data.list.forEach(row => {
+                this.$refs.multipleTable.toggleRowSelection(row,true);
+              })
             }
             if(this.dataObj.chooseWay === 'role'){
                 this.roleList = response.data.roleList
@@ -224,15 +231,11 @@ export default {
         this.currentIndex = index
         this.getList()
     },
-    // 取消按钮
-    cancel() {
-      this.visible = false
-      this.chooseUserList = []
-    },
     // 关闭
     close() {
-      this.visible = false
       this.chooseUserList = []
+      this.queryParams.ids = []
+      this.visible = false 
     },
     /** 搜索按钮操作 */
     handleQuery() {
@@ -249,17 +252,21 @@ export default {
     // 多选框选中数据
     handleSelectionChange(val) {
         if(this.multiple){
-          val.forEach(row => {
-            this.$refs.multipleTable.toggleRowSelection(row,true);
-          });
           this.chooseUserList = val.filter((element,index,self)=>{
              return self.findIndex(x=>x.userId===element.userId) === index
           })
+          val.forEach(u=>{
+            if(!this.chooseUserList.includes(u)){
+              this.$refs.multipleTable.toggleRowSelection(u, false);
+            }
+          })
+          this.queryParams.ids = this.chooseUserList.map((item) => {return item.userId});
         }else{
           this.chooseUserList = val
           if (val.length > 1) {
             let delRow = val.shift();
             this.$refs.multipleTable.toggleRowSelection(delRow, false);
+            this.queryParams.ids = this.chooseUserList.map((item) => {return item.userId});
           }
           if(val.length === 0){
             this.chooseUserList = null
@@ -270,11 +277,33 @@ export default {
     confirmUser(){
       if(this.chooseUserList.length>0){
         this.$emit("confirmUser",this.chooseUserList,this.nodeId)
+        this.chooseUserList = []
+        this.queryParams.ids = []
         this.visible = false
       }else{
         this.$modal.msgWarning("请选择人员！");
       }
-    }
+    },
+    // 删除tag
+    handleCloseTag(user,index){
+      if(this.$refs.multipleTable.selection && this.$refs.multipleTable.selection.length > 0){
+        this.$refs.multipleTable.selection.forEach((e,i)=>{
+          if(user.userId === e.userId){
+            this.$refs.multipleTable.selection.splice(i, 1);
+          }
+        })
+      }
+      this.chooseUserList.splice(index, 1);
+      this.$refs.multipleTable.toggleRowSelection(user, false)
+
+      if(this.queryParams.ids && this.queryParams.ids.length > 0){
+        this.queryParams.ids.forEach((userId,i)=>{
+          if(userId === user.userId){
+            this.queryParams.ids.splice(i, 1);
+          }
+        })
+      }
+    },
   }
 };
 </script>

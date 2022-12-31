@@ -352,7 +352,6 @@ export default {
     async submitUpload() {
       if(this.attachmentList.length>0){
         const formData = new FormData()
-        console.log(this.attachmentList)
 
         this.attachmentList.forEach((file) => {
             formData.append('file', file.raw)
