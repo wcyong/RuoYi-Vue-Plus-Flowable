@@ -1,5 +1,5 @@
 <template>
-<el-dialog title="用户" :visible.sync="visible" v-if="visible" width="60%" append-to-body v-dialogDrag @close="multiClose" :close-on-click-modal="false">
+<el-dialog title="用户" :visible.sync="visible" v-if="visible" width="70%" append-to-body v-dialogDrag @close="multiClose" :close-on-click-modal="false">
   <div class="app-container">
     <el-row :gutter="20">
       <!--部门数据-->
@@ -38,10 +38,10 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="手机号码" prop="phonenumber">
+          <el-form-item label="用户昵称" prop="nickName">
             <el-input
-              v-model="queryParams.phonenumber"
-              placeholder="请输入手机号码"
+              v-model="queryParams.nickName"
+              placeholder="请输入用户昵称"
               clearable
               style="width: 240px"
               @keyup.enter.native="handleQuery"
@@ -57,7 +57,7 @@
           <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" :columns="columns"></right-toolbar>
         </el-row>
 
-        <el-table v-loading="loading" border height="250px" :data="userList" ref="multipleTable" :row-key="getRowKey" @selection-change="handleSelectionChange">
+        <el-table v-loading="loading" border height="320px" :data="userList" ref="multipleTable" :row-key="getRowKey" @selection-change="handleSelectionChange">
           <el-table-column type="selection" :reserve-selection="true" width="50" align="center" />
           <el-table-column label="用户编号" align="center" key="userId" prop="userId" v-if="columns[0].visible" :show-overflow-tooltip="true"/>
           <el-table-column label="用户名称" align="center" key="userName" prop="userName" v-if="columns[1].visible" :show-overflow-tooltip="true" />
@@ -142,7 +142,7 @@ export default {
         pageNum: 1,
         pageSize: 10,
         userName: undefined,
-        phonenumber: undefined,
+        nickName: undefined,
         deptId: undefined,
         taskId: this.taskId,
         ids:[]
@@ -231,7 +231,7 @@ export default {
     /** 重置按钮操作 */
     resetQuery() {
       this.queryParams.deptId = ''
-      this.queryParams.phonenumber = ''
+      this.queryParams.nickName = ''
       this.queryParams.userName = ''
       this.handleQuery();
     },
@@ -293,5 +293,6 @@ export default {
 <style scoped>
 .app-container{
   height: 500px;
+  overflow: auto;
 }
 </style>

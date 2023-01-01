@@ -1,5 +1,5 @@
 <template>
-<el-dialog title="用户" :visible.sync="visible" @close="close"  width="60%" append-to-body v-dialogDrag :close-on-click-modal="false">
+<el-dialog title="用户" :visible.sync="visible" @close="close"  width="70%" append-to-body v-dialogDrag :close-on-click-modal="false">
   <div class="app-container">
     <el-row :gutter="20" >
       <!--部门数据-->
@@ -27,7 +27,7 @@
       <!--用户数据-->
       <el-col :span="span" :xs="24">
         <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="68px">
-          <el-form-item label="归属部门" prop="deptId">
+          <el-form-item label="归属部门" prop="deptId" v-if="this.dataObj.chooseWay === 'person'">
             <treeselect v-model="queryParams.deptId" style="width: 240px" :options="deptOptions" :show-count="true" placeholder="请选择归属部门" />
           </el-form-item>
           <el-form-item label="用户名称" prop="userName">
@@ -39,10 +39,10 @@
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="手机号码" prop="phonenumber">
+          <el-form-item label="用户昵称" prop="nickName">
             <el-input
-              v-model="queryParams.phonenumber"
-              placeholder="请输入手机号码"
+              v-model="queryParams.nickName"
+              placeholder="请输入用户昵称"
               clearable
               style="width: 240px"
               @keyup.enter.native="handleQuery"
@@ -79,12 +79,12 @@
           :limit.sync="queryParams.pageSize"
           @pagination="getList"
         />
+        <!-- 选中的用户 -->
+        <div>
+          <el-tag v-for="(user,index) in chooseUserList" :key="user.userId" closable @close="handleCloseTag(user,index)" style="margin:12px 2px 0px 2px">{{user.userName}} </el-tag>
+        </div>
       </el-col>
     </el-row>
-  </div>
-  <!-- 选中的用户 -->
-  <div>
-    <el-tag v-for="(user,index) in chooseUserList" :key="user.userId" closable @close="handleCloseTag(user,index)" style="margin:2px">{{user.userName}} </el-tag>
   </div>
   <div slot="footer" class="dialog-footer">
         <el-button :loading="buttonLoading" type="primary" @click="confirmUser">确认</el-button>
@@ -144,7 +144,7 @@ export default {
         pageNum: 1,
         pageSize: 10,
         userName: undefined,
-        phonenumber: undefined,
+        nickName: undefined,
         deptId: undefined,
         type: undefined,
         params: undefined,
@@ -172,6 +172,7 @@ export default {
             this.$nextTick(()=>{
               this.$refs.multipleTable.clearSelection();
             })
+            this.currentIndex = -1
             this.queryParams.params = this.dataObj.assigneeId
             this.queryParams.paramIds = this.dataObj.assigneeId
             this.queryParams.type = this.dataObj.chooseWay
@@ -310,6 +311,7 @@ export default {
 <style scoped>
   .app-container{
     height: 500px;
+    overflow: auto;
   }
   .item{
     border-bottom: 1px solid #eff3fa;

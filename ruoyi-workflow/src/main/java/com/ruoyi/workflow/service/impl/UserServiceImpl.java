@@ -86,7 +86,7 @@ public class UserServiceImpl implements IUserService {
             queryWrapper.eq(StringUtils.isNotEmpty(sysUserBo.getDeptId()), SysUser::getDeptId, sysUserBo.getDeptId());
             queryWrapper.eq(SysUser::getStatus, UserStatus.OK.getCode());
             queryWrapper.like(StringUtils.isNotEmpty(sysUserBo.getUserName()), SysUser::getUserName, sysUserBo.getUserName());
-            queryWrapper.like(StringUtils.isNotEmpty(sysUserBo.getPhonenumber()), SysUser::getPhonenumber, sysUserBo.getPhonenumber());
+            queryWrapper.like(StringUtils.isNotEmpty(sysUserBo.getNickName()), SysUser::getNickName, sysUserBo.getNickName());
             Page<SysUser> page = new Page<>(sysUserBo.getPageNum(), sysUserBo.getPageSize());
             // 按用户id查询
             List<Long> paramList = Arrays.stream(sysUserBo.getParams().split(",")).map(Long::valueOf).collect(Collectors.toList());
@@ -174,6 +174,9 @@ public class UserServiceImpl implements IUserService {
     public Map<String, Object> getWorkflowAddMultiListByPage(SysUserMultiBo sysUserMultiBo) {
         Map<String, Object> map = new HashMap<>(16);
         Task task = taskService.createTaskQuery().taskId(sysUserMultiBo.getTaskId()).singleResult();
+        if(task == null){
+            throw new ServiceException("任务不存在");
+        }
         MultiVo multiInstance = WorkFlowUtils.isMultiInstance(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
         LambdaQueryWrapper<SysUser> queryWrapper = Wrappers.lambdaQuery();
         //检索条件
@@ -247,7 +250,7 @@ public class UserServiceImpl implements IUserService {
         queryWrapper.eq(StringUtils.isNotEmpty(sysUserBo.getDeptId()), SysUser::getDeptId, sysUserBo.getDeptId());
         queryWrapper.eq(SysUser::getStatus, UserStatus.OK.getCode());
         queryWrapper.like(StringUtils.isNotEmpty(sysUserBo.getUserName()), SysUser::getUserName, sysUserBo.getUserName());
-        queryWrapper.like(StringUtils.isNotEmpty(sysUserBo.getPhonenumber()), SysUser::getPhonenumber, sysUserBo.getPhonenumber());
+        queryWrapper.like(StringUtils.isNotEmpty(sysUserBo.getNickName()), SysUser::getNickName, sysUserBo.getNickName());
         Page<SysUser> page = new Page<>(sysUserBo.getPageNum(), sysUserBo.getPageSize());
         Page<SysUser> userPage = userMapper.selectPage(page, queryWrapper);
         if (CollectionUtil.isNotEmpty(sysUserBo.getIds())) {
