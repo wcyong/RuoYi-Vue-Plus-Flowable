@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.redis.RedisUtils;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.domain.ActBusinessStatus;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.mapper.ActBusinessStatusMapper;
@@ -60,8 +60,8 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
                 int insert = baseMapper.insert(actBusinessStatus);
                 // 更新缓存
                 if (insert == 1) {
-                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, actBusinessStatus, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
-                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, actBusinessStatus, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
+                    RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, actBusinessStatus, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
+                    RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, actBusinessStatus, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
                 }
                 return insert == 1;
             } else {
@@ -75,8 +75,8 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
                 int update = baseMapper.updateById(bs);
                 // 更新缓存
                 if (update == 1) {
-                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, bs, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
-                    RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, bs, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
+                    RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, bs, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
+                    RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, bs, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
                 }
                 return update == 1;
             }
@@ -93,12 +93,12 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
 
     @Override
     public ActBusinessStatus getInfoByBusinessKey(String businessKey) {
-        ActBusinessStatus cacheBusinessStatus = RedisUtils.getCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey);
+        ActBusinessStatus cacheBusinessStatus = RedisUtils.getCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey);
         if (cacheBusinessStatus != null) {
             return cacheBusinessStatus;
         }
         ActBusinessStatus actBusinessStatus = baseMapper.selectOne(new LambdaQueryWrapper<ActBusinessStatus>().eq(ActBusinessStatus::getBusinessKey, businessKey));
-        RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, actBusinessStatus, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
+        RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey, actBusinessStatus, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
         return actBusinessStatus;
     }
 
@@ -114,8 +114,8 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
         ActBusinessStatus actBusinessStatus = getInfoByBusinessKey(businessKey);
         iActProcessNodeAssigneeService.deleteByProcessInstanceId(actBusinessStatus.getProcessInstanceId());
         if (actBusinessStatus != null) {
-            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey);
-            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getProcessInstanceId());
+            RedisUtils.deleteObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + businessKey);
+            RedisUtils.deleteObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getProcessInstanceId());
         }
         return delete == 1;
     }
@@ -127,8 +127,8 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
         ActBusinessStatus actBusinessStatus = getInfoByProcessInstId(processInstanceId);
         iActProcessNodeAssigneeService.deleteByProcessInstanceId(processInstanceId);
         if (actBusinessStatus != null) {
-            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
-            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getBusinessKey());
+            RedisUtils.deleteObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
+            RedisUtils.deleteObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getBusinessKey());
         }
         return delete == 1;
     }
@@ -137,20 +137,20 @@ public class ActBusinessStatusServiceImpl extends ServiceImpl<ActBusinessStatusM
     public boolean deleteCache(String processInstanceId) {
         ActBusinessStatus actBusinessStatus = getInfoByProcessInstId(processInstanceId);
         if (actBusinessStatus != null) {
-            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
-            RedisUtils.deleteObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getBusinessKey());
+            RedisUtils.deleteObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
+            RedisUtils.deleteObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + actBusinessStatus.getBusinessKey());
         }
         return true;
     }
 
     @Override
     public ActBusinessStatus getInfoByProcessInstId(String processInstanceId) {
-        ActBusinessStatus cacheBusinessStatus = RedisUtils.getCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
+        ActBusinessStatus cacheBusinessStatus = RedisUtils.getCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId);
         if (cacheBusinessStatus != null) {
             return cacheBusinessStatus;
         }
         ActBusinessStatus actBusinessStatus = baseMapper.selectOne(new LambdaQueryWrapper<ActBusinessStatus>().eq(ActBusinessStatus::getProcessInstanceId, processInstanceId));
-        RedisUtils.setCacheObject(ActConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, actBusinessStatus, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
+        RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_BUSINESS_STATUS_KEY + processInstanceId, actBusinessStatus, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
         return actBusinessStatus;
     }
 

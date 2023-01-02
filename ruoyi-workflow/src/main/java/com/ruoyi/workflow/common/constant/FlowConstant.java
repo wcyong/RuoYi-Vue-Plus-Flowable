@@ -6,7 +6,7 @@ package com.ruoyi.workflow.common.constant;
  * @author: gssong
  * @date: 2022-02-26
  */
-public interface ActConstant {
+public interface FlowConstant {
 
     String PNG = "png";
 

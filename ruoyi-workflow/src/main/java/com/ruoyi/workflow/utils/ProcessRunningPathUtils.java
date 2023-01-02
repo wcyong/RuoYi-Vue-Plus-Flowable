@@ -2,7 +2,7 @@ package com.ruoyi.workflow.utils;
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.ruoyi.common.utils.spring.SpringUtils;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.domain.vo.MultiVo;
 import com.ruoyi.workflow.domain.vo.ProcessNodePath;
 import com.ruoyi.workflow.flowable.cmd.ExpressCheckCmd;
@@ -51,14 +51,14 @@ public class ProcessRunningPathUtils {
         if (outgoingFlows.size() == 1) {
             ProcessNodePath processNodePath = new ProcessNodePath();
             processNodePath.setFirst(true);
-            buildData(processNodePath, null, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, ActConstant.USER_TASK, processNodePathList);
+            buildData(processNodePath, null, variables, outgoingFlows.get(0).getTargetFlowElement(), startElement, FlowConstant.USER_TASK, processNodePathList);
             getNextNodeList(processNodePathList, flowElements, outgoingFlows.get(0), variables, null);
         }
         Map<String, List<ProcessNodePath>> listMap = processNodePathList.stream().collect(Collectors.groupingBy(ProcessNodePath::getSourceFlowElementId));
         List<ProcessNodePath> buildList = new ArrayList<>();
         for (Map.Entry<String, List<ProcessNodePath>> exclusiveListEntry : listMap.entrySet()) {
             List<ProcessNodePath> nodeList = exclusiveListEntry.getValue();
-            if (ActConstant.EXCLUSIVE_GATEWAY.equals(nodeList.get(0).getNodeType())) {
+            if (FlowConstant.EXCLUSIVE_GATEWAY.equals(nodeList.get(0).getNodeType())) {
                 List<ProcessNodePath> expressionTrueList = nodeList.stream().filter(ProcessNodePath::getExpression).collect(Collectors.toList());
                 if (CollectionUtil.isNotEmpty(expressionTrueList)) {
                     buildList.addAll(expressionTrueList);
@@ -66,7 +66,7 @@ public class ProcessRunningPathUtils {
                     List<ProcessNodePath> expressionStrTrueList = nodeList.stream().filter(e -> !e.getExpressionStr()).collect(Collectors.toList());
                     buildList.addAll(expressionStrTrueList);
                 }
-            } else if (ActConstant.INCLUSIVE_GATEWAY.equals(nodeList.get(0).getNodeType())) {
+            } else if (FlowConstant.INCLUSIVE_GATEWAY.equals(nodeList.get(0).getNodeType())) {
                 List<ProcessNodePath> expressionTrueList = nodeList.stream().filter(ProcessNodePath::getExpression).collect(Collectors.toList());
                 if (CollectionUtil.isNotEmpty(expressionTrueList)) {
                     buildList.addAll(expressionTrueList);
@@ -111,13 +111,13 @@ public class ProcessRunningPathUtils {
                 nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, gateway);
                 // 排他网关
             } else if (currentFlowElement instanceof ExclusiveGateway) {
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.EXCLUSIVE_GATEWAY);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, FlowConstant.EXCLUSIVE_GATEWAY);
                 //并行网关
             } else if (currentFlowElement instanceof ParallelGateway) {
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.PARALLEL_GATEWAY);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, FlowConstant.PARALLEL_GATEWAY);
                 //包含网关
             } else if (currentFlowElement instanceof InclusiveGateway) {
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.INCLUSIVE_GATEWAY);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, FlowConstant.INCLUSIVE_GATEWAY);
             } else if (currentFlowElement instanceof SubProcess) {
                 Collection<FlowElement> subFlowElements = ((SubProcess) currentFlowElement).getFlowElements();
                 for (FlowElement element : subFlowElements) {
@@ -126,16 +126,16 @@ public class ProcessRunningPathUtils {
                         for (SequenceFlow subOutgoingFlow : startOutgoingFlows) {
                             FlowElement subTargetFlowElement = subOutgoingFlow.getTargetFlowElement();
                             if (subTargetFlowElement instanceof UserTask) {
-                                nextNodeBuild(processNodePathList, subFlowElements, subTargetFlowElement, subOutgoingFlow, variables, ActConstant.SUB_PROCESS);
+                                nextNodeBuild(processNodePathList, subFlowElements, subTargetFlowElement, subOutgoingFlow, variables, FlowConstant.SUB_PROCESS);
                                 break;
                             }
                         }
                     }
                 }
-                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, ActConstant.SUB_PROCESS);
-                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, ActConstant.SUB_PROCESS);
+                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, FlowConstant.SUB_PROCESS);
+                getNextNodeList(processNodePathList, flowElements, outgoingFlow, variables, FlowConstant.SUB_PROCESS);
             } else if (currentFlowElement instanceof EndEvent) {
-                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, ActConstant.SUB_PROCESS);
+                nextNodeBuild(processNodePathList, flowElements, currentFlowElement, outgoingFlow, variables, FlowConstant.SUB_PROCESS);
             }
         }
 
@@ -158,13 +158,13 @@ public class ProcessRunningPathUtils {
         ProcessNodePath processNodePath = new ProcessNodePath();
         FlowElement sourceFlowElement = sequenceFlow.getSourceFlowElement();
         //排他网关
-        if (ActConstant.EXCLUSIVE_GATEWAY.equals(gateway)) {
-            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, ActConstant.EXCLUSIVE_GATEWAY, processNodePathList);
+        if (FlowConstant.EXCLUSIVE_GATEWAY.equals(gateway)) {
+            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, FlowConstant.EXCLUSIVE_GATEWAY, processNodePathList);
             //包含网关
-        } else if (ActConstant.INCLUSIVE_GATEWAY.equals(gateway)) {
-            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, ActConstant.INCLUSIVE_GATEWAY, processNodePathList);
+        } else if (FlowConstant.INCLUSIVE_GATEWAY.equals(gateway)) {
+            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, FlowConstant.INCLUSIVE_GATEWAY, processNodePathList);
         } else {
-            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, ActConstant.USER_TASK, processNodePathList);
+            buildData(processNodePath, conditionExpression, variableMap, currentFlowElement, sourceFlowElement, FlowConstant.USER_TASK, processNodePathList);
         }
         getNextNodeList(processNodePathList, flowElements, sequenceFlow, variableMap, null);
     }
@@ -183,7 +183,7 @@ public class ProcessRunningPathUtils {
      * @date: 2022/8/23 20:26
      */
     private static void buildData(ProcessNodePath processNodePath, String conditionExpression, Map<String, Object> variableMap, FlowElement currentFlowElement, FlowElement sourceFlowElement, String gateway, List<ProcessNodePath> processNodePathList) {
-        if (ActConstant.USER_TASK.equals(gateway)) {
+        if (FlowConstant.USER_TASK.equals(gateway)) {
             processNodePath.setExpression(true);
             processNodePath.setExpressionStr(true);
         } else {

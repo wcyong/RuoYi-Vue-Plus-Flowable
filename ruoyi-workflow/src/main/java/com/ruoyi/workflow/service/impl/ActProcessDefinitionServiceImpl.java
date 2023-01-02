@@ -5,7 +5,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.domain.ActCategory;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.bo.DefinitionBo;
@@ -201,7 +201,7 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
             String suffix = filename.substring(filename.lastIndexOf(".") + 1).toUpperCase();
             InputStream inputStream = file.getInputStream();
             Deployment deployment;
-            if (ActConstant.ZIP.equals(suffix)) {
+            if (FlowConstant.ZIP.equals(suffix)) {
                 // zip
                 deployment = repositoryService.createDeployment()
                     .addZipInputStream(new ZipInputStream(inputStream)).name(processName).key(processKey).category(category).deploy();
@@ -236,17 +236,17 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
             ProcessDefinition processDefinition = repositoryService.getProcessDefinition(definitionId);
             String resourceName = "文件不存在";
 
-            if (ActConstant.XML.equals(type)) {
+            if (FlowConstant.XML.equals(type)) {
                 //xml名称
                 resourceName = processDefinition.getResourceName();
-            } else if (ActConstant.PNG.equals(type)) {
+            } else if (FlowConstant.PNG.equals(type)) {
                 // 获取 png 图片资源名
                 resourceName = processDefinition.getDiagramResourceName();
             }
             InputStream inputStream = repositoryService.getResourceAsStream(processDefinition.getDeploymentId(), resourceName);
             // 创建输出流
             response.setHeader("Content-Disposition",
-                "attachment; filename=" + URLEncoder.encode(resourceName, ActConstant.UTF_8));
+                "attachment; filename=" + URLEncoder.encode(resourceName, FlowConstant.UTF_8));
             // 流的拷贝放到设置请求头下面，不然文件大于10k可能无法导出
             IOUtils.copy(inputStream, response.getOutputStream());
 
@@ -336,7 +336,7 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
                         firstNode.setNodeId(flowElement.getId());
                         firstNode.setNodeName(flowElement.getName());
                         firstNode.setProcessDefinitionId(processDefinitionId);
-                        firstNode.setNodeType(ActConstant.USER_TASK);
+                        firstNode.setNodeType(FlowConstant.USER_TASK);
                         firstNode.setIndex(0);
                     }
                 }
@@ -349,7 +349,7 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
                 actProcessNodeVo.setNodeId(element.getId());
                 actProcessNodeVo.setNodeName(element.getName());
                 actProcessNodeVo.setProcessDefinitionId(processDefinitionId);
-                actProcessNodeVo.setNodeType(ActConstant.USER_TASK);
+                actProcessNodeVo.setNodeType(FlowConstant.USER_TASK);
                 actProcessNodeVo.setIndex(1);
                 processNodeVoList.add(actProcessNodeVo);
             } else if (element instanceof SubProcess) {
@@ -360,7 +360,7 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
                         actProcessNode.setNodeId(flowElement.getId());
                         actProcessNode.setNodeName(flowElement.getName());
                         actProcessNode.setProcessDefinitionId(processDefinitionId);
-                        actProcessNode.setNodeType(ActConstant.USER_TASK);
+                        actProcessNode.setNodeType(FlowConstant.USER_TASK);
                         actProcessNode.setIndex(1);
                         processNodeVoList.add(actProcessNode);
                     }
@@ -369,7 +369,7 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
                 actProcessNodeVo.setNodeId(element.getId());
                 actProcessNodeVo.setNodeName(element.getName());
                 actProcessNodeVo.setProcessDefinitionId(processDefinitionId);
-                actProcessNodeVo.setNodeType(ActConstant.END_EVENT);
+                actProcessNodeVo.setNodeType(FlowConstant.END_EVENT);
                 actProcessNodeVo.setIndex(1);
                 processNodeVoList.add(actProcessNodeVo);
             }
@@ -393,7 +393,7 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
             processNodeVo.setX(graphicInfo.getX());
         }
         for (ActProcessNodeVo node : processNodeVoList) {
-            if (ActConstant.END_EVENT.equals(node.getNodeType())) {
+            if (FlowConstant.END_EVENT.equals(node.getNodeType())) {
                 FlowElement flowElement = bpmnModel.getFlowElement(node.getNodeId());
 
                 List<SequenceFlow> incomingFlows = ((FlowNode) flowElement).getIncomingFlows();
@@ -430,7 +430,7 @@ public class ActProcessDefinitionServiceImpl extends WorkflowService implements 
             }
         }
 
-        processNodeVoList.removeIf(e -> ActConstant.END_EVENT.equals(e.getNodeType()));
+        processNodeVoList.removeIf(e -> FlowConstant.END_EVENT.equals(e.getNodeType()));
         return processNodeVoList.stream().sorted(Comparator.comparing(ActProcessNodeVo::getX)).collect(Collectors.toList());
     }
 

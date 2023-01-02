@@ -10,7 +10,7 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.redis.RedisUtils;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.vo.ActProcessNodeVo;
 import com.ruoyi.workflow.domain.vo.FieldList;
@@ -55,13 +55,13 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ActNodeAssignee add(ActNodeAssignee actNodeAssignee) {
-        RedisUtils.deleteObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + actNodeAssignee.getProcessDefinitionId() + "-" + actNodeAssignee.getNodeId());
+        RedisUtils.deleteObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + actNodeAssignee.getProcessDefinitionId() + "-" + actNodeAssignee.getNodeId());
 
         if (actNodeAssignee.getIndex() == 1 && StringUtils.isBlank(actNodeAssignee.getChooseWay())) {
             throw new ServiceException("请选择选人方式");
         }
 
-        if (!ActConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
+        if (!FlowConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
             actNodeAssignee.setBusinessRuleId(null);
         }
 
@@ -131,7 +131,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
      */
     @Override
     public ActNodeAssignee getInfoSetting(String processDefinitionId, String nodeId) {
-        ActNodeAssignee cacheActNodeAssignee = RedisUtils.getCacheObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId);
+        ActNodeAssignee cacheActNodeAssignee = RedisUtils.getCacheObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId);
         if (cacheActNodeAssignee != null) {
             return cacheActNodeAssignee;
         }
@@ -144,7 +144,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             nodeAssignee = new ActNodeAssignee();
             nodeAssignee.setProcessDefinitionId(processDefinitionId);
             nodeAssignee.setNodeId(nodeId);
-            nodeAssignee.setChooseWay(ActConstant.WORKFLOW_PERSON);
+            nodeAssignee.setChooseWay(FlowConstant.WORKFLOW_PERSON);
             nodeAssignee.setIsBack(false);
             nodeAssignee.setIsShow(false);
             nodeAssignee.setIsTransmit(false);
@@ -222,8 +222,8 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
      * @param nodeAssignee
      */
     private void setCache(String processDefinitionId, String nodeId, ActNodeAssignee nodeAssignee) {
-        RedisUtils.setCacheObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId,
-            nodeAssignee, Duration.ofMinutes(ActConstant.CACHE_EXPIRATION));
+        RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId,
+            nodeAssignee, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
     }
 
     /**
@@ -356,7 +356,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
         }
         if (CollectionUtil.isNotEmpty(actNodeAssigneeList)) {
             actNodeAssigneeList.forEach(e->{
-                RedisUtils.deleteObject(ActConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + e.getProcessDefinitionId() + "-" + e.getNodeId());
+                RedisUtils.deleteObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + e.getProcessDefinitionId() + "-" + e.getNodeId());
             });
             return saveBatch(actNodeAssigneeList);
         }

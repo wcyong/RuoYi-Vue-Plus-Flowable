@@ -14,7 +14,7 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StringUtils;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.domain.*;
 import com.ruoyi.workflow.domain.bo.*;
@@ -167,9 +167,9 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
                 List<IdentityLink> identityLinkList = WorkFlowUtils.getCandidateUser(e.getId());
                 if (CollectionUtil.isNotEmpty(identityLinkList)) {
                     List<String> collectType = identityLinkList.stream().map(IdentityLink::getType).collect(Collectors.toList());
-                    if (StringUtils.isBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(ActConstant.CANDIDATE)) {
+                    if (StringUtils.isBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(FlowConstant.CANDIDATE)) {
                         e.setIsClaim(false);
-                    } else if (StringUtils.isNotBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(ActConstant.CANDIDATE)) {
+                    } else if (StringUtils.isNotBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(FlowConstant.CANDIDATE)) {
                         e.setIsClaim(true);
                     }
                 }
@@ -256,9 +256,9 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             List<IdentityLink> identityLinkList = WorkFlowUtils.getCandidateUser(e.getId());
             if (CollectionUtil.isNotEmpty(identityLinkList)) {
                 List<String> collectType = identityLinkList.stream().map(IdentityLink::getType).collect(Collectors.toList());
-                if (StringUtils.isBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(ActConstant.CANDIDATE)) {
+                if (StringUtils.isBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(FlowConstant.CANDIDATE)) {
                     e.setIsClaim(false);
-                } else if (StringUtils.isNotBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(ActConstant.CANDIDATE)) {
+                } else if (StringUtils.isNotBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(FlowConstant.CANDIDATE)) {
                     e.setIsClaim(true);
                 }
             }
@@ -295,14 +295,14 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
         Task task = taskService.createTaskQuery().taskId(req.getTaskId()).taskAssignee(getUserId().toString()).singleResult();
 
         if (ObjectUtil.isEmpty(task)) {
-            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+            throw new ServiceException(FlowConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
         if (task.isSuspended()) {
-            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+            throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         try {
             //办理委托任务
-            if (ObjectUtil.isNotEmpty(task.getDelegationState()) && ActConstant.PENDING.equals(task.getDelegationState().name())) {
+            if (ObjectUtil.isNotEmpty(task.getDelegationState()) && FlowConstant.PENDING.equals(task.getDelegationState().name())) {
                 taskService.resolveTask(req.getTaskId());
                 ActHiTaskInst hiTaskInst = iActHiTaskInstService.getById(task.getId());
                 TaskEntity newTask = WorkFlowUtils.createNewTask(task, hiTaskInst.getStartTime());
@@ -353,13 +353,13 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             ActNodeAssignee nodeEvent = actNodeAssignees.stream().filter(e -> task.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);
             if (ObjectUtil.isNotEmpty(nodeEvent) && StringUtils.isNotBlank(nodeEvent.getTaskListener())) {
                 List<TaskListenerVo> taskListenerVos = JsonUtils.parseArray(nodeEvent.getTaskListener(), TaskListenerVo.class);
-                handleBeforeList = taskListenerVos.stream().filter(e -> ActConstant.HANDLE_BEFORE.equals(e.getEventType())).collect(Collectors.toList());
-                handleAfterList = taskListenerVos.stream().filter(e -> ActConstant.HANDLE_AFTER.equals(e.getEventType())).collect(Collectors.toList());
+                handleBeforeList = taskListenerVos.stream().filter(e -> FlowConstant.HANDLE_BEFORE.equals(e.getEventType())).collect(Collectors.toList());
+                handleAfterList = taskListenerVos.stream().filter(e -> FlowConstant.HANDLE_AFTER.equals(e.getEventType())).collect(Collectors.toList());
             }
             // 任务前执行
             if (CollectionUtil.isNotEmpty(handleBeforeList)) {
                 for (TaskListenerVo taskListenerVo : handleBeforeList) {
-                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), ActConstant.HANDLE_PROCESS
+                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), FlowConstant.HANDLE_PROCESS
                         , task.getProcessInstanceId(), task.getId());
                 }
             }
@@ -380,7 +380,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             // 任务后执行
             if (CollectionUtil.isNotEmpty(handleAfterList)) {
                 for (TaskListenerVo taskListenerVo : handleAfterList) {
-                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), ActConstant.HANDLE_PROCESS
+                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), FlowConstant.HANDLE_PROCESS
                         , task.getProcessInstanceId());
                 }
             }
@@ -565,7 +565,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
         Map<String, Object> map = new HashMap<>(16);
         TaskEntity task = (TaskEntity) taskService.createTaskQuery().taskId(req.getTaskId()).singleResult();
         if (task.isSuspended()) {
-            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+            throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         ActNodeAssignee nodeAssignee = iActNodeAssigneeService.getInfo(task.getProcessDefinitionId(), task.getTaskDefinitionKey());
         //可驳回的节点
@@ -577,7 +577,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             map.put("businessStatus", actBusinessStatus);
         }
         //委托流程
-        if (ObjectUtil.isNotEmpty(task.getDelegationState()) && ActConstant.PENDING.equals(task.getDelegationState().name())) {
+        if (ObjectUtil.isNotEmpty(task.getDelegationState()) && FlowConstant.PENDING.equals(task.getDelegationState().name())) {
             ActNodeAssignee actNodeAssignee = new ActNodeAssignee();
             actNodeAssignee.setIsDelegate(false);
             actNodeAssignee.setIsTransmit(false);
@@ -920,9 +920,9 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
                 List<IdentityLink> identityLinkList = WorkFlowUtils.getCandidateUser(e.getId());
                 if (CollectionUtil.isNotEmpty(identityLinkList)) {
                     List<String> collectType = identityLinkList.stream().map(IdentityLink::getType).collect(Collectors.toList());
-                    if (StringUtils.isBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(ActConstant.CANDIDATE)) {
+                    if (StringUtils.isBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(FlowConstant.CANDIDATE)) {
                         e.setIsClaim(false);
-                    } else if (StringUtils.isNotBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(ActConstant.CANDIDATE)) {
+                    } else if (StringUtils.isNotBlank(e.getAssignee()) && collectType.size() > 1 && collectType.contains(FlowConstant.CANDIDATE)) {
                         e.setIsClaim(true);
                     }
                 }
@@ -959,10 +959,10 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
         Task task = taskService.createTaskQuery().taskId(backProcessBo.getTaskId()).taskAssignee(getUserId().toString()).singleResult();
         String processInstanceId = task.getProcessInstanceId();
         if (ObjectUtil.isEmpty(task)) {
-            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+            throw new ServiceException(FlowConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
         if (task.isSuspended()) {
-            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+            throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         try {
             //判断是否有多个任务
@@ -1017,7 +1017,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             }
             ActTaskNode actTaskNode = iActTaskNodeService.getListByInstanceIdAndNodeId(task.getProcessInstanceId(), backProcessBo.getTargetActivityId());
 
-            if (ObjectUtil.isNotEmpty(actTaskNode) && ActConstant.USER_TASK.equals(actTaskNode.getTaskType())) {
+            if (ObjectUtil.isNotEmpty(actTaskNode) && FlowConstant.USER_TASK.equals(actTaskNode.getTaskType())) {
                 List<Task> runTaskList = taskService.createTaskQuery().processInstanceId(processInstanceId).list();
                 for (Task runTask : runTaskList) {
                     //取之前的历史办理人
@@ -1081,10 +1081,10 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
         TaskEntity task = (TaskEntity) taskService.createTaskQuery().taskId(delegateBo.getTaskId())
             .taskCandidateOrAssigned(LoginHelper.getUserId().toString()).singleResult();
         if (ObjectUtil.isEmpty(task)) {
-            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+            throw new ServiceException(FlowConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
         if (task.isSuspended()) {
-            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+            throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         try {
             TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
@@ -1119,10 +1119,10 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
         Task task = taskService.createTaskQuery().taskId(transmitBo.getTaskId())
             .taskCandidateOrAssigned(LoginHelper.getUserId().toString()).singleResult();
         if (ObjectUtil.isEmpty(task)) {
-            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+            throw new ServiceException(FlowConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
         if (task.isSuspended()) {
-            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+            throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         try {
             TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
@@ -1157,10 +1157,10 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
                 .taskCandidateOrAssigned(LoginHelper.getUserId().toString()).singleResult();
         }
         if (ObjectUtil.isEmpty(task) && !LoginHelper.isAdmin()) {
-            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+            throw new ServiceException(FlowConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
         if (task.isSuspended()) {
-            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+            throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         String taskDefinitionKey = task.getTaskDefinitionKey();
         String processInstanceId = task.getProcessInstanceId();
@@ -1208,10 +1208,10 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
                 .taskCandidateOrAssigned(LoginHelper.getUserId().toString()).singleResult();
         }
         if (ObjectUtil.isEmpty(task) && !LoginHelper.isAdmin()) {
-            throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+            throw new ServiceException(FlowConstant.MESSAGE_CURRENT_TASK_IS_NULL);
         }
         if (task.isSuspended()) {
-            throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+            throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         String taskDefinitionKey = task.getTaskDefinitionKey();
         String processInstanceId = task.getProcessInstanceId();
@@ -1367,10 +1367,10 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
         try {
             Task task = taskService.createTaskQuery().taskId(taskBo.getTaskId()).singleResult();
             if (ObjectUtil.isEmpty(task)) {
-                throw new ServiceException(ActConstant.MESSAGE_CURRENT_TASK_IS_NULL);
+                throw new ServiceException(FlowConstant.MESSAGE_CURRENT_TASK_IS_NULL);
             }
             if (task.isSuspended()) {
-                throw new ServiceException(ActConstant.MESSAGE_SUSPENDED);
+                throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
             }
             ActBusinessStatus actBusinessStatus = iActBusinessStatusService.getInfoByProcessInstId(task.getProcessInstanceId());
             if (actBusinessStatus == null) {

@@ -8,7 +8,7 @@ import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.utils.spring.SpringUtils;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.ActProcessNodeAssignee;
@@ -119,13 +119,13 @@ public class CompleteTaskUtils {
             ActNodeAssignee nodeEvent = actNodeAssignees.stream().filter(e -> task.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);
             if (ObjectUtil.isNotEmpty(nodeEvent) && StringUtils.isNotBlank(nodeEvent.getTaskListener())) {
                 List<TaskListenerVo> taskListenerVos = JsonUtils.parseArray(nodeEvent.getTaskListener(), TaskListenerVo.class);
-                handleBeforeList = taskListenerVos.stream().filter(e -> ActConstant.HANDLE_BEFORE.equals(e.getEventType())).collect(Collectors.toList());
-                handleAfterList = taskListenerVos.stream().filter(e -> ActConstant.HANDLE_AFTER.equals(e.getEventType())).collect(Collectors.toList());
+                handleBeforeList = taskListenerVos.stream().filter(e -> FlowConstant.HANDLE_BEFORE.equals(e.getEventType())).collect(Collectors.toList());
+                handleAfterList = taskListenerVos.stream().filter(e -> FlowConstant.HANDLE_AFTER.equals(e.getEventType())).collect(Collectors.toList());
             }
             // 任务前执行
             if (CollectionUtil.isNotEmpty(handleBeforeList)) {
                 for (TaskListenerVo taskListenerVo : handleBeforeList) {
-                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), ActConstant.HANDLE_PROCESS
+                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), FlowConstant.HANDLE_PROCESS
                         , task.getProcessInstanceId(), task.getId());
                 }
             }
@@ -142,7 +142,7 @@ public class CompleteTaskUtils {
             // 任务后执行
             if (CollectionUtil.isNotEmpty(handleAfterList)) {
                 for (TaskListenerVo taskListenerVo : handleAfterList) {
-                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), ActConstant.HANDLE_PROCESS
+                    WorkFlowUtils.springInvokeMethod(taskListenerVo.getBeanName(), FlowConstant.HANDLE_PROCESS
                         , task.getProcessInstanceId());
                 }
             }

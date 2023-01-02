@@ -11,7 +11,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.JsonUtils;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.domain.bo.ModelBo;
 import com.ruoyi.workflow.flowable.factory.WorkflowService;
 import com.ruoyi.workflow.service.IActModelService;
@@ -336,7 +336,7 @@ public class ActModelServiceImpl extends WorkflowService implements IActModelSer
                 }
             }
             response.setHeader("Content-Disposition",
-                "attachment; filename=" + URLEncoder.encode(zipName, ActConstant.UTF_8) + ".zip");
+                "attachment; filename=" + URLEncoder.encode(zipName, FlowConstant.UTF_8) + ".zip");
             // 刷出响应流
             response.flushBuffer();
         } catch (Exception e) {

@@ -14,7 +14,7 @@ import com.ruoyi.workflow.domain.bo.ProcessInstBo;
 import com.ruoyi.workflow.domain.bo.StartProcessBo;
 import com.ruoyi.workflow.domain.vo.*;
 import com.ruoyi.workflow.flowable.config.CustomDefaultProcessDiagramGenerator;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.domain.ActBusinessStatus;
 import com.ruoyi.workflow.domain.ActTaskNode;
@@ -231,7 +231,7 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
             List<String> highLightedNodes = new ArrayList<>();
             //高亮
             for (HistoricActivityInstance tempActivity : highLightedFlowList) {
-                if (ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType())) {
+                if (FlowConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType())) {
                     //高亮线
                     highLightedFlows.add(tempActivity.getActivityId());
                 } else {
@@ -612,10 +612,10 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
         List<HistoricActivityInstance> highLightedFlowList = historyService.createHistoricActivityInstanceQuery().processInstanceId(processInstanceId).orderByHistoricActivityInstanceStartTime().asc().list();
         for (HistoricActivityInstance tempActivity : highLightedFlowList) {
             Map<String, Object> task = new HashMap<>();
-            if (!ActConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType()) &&
-                !ActConstant.PARALLEL_GATEWAY.equals(tempActivity.getActivityType()) &&
-                !ActConstant.EXCLUSIVE_GATEWAY.equals(tempActivity.getActivityType()) &&
-                !ActConstant.INCLUSIVE_GATEWAY.equals(tempActivity.getActivityType())
+            if (!FlowConstant.SEQUENCE_FLOW.equals(tempActivity.getActivityType()) &&
+                !FlowConstant.PARALLEL_GATEWAY.equals(tempActivity.getActivityType()) &&
+                !FlowConstant.EXCLUSIVE_GATEWAY.equals(tempActivity.getActivityType()) &&
+                !FlowConstant.INCLUSIVE_GATEWAY.equals(tempActivity.getActivityType())
             ) {
                 task.put("key", tempActivity.getActivityId());
                 task.put("completed", tempActivity.getEndTime() != null);
@@ -681,13 +681,13 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                         node.setTransactor(e.getAssignee());
                         node.setTransactorId(e.getAssigneeId());
                         node.setChooseWay(e.getChooseWay());
-                        if (ActConstant.WORKFLOW_RULE.equals(e.getChooseWay())) {
+                        if (FlowConstant.WORKFLOW_RULE.equals(e.getChooseWay())) {
                             ActBusinessRuleVo actBusinessRuleVo = iActBusinessRuleService.queryById(e.getBusinessRuleId());
                             if (actBusinessRuleVo == null) {
                                 throw new ServiceException("规则不存在");
                             }
                             List<String> assignList = WorkFlowUtils.ruleAssignList(actBusinessRuleVo, processNodePath.getNodeName(), variables);
-                            node.setChooseWay(ActConstant.WORKFLOW_PERSON);
+                            node.setChooseWay(FlowConstant.WORKFLOW_PERSON);
                             node.setAssigneeId(String.join(",", assignList));
                             node.setAssignee(String.join(",", assignList));
                         }
@@ -695,7 +695,7 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                             SysUser sysUser = iUserService.selectUserById(Long.valueOf(processInstance.getStartUserId()));
                             node.setAssignee(sysUser.getNickName());
                             node.setAssigneeId(sysUser.getUserId().toString());
-                            node.setChooseWay(ActConstant.WORKFLOW_PERSON);
+                            node.setChooseWay(FlowConstant.WORKFLOW_PERSON);
                             node.setTransactor(sysUser.getNickName());
                             node.setTransactorId(sysUser.getUserId().toString());
                         }
@@ -703,8 +703,8 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                             node.setTransactor(StrUtil.EMPTY);
                             node.setTransactorId(StrUtil.EMPTY);
                         }
-                        if ((ActConstant.WORKFLOW_ROLE.equals(e.getChooseWay()) || ActConstant.WORKFLOW_DEPT.equals(e.getChooseWay())) && !e.getIsShow()) {
-                            if (ActConstant.WORKFLOW_ROLE.equals(e.getChooseWay())) {
+                        if ((FlowConstant.WORKFLOW_ROLE.equals(e.getChooseWay()) || FlowConstant.WORKFLOW_DEPT.equals(e.getChooseWay())) && !e.getIsShow()) {
+                            if (FlowConstant.WORKFLOW_ROLE.equals(e.getChooseWay())) {
                                 List<Long> roleIds = Arrays.stream(node.getAssigneeId().split(",")).map(Long::valueOf).collect(Collectors.toList());
                                 List<SysUser> userList = iUserService.getUserListByRoleIds(roleIds);
                                 if (CollUtil.isEmpty(userList)) {
@@ -715,7 +715,7 @@ public class ActProcessInstanceServiceImpl extends WorkflowService implements IA
                                 node.setAssigneeId(userIds);
                                 node.setAssignee(nickNames);
                             }
-                            if (ActConstant.WORKFLOW_DEPT.equals(e.getChooseWay())) {
+                            if (FlowConstant.WORKFLOW_DEPT.equals(e.getChooseWay())) {
                                 List<Long> deptIds = Arrays.stream(node.getAssigneeId().split(",")).map(Long::valueOf).collect(Collectors.toList());
                                 List<SysUser> userList = iUserService.getUserListByDeptIds(deptIds);
                                 if (CollUtil.isEmpty(userList)) {

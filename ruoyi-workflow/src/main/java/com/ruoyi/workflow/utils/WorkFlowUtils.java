@@ -19,7 +19,7 @@ import com.ruoyi.workflow.domain.bo.TaskCompleteBo;
 import com.ruoyi.workflow.domain.vo.FieldList;
 import com.ruoyi.workflow.domain.vo.MultiVo;
 import com.ruoyi.workflow.flowable.cmd.*;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.domain.vo.ActBusinessRuleVo;
 import com.ruoyi.workflow.domain.vo.ProcessNode;
@@ -53,7 +53,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.ruoyi.workflow.common.constant.ActConstant.*;
+import static com.ruoyi.workflow.common.constant.FlowConstant.*;
 
 /**
  * @description: 工作流工具栏
@@ -177,19 +177,19 @@ public class WorkFlowUtils {
                 nextNodeBuild(executionEntity, nextNodes, tempNodes, taskId, gateway, sequenceFlow, processNode, tempNode, outFlowElement);
                 // 排他网关
             } else if (outFlowElement instanceof ExclusiveGateway) {
-                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, ActConstant.EXCLUSIVE_GATEWAY);
+                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.EXCLUSIVE_GATEWAY);
                 //并行网关
             } else if (outFlowElement instanceof ParallelGateway) {
-                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, ActConstant.PARALLEL_GATEWAY);
+                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.PARALLEL_GATEWAY);
                 //包含网关
             } else if (outFlowElement instanceof InclusiveGateway) {
-                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, ActConstant.INCLUSIVE_GATEWAY);
+                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.INCLUSIVE_GATEWAY);
             } else if (outFlowElement instanceof EndEvent) {
                 FlowElement subProcess = getSubProcess(flowElements, outFlowElement);
                 if (subProcess == null) {
                     continue;
                 }
-                getNextNodeList(flowElements, subProcess, executionEntity, nextNodes, tempNodes, taskId, ActConstant.END_EVENT);
+                getNextNodeList(flowElements, subProcess, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.END_EVENT);
             } else if (outFlowElement instanceof SubProcess) {
                 Collection<FlowElement> subFlowElements = ((SubProcess) outFlowElement).getFlowElements();
                 for (FlowElement element : subFlowElements) {
@@ -227,28 +227,28 @@ public class WorkFlowUtils {
      */
     private static void nextNodeBuild(ExecutionEntityImpl executionEntity, List<ProcessNode> nextNodes, List<ProcessNode> tempNodes, String taskId, String gateway, SequenceFlow sequenceFlow, ProcessNode processNode, ProcessNode tempNode, FlowElement outFlowElement) {
         // 判断是否为排它网关
-        if (ActConstant.EXCLUSIVE_GATEWAY.equals(gateway)) {
+        if (FlowConstant.EXCLUSIVE_GATEWAY.equals(gateway)) {
             String conditionExpression = sequenceFlow.getConditionExpression();
             //判断是否有条件
             if (StringUtils.isNotBlank(conditionExpression)) {
                 ExpressCmd expressCmd = new ExpressCmd(sequenceFlow, executionEntity);
                 Boolean condition = PROCESS_ENGINE.getManagementService().executeCommand(expressCmd);
-                processNodeBuildList(processNode, outFlowElement, ActConstant.EXCLUSIVE_GATEWAY, taskId, condition, nextNodes);
+                processNodeBuildList(processNode, outFlowElement, FlowConstant.EXCLUSIVE_GATEWAY, taskId, condition, nextNodes);
             } else {
                 tempNodeBuildList(tempNodes, taskId, tempNode, outFlowElement);
             }
             //包含网关
-        } else if (ActConstant.INCLUSIVE_GATEWAY.equals(gateway)) {
+        } else if (FlowConstant.INCLUSIVE_GATEWAY.equals(gateway)) {
             String conditionExpression = sequenceFlow.getConditionExpression();
             if (StringUtils.isBlank(conditionExpression)) {
-                processNodeBuildList(processNode, outFlowElement, ActConstant.INCLUSIVE_GATEWAY, taskId, true, nextNodes);
+                processNodeBuildList(processNode, outFlowElement, FlowConstant.INCLUSIVE_GATEWAY, taskId, true, nextNodes);
             } else {
                 ExpressCmd expressCmd = new ExpressCmd(sequenceFlow, executionEntity);
                 Boolean condition = PROCESS_ENGINE.getManagementService().executeCommand(expressCmd);
-                processNodeBuildList(processNode, outFlowElement, ActConstant.INCLUSIVE_GATEWAY, taskId, condition, nextNodes);
+                processNodeBuildList(processNode, outFlowElement, FlowConstant.INCLUSIVE_GATEWAY, taskId, condition, nextNodes);
             }
         } else {
-            processNodeBuildList(processNode, outFlowElement, ActConstant.USER_TASK, taskId, true, nextNodes);
+            processNodeBuildList(processNode, outFlowElement, FlowConstant.USER_TASK, taskId, true, nextNodes);
         }
     }
 
@@ -265,10 +265,10 @@ public class WorkFlowUtils {
     private static void tempNodeBuildList(List<ProcessNode> tempNodes, String taskId, ProcessNode tempNode, FlowElement outFlowElement) {
         tempNode.setNodeId(outFlowElement.getId());
         tempNode.setNodeName(outFlowElement.getName());
-        tempNode.setNodeType(ActConstant.EXCLUSIVE_GATEWAY);
+        tempNode.setNodeType(FlowConstant.EXCLUSIVE_GATEWAY);
         tempNode.setTaskId(taskId);
         tempNode.setExpression(true);
-        tempNode.setChooseWay(ActConstant.WORKFLOW_ASSIGNEE);
+        tempNode.setChooseWay(FlowConstant.WORKFLOW_ASSIGNEE);
         tempNode.setAssignee(((UserTask) outFlowElement).getAssignee());
         tempNode.setAssigneeId(((UserTask) outFlowElement).getAssignee());
         tempNodes.add(tempNode);
@@ -292,7 +292,7 @@ public class WorkFlowUtils {
         processNode.setNodeType(exclusiveGateway);
         processNode.setTaskId(taskId);
         processNode.setExpression(condition);
-        processNode.setChooseWay(ActConstant.WORKFLOW_ASSIGNEE);
+        processNode.setChooseWay(FlowConstant.WORKFLOW_ASSIGNEE);
         processNode.setAssignee(((UserTask) outFlowElement).getAssignee());
         processNode.setAssigneeId(((UserTask) outFlowElement).getAssignee());
         nextNodes.add(processNode);
@@ -345,31 +345,31 @@ public class WorkFlowUtils {
                     if (variables.containsKey(businessRuleParams.get(i).getParam())) {
                         String variable = (String) variables.get(businessRuleParams.get(i).getParam());
                         switch (businessRuleParams.get(i).getParamType()) {
-                            case ActConstant.PARAM_STRING:
+                            case FlowConstant.PARAM_STRING:
                                 paramClass[i] = String.valueOf(variable).getClass();
                                 params.add(String.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_SHORT:
+                            case FlowConstant.PARAM_SHORT:
                                 paramClass[i] = Short.valueOf(variable).getClass();
                                 params.add(Short.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_INTEGER:
+                            case FlowConstant.PARAM_INTEGER:
                                 paramClass[i] = Integer.valueOf(variable).getClass();
                                 params.add(Integer.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_LONG:
+                            case FlowConstant.PARAM_LONG:
                                 paramClass[i] = Long.valueOf(variable).getClass();
                                 params.add(Long.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_FLOAT:
+                            case FlowConstant.PARAM_FLOAT:
                                 paramClass[i] = Float.valueOf(variable).getClass();
                                 params.add(Float.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_DOUBLE:
+                            case FlowConstant.PARAM_DOUBLE:
                                 paramClass[i] = Double.valueOf(variable).getClass();
                                 params.add(Double.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_BOOLEAN:
+                            case FlowConstant.PARAM_BOOLEAN:
                                 paramClass[i] = Boolean.valueOf(variable).getClass();
                                 params.add(Boolean.valueOf(variable));
                                 break;
@@ -427,31 +427,31 @@ public class WorkFlowUtils {
                         VariableInstance v = variables.get(businessRuleParams.get(i).getParam());
                         String variable = v.getTextValue();
                         switch (businessRuleParams.get(i).getParamType()) {
-                            case ActConstant.PARAM_STRING:
+                            case FlowConstant.PARAM_STRING:
                                 paramClass[i] = String.valueOf(variable).getClass();
                                 params.add(String.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_SHORT:
+                            case FlowConstant.PARAM_SHORT:
                                 paramClass[i] = Short.valueOf(variable).getClass();
                                 params.add(Short.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_INTEGER:
+                            case FlowConstant.PARAM_INTEGER:
                                 paramClass[i] = Integer.valueOf(variable).getClass();
                                 params.add(Integer.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_LONG:
+                            case FlowConstant.PARAM_LONG:
                                 paramClass[i] = Long.valueOf(variable).getClass();
                                 params.add(Long.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_FLOAT:
+                            case FlowConstant.PARAM_FLOAT:
                                 paramClass[i] = Float.valueOf(variable).getClass();
                                 params.add(Float.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_DOUBLE:
+                            case FlowConstant.PARAM_DOUBLE:
                                 paramClass[i] = Double.valueOf(variable).getClass();
                                 params.add(Double.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_BOOLEAN:
+                            case FlowConstant.PARAM_BOOLEAN:
                                 paramClass[i] = Boolean.valueOf(variable).getClass();
                                 params.add(Boolean.valueOf(variable));
                                 break;
@@ -940,7 +940,7 @@ public class WorkFlowUtils {
      */
     public static void settingAssignee(Task task, ActNodeAssignee actNodeAssignee, Boolean multiple) {
         //按业务规则选人
-        if (ActConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
+        if (FlowConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
             ActBusinessRuleVo actBusinessRuleVo = iActBusinessRuleService.queryById(actNodeAssignee.getBusinessRuleId());
             List<String> ruleAssignList = ruleAssignList(actBusinessRuleVo, task.getId(), task.getName());
             List<Long> userIdList = new ArrayList<>();
