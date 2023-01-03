@@ -2,13 +2,15 @@ package com.ruoyi.workflow.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.JsonUtils;
 import com.ruoyi.common.utils.StringUtils;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.common.utils.redis.RedisUtils;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.domain.ActNodeAssignee;
 import com.ruoyi.workflow.domain.vo.ActProcessNodeVo;
 import com.ruoyi.workflow.domain.vo.FieldList;
@@ -26,6 +28,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -52,12 +55,13 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ActNodeAssignee add(ActNodeAssignee actNodeAssignee) {
+        RedisUtils.deleteObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + actNodeAssignee.getProcessDefinitionId() + "-" + actNodeAssignee.getNodeId());
 
         if (actNodeAssignee.getIndex() == 1 && StringUtils.isBlank(actNodeAssignee.getChooseWay())) {
             throw new ServiceException("请选择选人方式");
         }
 
-        if (!ActConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
+        if (!FlowConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
             actNodeAssignee.setBusinessRuleId(null);
         }
 
@@ -69,7 +73,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
         if (!actNodeAssignee.getMultiple()) {
             actNodeAssignee.setAddMultiInstance(false);
             actNodeAssignee.setDeleteMultiInstance(false);
-            actNodeAssignee.setMultipleColumn("");
+            actNodeAssignee.setMultipleColumn(StrUtil.EMPTY);
         }
         if (CollectionUtil.isNotEmpty(actNodeAssignee.getTaskListenerList())) {
             List<TaskListenerVo> taskListenerList = new ArrayList<>();
@@ -83,13 +87,13 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                 actNodeAssignee.setTaskListener(jsonString);
             }
         }
-        actNodeAssignee.setFieldListJson("");
+        actNodeAssignee.setFieldListJson(StrUtil.EMPTY);
         if (CollectionUtil.isNotEmpty(actNodeAssignee.getFieldList())) {
             List<FieldList> fieldListVoList = new ArrayList<>();
             actNodeAssignee.getFieldList().forEach(e -> {
                 if (StringUtils.isNotBlank(e.getField()) && e.getEdit() != null && e.getRequired() != null) {
-                    if(!e.getRequired()){
-                        e.setMessage("");
+                    if (!e.getRequired()) {
+                        e.setMessage(StrUtil.EMPTY);
                     }
                     fieldListVoList.add(e);
                 }
@@ -127,6 +131,10 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
      */
     @Override
     public ActNodeAssignee getInfoSetting(String processDefinitionId, String nodeId) {
+        ActNodeAssignee cacheActNodeAssignee = RedisUtils.getCacheObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId);
+        if (cacheActNodeAssignee != null) {
+            return cacheActNodeAssignee;
+        }
         LambdaQueryWrapper<ActNodeAssignee> wrapper = Wrappers.lambdaQuery();
         wrapper.eq(ActNodeAssignee::getProcessDefinitionId, processDefinitionId);
         wrapper.eq(ActNodeAssignee::getNodeId, nodeId);
@@ -136,7 +144,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             nodeAssignee = new ActNodeAssignee();
             nodeAssignee.setProcessDefinitionId(processDefinitionId);
             nodeAssignee.setNodeId(nodeId);
-            nodeAssignee.setChooseWay(ActConstant.WORKFLOW_PERSON);
+            nodeAssignee.setChooseWay(FlowConstant.WORKFLOW_PERSON);
             nodeAssignee.setIsBack(false);
             nodeAssignee.setIsShow(false);
             nodeAssignee.setIsTransmit(false);
@@ -156,7 +164,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             }
         } else {
             nodeAssignee.setMultiple(false);
-            nodeAssignee.setMultipleColumn("");
+            nodeAssignee.setMultipleColumn(StrUtil.EMPTY);
             nodeAssignee.setAddMultiInstance(false);
             nodeAssignee.setDeleteMultiInstance(false);
         }
@@ -203,7 +211,19 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
                 }
             }
         }
+        setCache(processDefinitionId, nodeId, nodeAssignee);
         return nodeAssignee;
+    }
+
+    /**
+     * 添加缓存
+     * @param processDefinitionId
+     * @param nodeId
+     * @param nodeAssignee
+     */
+    private void setCache(String processDefinitionId, String nodeId, ActNodeAssignee nodeAssignee) {
+        RedisUtils.setCacheObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + processDefinitionId + "-" + nodeId,
+            nodeAssignee, Duration.ofMinutes(FlowConstant.CACHE_EXPIRATION));
     }
 
     /**
@@ -326,15 +346,18 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
 
                 ActNodeAssignee actNodeAssignee = new ActNodeAssignee();
                 BeanUtils.copyProperties(oldNodeAssignee, actNodeAssignee);
-                actNodeAssignee.setId("");
+                actNodeAssignee.setId(StrUtil.EMPTY);
                 actNodeAssignee.setProcessDefinitionId(processDefinition.getId());
                 if (!actNodeAssignee.getMultiple()) {
-                    actNodeAssignee.setMultipleColumn("");
+                    actNodeAssignee.setMultipleColumn(StrUtil.EMPTY);
                 }
                 actNodeAssigneeList.add(actNodeAssignee);
             }
         }
         if (CollectionUtil.isNotEmpty(actNodeAssigneeList)) {
+            actNodeAssigneeList.forEach(e->{
+                RedisUtils.deleteObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + e.getProcessDefinitionId() + "-" + e.getNodeId());
+            });
             return saveBatch(actNodeAssigneeList);
         }
         return false;

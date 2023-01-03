@@ -39,9 +39,9 @@ public class SysUserBo implements Serializable {
     private String userName;
 
     /**
-     * 手机号
+     * 用户昵称
      */
-    private String phonenumber;
+    private String nickName;
 
     /**
      * 部门id

@@ -1,5 +1,6 @@
 package com.ruoyi.workflow.utils;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
@@ -18,7 +19,7 @@ import com.ruoyi.workflow.domain.bo.TaskCompleteBo;
 import com.ruoyi.workflow.domain.vo.FieldList;
 import com.ruoyi.workflow.domain.vo.MultiVo;
 import com.ruoyi.workflow.flowable.cmd.*;
-import com.ruoyi.workflow.common.constant.ActConstant;
+import com.ruoyi.workflow.common.constant.FlowConstant;
 import com.ruoyi.workflow.common.enums.BusinessStatusEnum;
 import com.ruoyi.workflow.domain.vo.ActBusinessRuleVo;
 import com.ruoyi.workflow.domain.vo.ProcessNode;
@@ -52,7 +53,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.ruoyi.workflow.common.constant.ActConstant.*;
+import static com.ruoyi.workflow.common.constant.FlowConstant.*;
 
 /**
  * @description: 工作流工具栏
@@ -176,19 +177,19 @@ public class WorkFlowUtils {
                 nextNodeBuild(executionEntity, nextNodes, tempNodes, taskId, gateway, sequenceFlow, processNode, tempNode, outFlowElement);
                 // 排他网关
             } else if (outFlowElement instanceof ExclusiveGateway) {
-                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, ActConstant.EXCLUSIVE_GATEWAY);
+                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.EXCLUSIVE_GATEWAY);
                 //并行网关
             } else if (outFlowElement instanceof ParallelGateway) {
-                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, ActConstant.PARALLEL_GATEWAY);
+                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.PARALLEL_GATEWAY);
                 //包含网关
             } else if (outFlowElement instanceof InclusiveGateway) {
-                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, ActConstant.INCLUSIVE_GATEWAY);
+                getNextNodeList(flowElements, outFlowElement, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.INCLUSIVE_GATEWAY);
             } else if (outFlowElement instanceof EndEvent) {
                 FlowElement subProcess = getSubProcess(flowElements, outFlowElement);
                 if (subProcess == null) {
                     continue;
                 }
-                getNextNodeList(flowElements, subProcess, executionEntity, nextNodes, tempNodes, taskId, ActConstant.END_EVENT);
+                getNextNodeList(flowElements, subProcess, executionEntity, nextNodes, tempNodes, taskId, FlowConstant.END_EVENT);
             } else if (outFlowElement instanceof SubProcess) {
                 Collection<FlowElement> subFlowElements = ((SubProcess) outFlowElement).getFlowElements();
                 for (FlowElement element : subFlowElements) {
@@ -226,28 +227,28 @@ public class WorkFlowUtils {
      */
     private static void nextNodeBuild(ExecutionEntityImpl executionEntity, List<ProcessNode> nextNodes, List<ProcessNode> tempNodes, String taskId, String gateway, SequenceFlow sequenceFlow, ProcessNode processNode, ProcessNode tempNode, FlowElement outFlowElement) {
         // 判断是否为排它网关
-        if (ActConstant.EXCLUSIVE_GATEWAY.equals(gateway)) {
+        if (FlowConstant.EXCLUSIVE_GATEWAY.equals(gateway)) {
             String conditionExpression = sequenceFlow.getConditionExpression();
             //判断是否有条件
             if (StringUtils.isNotBlank(conditionExpression)) {
                 ExpressCmd expressCmd = new ExpressCmd(sequenceFlow, executionEntity);
                 Boolean condition = PROCESS_ENGINE.getManagementService().executeCommand(expressCmd);
-                processNodeBuildList(processNode, outFlowElement, ActConstant.EXCLUSIVE_GATEWAY, taskId, condition, nextNodes);
+                processNodeBuildList(processNode, outFlowElement, FlowConstant.EXCLUSIVE_GATEWAY, taskId, condition, nextNodes);
             } else {
                 tempNodeBuildList(tempNodes, taskId, tempNode, outFlowElement);
             }
             //包含网关
-        } else if (ActConstant.INCLUSIVE_GATEWAY.equals(gateway)) {
+        } else if (FlowConstant.INCLUSIVE_GATEWAY.equals(gateway)) {
             String conditionExpression = sequenceFlow.getConditionExpression();
             if (StringUtils.isBlank(conditionExpression)) {
-                processNodeBuildList(processNode, outFlowElement, ActConstant.INCLUSIVE_GATEWAY, taskId, true, nextNodes);
+                processNodeBuildList(processNode, outFlowElement, FlowConstant.INCLUSIVE_GATEWAY, taskId, true, nextNodes);
             } else {
                 ExpressCmd expressCmd = new ExpressCmd(sequenceFlow, executionEntity);
                 Boolean condition = PROCESS_ENGINE.getManagementService().executeCommand(expressCmd);
-                processNodeBuildList(processNode, outFlowElement, ActConstant.INCLUSIVE_GATEWAY, taskId, condition, nextNodes);
+                processNodeBuildList(processNode, outFlowElement, FlowConstant.INCLUSIVE_GATEWAY, taskId, condition, nextNodes);
             }
         } else {
-            processNodeBuildList(processNode, outFlowElement, ActConstant.USER_TASK, taskId, true, nextNodes);
+            processNodeBuildList(processNode, outFlowElement, FlowConstant.USER_TASK, taskId, true, nextNodes);
         }
     }
 
@@ -264,10 +265,10 @@ public class WorkFlowUtils {
     private static void tempNodeBuildList(List<ProcessNode> tempNodes, String taskId, ProcessNode tempNode, FlowElement outFlowElement) {
         tempNode.setNodeId(outFlowElement.getId());
         tempNode.setNodeName(outFlowElement.getName());
-        tempNode.setNodeType(ActConstant.EXCLUSIVE_GATEWAY);
+        tempNode.setNodeType(FlowConstant.EXCLUSIVE_GATEWAY);
         tempNode.setTaskId(taskId);
         tempNode.setExpression(true);
-        tempNode.setChooseWay(ActConstant.WORKFLOW_ASSIGNEE);
+        tempNode.setChooseWay(FlowConstant.WORKFLOW_ASSIGNEE);
         tempNode.setAssignee(((UserTask) outFlowElement).getAssignee());
         tempNode.setAssigneeId(((UserTask) outFlowElement).getAssignee());
         tempNodes.add(tempNode);
@@ -291,7 +292,7 @@ public class WorkFlowUtils {
         processNode.setNodeType(exclusiveGateway);
         processNode.setTaskId(taskId);
         processNode.setExpression(condition);
-        processNode.setChooseWay(ActConstant.WORKFLOW_ASSIGNEE);
+        processNode.setChooseWay(FlowConstant.WORKFLOW_ASSIGNEE);
         processNode.setAssignee(((UserTask) outFlowElement).getAssignee());
         processNode.setAssigneeId(((UserTask) outFlowElement).getAssignee());
         nextNodes.add(processNode);
@@ -316,6 +317,86 @@ public class WorkFlowUtils {
             }
         }
         return null;
+    }
+
+    /**
+     * @description: 查询业务规则中的人员id
+     * @param: businessRule 业务规则对象
+     * @param: taskName 任务名称
+     * @param: variables 业务变量
+     * @return: 执行业务规则查询人员
+     * @return: java.util.List<java.lang.String>
+     * @author: gssong
+     * @date: 2022/4/11 13:35
+     */
+    public static List<String> ruleAssignList(ActBusinessRuleVo businessRule, String taskName,Map<String,Object> variables) {
+        try {
+            //返回值
+            Object obj;
+            //方法名称
+            String methodName = businessRule.getMethod();
+            //全类名
+            Object beanName = SpringUtils.getBean(businessRule.getBeanName());
+            if (StringUtils.isNotBlank(businessRule.getParam())) {
+                List<ActBusinessRuleParam> businessRuleParams = JsonUtils.parseArray(businessRule.getParam(), ActBusinessRuleParam.class);
+                Class[] paramClass = new Class[businessRuleParams.size()];
+                List<Object> params = new ArrayList<>();
+                for (int i = 0; i < businessRuleParams.size(); i++) {
+                    if (variables.containsKey(businessRuleParams.get(i).getParam())) {
+                        String variable = (String) variables.get(businessRuleParams.get(i).getParam());
+                        switch (businessRuleParams.get(i).getParamType()) {
+                            case FlowConstant.PARAM_STRING:
+                                paramClass[i] = String.valueOf(variable).getClass();
+                                params.add(String.valueOf(variable));
+                                break;
+                            case FlowConstant.PARAM_SHORT:
+                                paramClass[i] = Short.valueOf(variable).getClass();
+                                params.add(Short.valueOf(variable));
+                                break;
+                            case FlowConstant.PARAM_INTEGER:
+                                paramClass[i] = Integer.valueOf(variable).getClass();
+                                params.add(Integer.valueOf(variable));
+                                break;
+                            case FlowConstant.PARAM_LONG:
+                                paramClass[i] = Long.valueOf(variable).getClass();
+                                params.add(Long.valueOf(variable));
+                                break;
+                            case FlowConstant.PARAM_FLOAT:
+                                paramClass[i] = Float.valueOf(variable).getClass();
+                                params.add(Float.valueOf(variable));
+                                break;
+                            case FlowConstant.PARAM_DOUBLE:
+                                paramClass[i] = Double.valueOf(variable).getClass();
+                                params.add(Double.valueOf(variable));
+                                break;
+                            case FlowConstant.PARAM_BOOLEAN:
+                                paramClass[i] = Boolean.valueOf(variable).getClass();
+                                params.add(Boolean.valueOf(variable));
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                if (ObjectUtil.isEmpty(paramClass) && CollectionUtil.isNotEmpty(businessRuleParams)) {
+                    String variableParams = businessRuleParams.stream().map(ActBusinessRuleParam::getParam).collect(Collectors.joining(","));
+                    throw new ServiceException("【" + variableParams + "】流程变量不存在");
+                }
+                Method method = ReflectionUtils.findMethod(beanName.getClass(), methodName, paramClass);
+                assert method != null;
+                obj = ReflectionUtils.invokeMethod(method, beanName, params.toArray());
+            } else {
+                Method method = ReflectionUtils.findMethod(beanName.getClass(), methodName);
+                assert method != null;
+                obj = ReflectionUtils.invokeMethod(method, beanName);
+            }
+            if (obj == null) {
+                throw new ServiceException("【" + taskName + "】任务环节未配置审批人,请确认传值是否正确,检查：【" + businessRule.getBeanName() + "】Bean容器中【" + methodName + "】方法");
+            }
+            return Arrays.asList(obj.toString().split(","));
+        } catch (Exception e) {
+            throw new ServiceException(e.getMessage());
+        }
     }
 
     /**
@@ -346,31 +427,31 @@ public class WorkFlowUtils {
                         VariableInstance v = variables.get(businessRuleParams.get(i).getParam());
                         String variable = v.getTextValue();
                         switch (businessRuleParams.get(i).getParamType()) {
-                            case ActConstant.PARAM_STRING:
+                            case FlowConstant.PARAM_STRING:
                                 paramClass[i] = String.valueOf(variable).getClass();
                                 params.add(String.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_SHORT:
+                            case FlowConstant.PARAM_SHORT:
                                 paramClass[i] = Short.valueOf(variable).getClass();
                                 params.add(Short.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_INTEGER:
+                            case FlowConstant.PARAM_INTEGER:
                                 paramClass[i] = Integer.valueOf(variable).getClass();
                                 params.add(Integer.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_LONG:
+                            case FlowConstant.PARAM_LONG:
                                 paramClass[i] = Long.valueOf(variable).getClass();
                                 params.add(Long.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_FLOAT:
+                            case FlowConstant.PARAM_FLOAT:
                                 paramClass[i] = Float.valueOf(variable).getClass();
                                 params.add(Float.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_DOUBLE:
+                            case FlowConstant.PARAM_DOUBLE:
                                 paramClass[i] = Double.valueOf(variable).getClass();
                                 params.add(Double.valueOf(variable));
                                 break;
-                            case ActConstant.PARAM_BOOLEAN:
+                            case FlowConstant.PARAM_BOOLEAN:
                                 paramClass[i] = Boolean.valueOf(variable).getClass();
                                 params.add(Boolean.valueOf(variable));
                                 break;
@@ -751,6 +832,58 @@ public class WorkFlowUtils {
      * @description: 自动办理任务
      * @param: processInstanceId 流程实例id
      * @param: businessKey 业务id
+     * @param: processNodeAssigneeList 流程人员
+     * @param: actNodeAssignees 流程定义设置
+     * @return: void
+     * @author: gssong
+     * @date: 2022/12/19 13:53
+     */
+    public static boolean autoComplete(String processInstanceId, String businessKey, List<ActProcessNodeAssignee> processNodeAssigneeList, List<ActNodeAssignee> actNodeAssignees){
+        List<Task> taskList = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
+        if (CollectionUtil.isEmpty(taskList)) {
+            iActBusinessStatusService.updateState(businessKey, BusinessStatusEnum.FINISH, processInstanceId);
+        }
+        List<Task> list = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId)
+            .taskCandidateOrAssigned(LoginHelper.getUserId().toString()).list();
+        if (CollectionUtil.isEmpty(list)) {
+            return false;
+        }
+        for (Task task : list) {
+            ActNodeAssignee nodeAssignee = actNodeAssignees.stream().filter(e -> task.getTaskDefinitionKey().equals(e.getNodeId())).findFirst().orElse(null);
+            if (ObjectUtil.isNull(nodeAssignee)) {
+                throw new ServiceException("请检查【" + task.getName() + "】节点配置");
+            }
+            if (!nodeAssignee.getAutoComplete()) {
+                return false;
+            }
+            PROCESS_ENGINE.getTaskService().addComment(task.getId(), task.getProcessInstanceId(), "流程引擎满足条件自动办理");
+            PROCESS_ENGINE.getTaskService().complete(task.getId());
+            recordExecuteNode(task, actNodeAssignees);
+        }
+        List<Task> tasks = PROCESS_ENGINE.getTaskService().createTaskQuery().processInstanceId(processInstanceId).list();
+        if(CollUtil.isNotEmpty(tasks)){
+            for (Task task : tasks) {
+                processNodeAssigneeList.stream().filter(e -> e.getNodeId().equals(task.getTaskDefinitionKey()) && !e.getMultiple()).findFirst()
+                    .ifPresent(e -> {
+                        String[] userIds = e.getAssigneeId().split(",");
+                        if(userIds.length == 1){
+                            PROCESS_ENGINE.getTaskService().setAssignee(task.getId(), userIds[0]);
+                        }else{
+                            for (String userId : userIds) {
+                                PROCESS_ENGINE.getTaskService().addCandidateUser(task.getId(), userId);
+                            }
+                        }
+                    });
+            }
+        }
+        autoComplete(processInstanceId, businessKey, processNodeAssigneeList, actNodeAssignees);
+        return true;
+    }
+
+    /**
+     * @description: 自动办理任务
+     * @param: processInstanceId 流程实例id
+     * @param: businessKey 业务id
      * @param: actNodeAssignees 流程定义设置
      * @return: java.lang.Boolean
      * @author: gssong
@@ -807,7 +940,7 @@ public class WorkFlowUtils {
      */
     public static void settingAssignee(Task task, ActNodeAssignee actNodeAssignee, Boolean multiple) {
         //按业务规则选人
-        if (ActConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
+        if (FlowConstant.WORKFLOW_RULE.equals(actNodeAssignee.getChooseWay())) {
             ActBusinessRuleVo actBusinessRuleVo = iActBusinessRuleService.queryById(actNodeAssignee.getBusinessRuleId());
             List<String> ruleAssignList = ruleAssignList(actBusinessRuleVo, task.getId(), task.getName());
             List<Long> userIdList = new ArrayList<>();
@@ -924,7 +1057,7 @@ public class WorkFlowUtils {
                         if (StringUtils.isBlank(conditionExpression)) {
                             nodeListId.add(element.getId());
                         } else {
-                            ExpressCheckCmd expressCmd = new ExpressCheckCmd(task.getProcessInstanceId(), conditionExpression, variables);
+                            ExpressCheckCmd expressCmd = new ExpressCheckCmd(conditionExpression, variables);
                             Boolean condition = PROCESS_ENGINE.getManagementService().executeCommand(expressCmd);
                             if (condition) {
                                 nodeListId.add(element.getId());

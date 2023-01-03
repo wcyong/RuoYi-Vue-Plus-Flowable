@@ -37,10 +37,6 @@ public class ActProcessDefSetting extends BaseEntity {
      */
     private String processDefinitionName;
     /**
-     * 业务类型，0动态表单，1业务单据
-     */
-    private Integer businessType;
-    /**
      * 表名
      */
     private String tableName;
@@ -49,24 +45,12 @@ public class ActProcessDefSetting extends BaseEntity {
      */
     private String componentName;
     /**
-     * 表单id
-     */
-    private Long formId;
-    /**
-     * 表单key
-     */
-    private String formKey;
-    /**
-     * 表单名称
-     */
-    private String formName;
-    /**
-     * 动态表单中参数id,多个用英文逗号隔开
-     */
-    private String formVariable;
-    /**
      * 备注
      */
     private String remark;
+    /**
+     * true 为审批节点选人 false 为申请人选择全部人员
+     */
+    private Boolean defaultProcess;
 
 }

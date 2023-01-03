@@ -85,6 +85,7 @@
                 this.formData = response.data
               }else{
                 this.formData.businessType = 0
+                this.formData.defaultProcess = true
               }
               this.formData.processDefinitionId = data.id
               this.formData.processDefinitionKey = data.key

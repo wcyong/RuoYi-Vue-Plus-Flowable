@@ -2,10 +2,19 @@
     <div class="app-container">
         <div v-if="dataViewVisible">
             <el-form :model="queryParams" ref="queryForm" :inline="true" v-show="showSearch" label-width="100px">
-                <el-form-item label="流程名称" prop="name">
+                <el-form-item label="流程名称" prop="processDefinitionName">
                     <el-input
-                    v-model="queryParams.name"
+                    v-model="queryParams.processDefinitionName"
                     placeholder="请输入流程名称"
+                    clearable
+                    size="small"
+                    @keyup.enter.native="handleQuery"
+                    />
+                </el-form-item>
+                <el-form-item label="任务名称" prop="taskName">
+                    <el-input
+                    v-model="queryParams.taskName"
+                    placeholder="请输入任务名称"
                     clearable
                     size="small"
                     @keyup.enter.native="handleQuery"
@@ -66,7 +75,7 @@
         <div class="form-container" v-if="dynamicFormEditVisible">
             <div class="form-container-header"><i class="el-dialog__close el-icon el-icon-close" @click="closeDynamicEdit"></i></div>
             <approvalForm ref="approvalForm" :businessKey = 'businessKey' :taskId = 'taskId' :parentTaskId = 'parentTaskId'
-            @closeForm = 'closeDynamicEdit' :currProcessForm = 'currProcessForm' :processInstanceId = 'processInstanceId' :dynamicFormData = 'dynamicFormData'/>
+            @closeForm = 'closeDynamicEdit' :currProcessForm = 'currProcessForm' :processInstanceId = 'processInstanceId'/>
         </div>
         <!-- 单据信息结束 -->
     </div>
@@ -75,7 +84,6 @@
 <script>
   import api from '@/api/workflow/task'
   import approvalForm from "@/views/components/approvalForm";
-  import { getBusinessForm } from "@/api/workflow/businessForm";
   export default {
     components: {
       approvalForm
@@ -108,7 +116,8 @@
         queryParams: {
             pageNum: 1,
             pageSize: 10,
-            name: undefined
+            taskName: undefined,
+            processDefinitionName: undefined
         },
         // 任务id
         taskId:undefined,
@@ -117,7 +126,6 @@
         parentTaskId: undefined,
         businessKey: undefined, // 业务唯一标识
         currProcessForm: '', //表单组件名称
-        dynamicFormData: '' //表单组件名称
       }
     },
     created() {
@@ -160,26 +168,13 @@
           this.processInstanceId = row.processInstanceId
           this.taskId = row.id
           this.parentTaskId = row.parentTaskId
-          if(row.actProcessDefSetting && row.actProcessDefSetting.businessType === 0){
-            getBusinessForm(this.businessKey).then(response => {
-                if(response.data){
-                  this.dynamicFormData = response.data;
-                  this.dynamicFormEditVisible = true;
-                  this.dataViewVisible = false
-                  this.currProcessForm = 'dynamicFormEdit'
-                }else{
-                  this.$modal.msgError("当前流程绑定表单有误，请在流程定义设置中修改");
-                }  
-            });
+          if(row.actProcessDefSetting && row.actProcessDefSetting.componentName){
+              this.currProcessForm = row.actProcessDefSetting.componentName
+              this.dynamicFormEditVisible = true    
+              this.dataViewVisible = false 
           }else{
-            if(row.actProcessDefSetting && row.actProcessDefSetting.componentName){
-                this.currProcessForm = row.actProcessDefSetting.componentName
-                this.dynamicFormEditVisible = true    
-                this.dataViewVisible = false 
-            }else{
-                this.$modal.msgError("当前业务未绑定组件，请在流程定义中设置");
-            } 
-          }
+              this.$modal.msgError("当前业务未绑定组件，请在流程定义中设置");
+          } 
       },
       //关闭办理弹出层
       closeDynamicEdit(){

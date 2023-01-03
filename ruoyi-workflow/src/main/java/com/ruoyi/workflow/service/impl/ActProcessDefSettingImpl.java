@@ -77,19 +77,11 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
         LambdaQueryWrapper<ActProcessDefSetting> lqw = Wrappers.lambdaQuery();
         lqw.ne(bo.getId() != null, ActProcessDefSetting::getId, bo.getId());
         lqw.eq(ActProcessDefSetting::getProcessDefinitionId, bo.getProcessDefinitionId());
-        if (0 == bo.getBusinessType()) {
-            lqw.eq(ActProcessDefSetting::getFormId, bo.getFormId());
-            ActProcessDefSetting setting = baseMapper.selectOne(lqw);
-            if (ObjectUtil.isNotEmpty(setting)) {
-                return R.ok("表单已被流程【" + setting.getProcessDefinitionName() + "】绑定，是否确认删除绑定，绑定当前选项？", setting.getId());
-            }
-        } else {
-            lqw.eq(ActProcessDefSetting::getComponentName, bo.getComponentName());
-            ActProcessDefSetting setting = baseMapper.selectOne(lqw);
-            if (ObjectUtil.isNotEmpty(setting)) {
-                return R.ok("组件已被流程【" + setting.getProcessDefinitionName() + "】绑定，是否确认删除绑定，绑定当前选项？", setting.getId());
+        lqw.eq(ActProcessDefSetting::getComponentName, bo.getComponentName());
+        ActProcessDefSetting setting = baseMapper.selectOne(lqw);
+        if (ObjectUtil.isNotEmpty(setting)) {
+            return R.ok("组件已被流程【" + setting.getProcessDefinitionName() + "】绑定，是否确认删除绑定，绑定当前选项？", setting.getId());
 
-            }
         }
         return R.ok();
     }
@@ -118,10 +110,6 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
         lqw.eq(StringUtils.isNotBlank(bo.getProcessDefinitionId()), ActProcessDefSetting::getProcessDefinitionId, bo.getProcessDefinitionId());
         lqw.eq(StringUtils.isNotBlank(bo.getProcessDefinitionKey()), ActProcessDefSetting::getProcessDefinitionKey, bo.getProcessDefinitionKey());
         lqw.like(StringUtils.isNotBlank(bo.getProcessDefinitionName()), ActProcessDefSetting::getProcessDefinitionName, bo.getProcessDefinitionName());
-        lqw.eq(bo.getFormId() != null, ActProcessDefSetting::getFormId, bo.getFormId());
-        lqw.eq(StringUtils.isNotBlank(bo.getFormKey()), ActProcessDefSetting::getFormKey, bo.getFormKey());
-        lqw.like(StringUtils.isNotBlank(bo.getFormName()), ActProcessDefSetting::getFormName, bo.getFormName());
-        lqw.eq(StringUtils.isNotBlank(bo.getFormVariable()), ActProcessDefSetting::getFormVariable, bo.getFormVariable());
         return lqw;
     }
 
@@ -131,35 +119,12 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ActProcessDefSetting insertByBo(ActProcessDefSettingBo bo) {
-        ActProcessDefSetting add = new ActProcessDefSetting();
-        add.setProcessDefinitionId(bo.getProcessDefinitionId());
-        add.setProcessDefinitionKey(bo.getProcessDefinitionKey());
-        add.setProcessDefinitionName(bo.getProcessDefinitionName());
-        add.setBusinessType(bo.getBusinessType());
-        add.setRemark(bo.getRemark());
-        if (0 == bo.getBusinessType()) {
-            add.setFormId(bo.getFormId());
-            add.setFormKey(bo.getFormKey());
-            add.setFormName(bo.getFormName());
-            add.setFormVariable(bo.getFormVariable());
-        } else {
-            add.setComponentName(bo.getComponentName());
-            add.setTableName(bo.getTableName());
-        }
+        ActProcessDefSetting add = BeanUtil.toBean(bo, ActProcessDefSetting.class);
         if (ObjectUtil.isNotEmpty(bo.getSettingId())) {
             baseMapper.deleteById(bo.getSettingId());
         }
         if (bo.getId() != null) {
             baseMapper.deleteById(bo.getId());
-        }
-        if (0 == bo.getBusinessType() && (bo.getFormId() == null || StringUtils.isBlank(bo.getFormKey()))) {
-            throw new ServiceException("请选择表单");
-        }
-        if (1 == bo.getBusinessType() && StringUtils.isBlank(bo.getComponentName())) {
-            throw new ServiceException("组件名称不能为空");
-        }
-        if (1 == bo.getBusinessType() && StringUtils.isBlank(bo.getTableName())) {
-            throw new ServiceException("表名不能为空");
         }
         baseMapper.insert(add);
         return add;
@@ -196,19 +161,5 @@ public class ActProcessDefSettingImpl implements IActProcessDefSetting {
         LambdaQueryWrapper<ActProcessDefSetting> wrapper = Wrappers.lambdaQuery();
         wrapper.in(ActProcessDefSetting::getProcessDefinitionId, definitionIds);
         return baseMapper.delete(wrapper) > 0;
-    }
-
-    /**
-     * @description: 按照表单id查询
-     * @param: formId
-     * @return: com.ruoyi.workflow.domain.ActProcessDefSetting
-     * @author: gssong
-     * @date: 2022/8/30 22:10
-     */
-    @Override
-    public ActProcessDefSetting queryByFormId(Long formId) {
-        LambdaQueryWrapper<ActProcessDefSetting> lqw = Wrappers.lambdaQuery();
-        lqw.eq(ActProcessDefSetting::getFormId, formId);
-        return baseMapper.selectOne(lqw);
     }
 }

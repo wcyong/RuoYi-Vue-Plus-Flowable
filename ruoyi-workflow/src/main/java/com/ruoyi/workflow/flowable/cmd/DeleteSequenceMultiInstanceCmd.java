@@ -11,8 +11,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.ruoyi.workflow.common.constant.ActConstant.LOOP_COUNTER;
-import static com.ruoyi.workflow.common.constant.ActConstant.NUMBER_OF_INSTANCES;
+import static com.ruoyi.workflow.common.constant.FlowConstant.LOOP_COUNTER;
+import static com.ruoyi.workflow.common.constant.FlowConstant.NUMBER_OF_INSTANCES;
 
 /**
  * @description: 串行减签

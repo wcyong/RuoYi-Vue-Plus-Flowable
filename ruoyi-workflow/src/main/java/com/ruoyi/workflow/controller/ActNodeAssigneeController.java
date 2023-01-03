@@ -51,8 +51,7 @@ public class ActNodeAssigneeController extends BaseController {
     @GetMapping("/{processDefinitionId}/{nodeId}")
     public R<ActNodeAssignee> getInfoSetting(@NotBlank(message = "流程定义id不能为空") @PathVariable String processDefinitionId,
                                              @NotBlank(message = "流程节点id不能为空") @PathVariable String nodeId){
-        ActNodeAssignee nodeAssignee = iActNodeAssigneeService.getInfoSetting(processDefinitionId,nodeId);
-        return R.ok(nodeAssignee);
+        return R.ok(iActNodeAssigneeService.getInfoSetting(processDefinitionId,nodeId));
     }
 
     /**

@@ -6,9 +6,6 @@
             @closeForm="closeForm" 
             :taskId="taskId" 
             :processInstanceId="processInstanceId"
-            :buildData="dynamicFormData.formText"
-            v-model="dynamicFormData.formValue"
-            :dynamicFormData="dynamicFormData"
         ></component>
     </div>
 </template>
@@ -30,7 +27,6 @@ export default {
       taskId: String, // 任务id
       parentTaskId: String, // 父级任务id
       currProcessForm: String, // 当前流程表单组件
-      dynamicFormData: {} //动态表单数据
     },
     components: components,
     data() {

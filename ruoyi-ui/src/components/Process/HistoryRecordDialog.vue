@@ -1,5 +1,5 @@
 <template>
-  <el-dialog  title="审批意见" :visible.sync="recordVisible" v-if="recordVisible" width="70%">
+  <el-dialog  title="审批意见" :visible.sync="recordVisible" v-if="recordVisible" append-to-body v-dialogDrag width="70%">
     <div class="containers" v-loading="loading">
       <el-table v-if="historicProcessInstance.length>0" :data="historicProcessInstance" style="width: 100%"> 
             <el-table-column prop="deleteReason" label="作废理由" align="center" ></el-table-column>

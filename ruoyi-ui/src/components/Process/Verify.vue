@@ -1,67 +1,84 @@
 <template>
 <div v-if="visible">
   <!-- 提交申请开始 -->
-  <el-dialog  v-if="visible"  title="提交申请" :visible.sync="visible"  width="800px" :close-on-click-modal="false" append-to-body destroy-on-close @close="closeDialog" >
-    <el-form v-loading="loading"  :rules="rules" ref="formData" :model="formData" status-icon >
-      <el-form-item label="审批意见" prop="message" v-if="businessStatus.status==='waiting'" label-width="120px">
-        <el-input  type="textarea" v-model="formData.message" maxlength="300" placeholder="请输入审批意见" :autosize="{ minRows: 4 }" show-word-limit ></el-input>
-      </el-form-item>
-      <el-form-item label="附件" prop="message" v-if="businessStatus.status==='waiting'" label-width="120px">
-        <el-upload ref="redmineUpload" :file-list="attachmentList"
-                    :multiple="true"
-                    :limit="5"
-                    action="'#'"
-                    :on-change="handleFileChange"
-                    :auto-upload="false"
-                    :show-file-list="true" >
-          <el-button slot="trigger" size="small" type="primary" icon="el-icon-upload">点击上传</el-button>
-        </el-upload>
-      </el-form-item>
-      <el-form-item label="提醒方式" prop="sendMessageType" label-width="120px">
-        <el-checkbox-group v-model="sendMessageType" size="small">
-            <el-checkbox v-for="dict in dict.type.sys_message" :disabled="parseInt(dict.value) === 1" :label="parseInt(dict.value)" :key="dict.value" border>
-                {{dict.label}}
-            </el-checkbox>
-        </el-checkbox-group>
-      </el-form-item>
-      <el-form-item v-if="nextNodes && nextNodes.length > 0" label="下一步审批人"  prop="assigneeMap" label-width="120px" >
-        <div v-for="(item, index) in nextNodes" :key="index">
-          <span>【{{ item.nodeName }}】：</span>
-          <el-input v-show="false" v-model="formData.assigneeMap[item.nodeId]" />
-          <el-input  placeholder="请选择审批人" readonly v-model="nickName[item.nodeId]" >
-              <el-button  @click="choosePeople(item.chooseWay, item.assigneeId, item.nodeId) " slot="append" icon="el-icon-search" >选择</el-button>
-          </el-input>
-        </div>
-      </el-form-item>
-      <el-form-item label="是否抄送" prop="isCopy" label-width="120px" v-if="setting.isCopy">
-         <el-col :span="12">
-           <div class="grid-content bg-purple">
-             <el-radio-group v-model="formData.isCopy" size="small">
-              <el-radio :label="true" border>是</el-radio>
-              <el-radio :label="false" border>否</el-radio>
-            </el-radio-group>
-           </div>
-        </el-col>
-         <el-col :span="12" v-if="formData.isCopy">
-           <div class="grid-content bg-purple">
-             <el-input v-show="false" v-model="formData.assigneeIds"/>
-             <el-input size="small" v-model="formData.assigneeNames" readonly placeholder="请选择人员" class="input-with-select">
-              <el-button slot="append" @click="chooseCopyUser" icon="el-icon-search"></el-button>
+  <el-dialog v-if="visible"  title="提交申请" :visible.sync="visible"  width="800px" :close-on-click-modal="false" append-to-body destroy-on-close @close="closeDialog" >
+    <div v-loading="loading" >
+      <!--节点开始  -->
+      <el-table border :data="processNodeList" v-if="defaultProcess && processNodeList.length>0" class="processTab" max-height="300px">
+        <el-table-column prop="nodeName" label="节点名称" width="250"/>
+        <el-table-column prop="transactor" :show-overflow-tooltip="true" label="审批人" />
+        <el-table-column prop="transactorId" v-if="false" label="审批人ID" />
+        <el-table-column label="操作" align="center" width="100">
+          <template slot-scope="scope">
+            <el-button
+              size="mini" type="primary" :disabled="!scope.row.disabled"
+              @click="handleChooseUser(scope.$index,scope.row)">选择</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <chooseWorkflowUser :dataObj="dataObj" :nodeId="nodeId" @confirmUser="confirmTaskUser" ref="taskUserRef"/>
+      <!-- 节点结束 -->
+      <el-form :rules="rules" ref="formData" :model="formData" status-icon >
+        <el-form-item label="审批意见" prop="message" v-if="businessStatus.status==='waiting'" label-width="120px">
+          <el-input  type="textarea" v-model="formData.message" maxlength="300" placeholder="请输入审批意见" :autosize="{ minRows: 4 }" show-word-limit ></el-input>
+        </el-form-item>
+        <el-form-item label="附件" prop="message" v-if="businessStatus.status==='waiting'" label-width="120px">
+          <el-upload ref="redmineUpload" :file-list="attachmentList"
+                      :multiple="true"
+                      :limit="5"
+                      action="'#'"
+                      :on-change="handleFileChange"
+                      :auto-upload="false"
+                      :show-file-list="true" >
+            <el-button slot="trigger" size="small" type="primary" icon="el-icon-upload">点击上传</el-button>
+          </el-upload>
+        </el-form-item>
+        <el-form-item label="提醒方式" prop="sendMessageType" label-width="120px">
+          <el-checkbox-group v-model="sendMessageType" size="small">
+              <el-checkbox v-for="dict in dict.type.sys_message" :disabled="parseInt(dict.value) === 1" :label="parseInt(dict.value)" :key="dict.value" border>
+                  {{dict.label}}
+              </el-checkbox>
+          </el-checkbox-group>
+        </el-form-item>
+        <el-form-item v-if="nextNodes && nextNodes.length > 0 && !defaultProcess" label="下一步审批人"  prop="assigneeMap" label-width="120px" >
+          <div v-for="(item, index) in nextNodes" :key="index">
+            <span>【{{ item.nodeName }}】：</span>
+            <el-input v-show="false" v-model="formData.assigneeMap[item.nodeId]" />
+            <el-input  placeholder="请选择审批人" readonly v-model="nickName[item.nodeId]" >
+                <el-button  @click="choosePeople(item.chooseWay, item.assigneeId, item.nodeId) " slot="append" icon="el-icon-search" >选择</el-button>
             </el-input>
-           </div>
-        </el-col>
-      </el-form-item>
-      <el-form-item align="center">
-        <el-button type="primary" @click="submitForm('formData')" size="small">提交</el-button>
-        <el-button type="primary" v-if="backNodeList && backNodeList.length>0" @click="openBack()" size="small">退回</el-button>
-        <el-button type="primary" v-if="isMultiInstance && setting.addMultiInstance" @click="addMultiClick()" size="small">加签</el-button>
-        <el-button type="primary" v-if="multiList && multiList.length>0 && setting.deleteMultiInstance" @click="deleteMultiClick()" size="small">减签</el-button>
-        <el-button type="primary" v-if="setting.isDelegate" @click="delegateClick()" size="small">委托</el-button>
-        <el-button type="primary" v-if="setting.isTransmit" @click="transmitClick()" size="small">转办</el-button>
-        <el-button type="primary" v-if="businessStatus.status==='waiting'" @click="terminationClick()" size="small">终止</el-button>
-        <el-button size="small" @click="closeDialog()">取消</el-button>
-      </el-form-item>
-    </el-form>
+          </div>
+        </el-form-item>
+        <el-form-item label="是否抄送" prop="isCopy" label-width="120px" v-if="setting.isCopy">
+          <el-col :span="12">
+            <div class="grid-content bg-purple">
+              <el-radio-group v-model="formData.isCopy" size="small">
+                <el-radio :label="true" border>是</el-radio>
+                <el-radio :label="false" border>否</el-radio>
+              </el-radio-group>
+            </div>
+          </el-col>
+          <el-col :span="12" v-if="formData.isCopy">
+            <div class="grid-content bg-purple">
+              <el-input v-show="false" v-model="formData.assigneeIds"/>
+              <el-input size="small" v-model="formData.assigneeNames" readonly placeholder="请选择人员" class="input-with-select">
+                <el-button slot="append" @click="chooseCopyUser" icon="el-icon-search"></el-button>
+              </el-input>
+            </div>
+          </el-col>
+        </el-form-item>
+        <el-form-item align="center">
+          <el-button type="primary" @click="submitForm('formData')" size="small">提交</el-button>
+          <el-button type="primary" v-if="backNodeList && backNodeList.length>0" @click="openBack()" size="small">退回</el-button>
+          <el-button type="primary" v-if="isMultiInstance && setting.addMultiInstance" @click="addMultiClick()" size="small">加签</el-button>
+          <el-button type="primary" v-if="multiList && multiList.length>0 && setting.deleteMultiInstance" @click="deleteMultiClick()" size="small">减签</el-button>
+          <el-button type="primary" v-if="setting.isDelegate" @click="delegateClick()" size="small">委托</el-button>
+          <el-button type="primary" v-if="setting.isTransmit" @click="transmitClick()" size="small">转办</el-button>
+          <el-button type="primary" v-if="businessStatus.status==='waiting'" @click="terminationClick()" size="small">终止</el-button>
+          <el-button size="small" @click="closeDialog()">取消</el-button>
+        </el-form-item>
+      </el-form>
+    </div>  
   </el-dialog>
   <!-- 提交申请结束 -->
 
@@ -185,7 +202,11 @@ export default {
         //抄送人名称
         assigneeNames: undefined,
         //消息提醒
-        sendMessage: {}
+        sendMessage: {},
+        //true 为申请人选择全部人员  false为审批节点选人
+        defaultProcess:false,
+        //全部节点
+        processNodeList: []
       },
       //转办
       transmitForm: {
@@ -246,7 +267,13 @@ export default {
       //消息提醒类型1.站内信,2.邮箱,3.短信
       sendMessageType:[1],
       //附件
-      attachmentList: []
+      attachmentList: [],
+      //true 为申请人选择全部人员  false为审批节点选人
+      defaultProcess: false,
+      //全部节点 
+      processNodeList: [],
+      //下标
+      index: 0
     };
   },
   watch: {
@@ -268,6 +295,8 @@ export default {
           this.businessStatus = data.businessStatus
           this.processInstanceId = data.processInstanceId
           this.attachmentList = []
+          this.defaultProcess = data.defaultProcess
+          this.processNodeList = data.processNodeList
           this.loading = false;
         } catch (error) {
           this.loading = false;
@@ -295,6 +324,8 @@ export default {
             if(this.businessStatus.status === 'draft'){
                  this.formData.message = '提交单据'
             }
+            this.formData.defaultProcess = this.defaultProcess
+            this.formData.processNodeList = this.processNodeList
             let response = await api.completeTask(this.formData);
             if (response.code === 200) {
               // 刷新数据
@@ -321,7 +352,6 @@ export default {
     async submitUpload() {
       if(this.attachmentList.length>0){
         const formData = new FormData()
-        console.log(this.attachmentList)
 
         this.attachmentList.forEach((file) => {
             formData.append('file', file.raw)
@@ -351,7 +381,7 @@ export default {
             ids: this.formData.assigneeMap[nodeId].split(",")
           };
         }else{
-           this.dataObj = {
+          this.dataObj = {
             chooseWay: chooseWay,
             assigneeId: assigneeId,
             ids: []
@@ -600,7 +630,37 @@ export default {
         this.formData.message = null
         this.formData.assigneeMap = {}
         this.nickName = {}
+    },
+    //任务选人
+    handleChooseUser(index,row){
+      this.dataObj = {
+        chooseWay: row.chooseWay,
+        assigneeId: row.assigneeId,
+        ids: row.transactorId!==null?row.transactorId.split(","):[]
+      };
+      this.nodeId = row.nodeId
+      this.index = index
+      this.$refs.taskUserRef.visible = true
+    },
+    //确认人员
+    confirmTaskUser(userList, nodeId){
+      let assignee = userList.map((item) => {
+        return item.userId;
+      });
+      let nickName = userList.map((item) => {
+        return item.nickName;
+      });
+      let arrAssignee = assignee.join(",");
+      let arrNickName = nickName.join(",");
+      this.processNodeList[this.index].transactorId = arrAssignee
+      this.processNodeList[this.index].transactor = arrNickName
     }
   }
 };
 </script>
+<style scoped>
+.processTab{
+  width: 100%;
+  margin-bottom: 20px;
+}
+</style>

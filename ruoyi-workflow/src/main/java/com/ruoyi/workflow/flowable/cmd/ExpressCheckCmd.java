@@ -4,9 +4,9 @@ import com.ruoyi.common.utils.spring.SpringUtils;
 import org.flowable.common.engine.api.delegate.Expression;
 import org.flowable.common.engine.impl.interceptor.Command;
 import org.flowable.common.engine.impl.interceptor.CommandContext;
-import org.flowable.engine.RuntimeService;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.flowable.engine.impl.cfg.ProcessEngineConfigurationImpl;
-import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntityImpl;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -18,15 +18,11 @@ import java.util.Map;
  */
 public class ExpressCheckCmd implements Command<Boolean>, Serializable {
 
-
-    private final String processInstanceId;
-
     private final String conditionExpression;
 
     private final Map<String, Object> variableMap;
 
-    public ExpressCheckCmd(String processInstanceId, String conditionExpression, Map<String, Object> variableMap) {
-        this.processInstanceId = processInstanceId;
+    public ExpressCheckCmd(String conditionExpression, Map<String, Object> variableMap) {
         this.conditionExpression = conditionExpression;
         this.variableMap = variableMap;
     }
@@ -34,11 +30,10 @@ public class ExpressCheckCmd implements Command<Boolean>, Serializable {
     @Override
     public Boolean execute(CommandContext commandContext) {
         ProcessEngineConfigurationImpl processEngineConfiguration = SpringUtils.getBean(ProcessEngineConfigurationImpl.class);
-        RuntimeService runtimeService = SpringUtils.getBean(RuntimeService.class);
         Expression expression = processEngineConfiguration.getExpressionManager().createExpression(this.conditionExpression);
-        ExecutionEntity executionEntity = (ExecutionEntity) runtimeService.createProcessInstanceQuery().processInstanceId(this.processInstanceId).includeProcessVariables().singleResult();
-        executionEntity.setVariables(variableMap);
-        Object result = expression.getValue(executionEntity);
+        DelegateExecution delegateExecution = new ExecutionEntityImpl();
+        delegateExecution.setTransientVariables(variableMap);
+        Object result = expression.getValue(delegateExecution);
         return (Boolean) result;
     }
 

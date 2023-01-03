@@ -52,9 +52,9 @@ export default {
         {
           //禁止滚轮滚动
           zoomScroll: ["value",""],
-          ZoomScrollModule,
-          MoveCanvasModule
-        }
+        },
+        ZoomScrollModule,
+        MoveCanvasModule
       ]
     })
     processApi.getXml(this.processInstanceId).then(response=>{        
@@ -110,8 +110,6 @@ export default {
         flowElements.forEach(n => {
             if (n.$type === 'bpmn:UserTask') {
                 const completeTask = this.taskList.find(m => m.key === n.id)
-                const todoTask = this.taskList.find(m => !m.completed)
-                const endTask = this.taskList[this.taskList.length - 1]
                 if (completeTask) {
                     canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
                     n.outgoing?.forEach(nn => {
@@ -121,15 +119,12 @@ export default {
                         } else if (nn.targetRef.$type === 'bpmn:ExclusiveGateway') {
                             canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
                             canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
-                        } else if (nn.targetRef.$type === 'bpmn:EndEvent') {
-                            if (!todoTask && endTask.key === n.id) {
-                                canvas.addMarker(nn.id, 'highlight')
-                                canvas.addMarker(nn.targetRef.id, 'highlight')
-                            }
-                            if (!completeTask.completed) {
-                                canvas.addMarker(nn.id, 'highlight-todo')
-                                canvas.addMarker(nn.targetRef.id, 'highlight-todo')
-                            }
+                        } else if (nn.targetRef.$type === 'bpmn:ParallelGateway') {
+                            canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                            canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                        } else if (nn.targetRef.$type === 'bpmn:InclusiveGateway') {
+                            canvas.addMarker(nn.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                            canvas.addMarker(nn.targetRef.id, completeTask.completed ? 'highlight' : 'highlight-todo')
                         }
                     })
                 }
@@ -140,10 +135,28 @@ export default {
                         canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
                     }
                 })
+            }  else if (n.$type === 'bpmn:ParallelGateway') {
+                n.outgoing.forEach(nn => {
+                    const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
+                    if (targetTask) {
+                        canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
+                    }
+                })
+            }   else if (n.$type === 'bpmn:InclusiveGateway') {
+                n.outgoing.forEach(nn => {
+                    const targetTask = this.taskList.find(m => m.key === nn.targetRef.id)
+                    if (targetTask) {
+                        canvas.addMarker(nn.id, targetTask.completed ? 'highlight' : 'highlight-todo')
+                    }
+                })
             } else if (n.$type === 'bpmn:SubProcess') {
+                const completeTask = this.taskList.find(m => m.key === n.id)
+                if (completeTask) {
+                    canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                    canvas.addMarker(n.id, completeTask.completed ? 'highlight' : 'highlight-todo')
+                }
                 this.bpmnNodeList(n.flowElements,canvas)
-            }
-            if (n.$type === 'bpmn:StartEvent') {
+            } else if (n.$type === 'bpmn:StartEvent') {
                 n.outgoing.forEach(nn => {
                     const completeTask = this.taskList.find(m => m.key === nn.targetRef.id)
                     if (completeTask) {
@@ -152,6 +165,13 @@ export default {
                         return
                     }
                 })
+            } else if (n.$type === 'bpmn:EndEvent') {
+                const completeTask = this.taskList.find(m => m.key === n.id)
+                if (completeTask) {
+                    canvas.addMarker(completeTask.key, 'highlight')
+                    canvas.addMarker(n.id, 'highlight')
+                    return
+                }
             }
       })
     }

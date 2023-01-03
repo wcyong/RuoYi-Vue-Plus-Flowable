@@ -67,9 +67,4 @@ public interface IActProcessDefSetting {
      * 按照流程定义id删除
      */
     Boolean deleteByDefinitionIds(List<String> definitionIds);
-
-    /**
-     * 按照formId查询
-     */
-    ActProcessDefSetting queryByFormId(Long formId);
 }
