@@ -81,8 +81,6 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
 
     private final IActBusinessRuleService iActBusinessRuleService;
 
-    private final IActHiTaskInstService iActHiTaskInstService;
-
     private final ManagementService managementService;
 
     private final ActTaskMapper actTaskMapper;
@@ -304,14 +302,9 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             //办理委托任务
             if (ObjectUtil.isNotEmpty(task.getDelegationState()) && FlowConstant.PENDING.equals(task.getDelegationState().name())) {
                 taskService.resolveTask(req.getTaskId());
-                ActHiTaskInst hiTaskInst = iActHiTaskInstService.getById(task.getId());
-                TaskEntity newTask = WorkFlowUtils.createNewTask(task, hiTaskInst.getStartTime());
+                TaskEntity newTask = WorkFlowUtils.createNewTask(task);
                 taskService.addComment(newTask.getId(), task.getProcessInstanceId(), req.getMessage());
                 taskService.complete(newTask.getId());
-                ActHiTaskInst actHiTaskInst = new ActHiTaskInst();
-                actHiTaskInst.setId(task.getId());
-                actHiTaskInst.setStartTime(new Date());
-                iActHiTaskInstService.updateById(actHiTaskInst);
                 return true;
             }
             //流程定义设置
@@ -392,7 +385,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
                 if (StringUtils.isBlank(req.getAssigneeIds())) {
                     throw new ServiceException("抄送人不能为空 ");
                 }
-                TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
+                TaskEntity newTask = WorkFlowUtils.createNewTask(task);
                 taskService.addComment(newTask.getId(), task.getProcessInstanceId(),
                     LoginHelper.getUsername() + "【抄送】给" + req.getAssigneeNames());
                 taskService.complete(newTask.getId());
@@ -1087,16 +1080,12 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         try {
-            TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
+            TaskEntity newTask = WorkFlowUtils.createNewTask(task);
             taskService.addComment(newTask.getId(), task.getProcessInstanceId(), "【" + LoginHelper.getUsername() + "】委派给【" + delegateBo.getDelegateUserName() + "】");
             //委托任务
             taskService.delegateTask(delegateBo.getTaskId(), delegateBo.getDelegateUserId());
             //办理生成的任务记录
             taskService.complete(newTask.getId());
-            ActHiTaskInst actHiTaskInst = new ActHiTaskInst();
-            actHiTaskInst.setId(task.getId());
-            actHiTaskInst.setStartTime(new Date());
-            iActHiTaskInstService.updateById(actHiTaskInst);
             //发送站内信
             WorkFlowUtils.sendMessage(delegateBo.getSendMessage(), task.getProcessInstanceId());
             return true;
@@ -1125,7 +1114,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             throw new ServiceException(FlowConstant.MESSAGE_SUSPENDED);
         }
         try {
-            TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
+            TaskEntity newTask = WorkFlowUtils.createNewTask(task);
             taskService.addComment(newTask.getId(), task.getProcessInstanceId(),
                 StringUtils.isNotBlank(transmitBo.getComment()) ? transmitBo.getComment() : LoginHelper.getUsername() + "转办了任务");
             taskService.complete(newTask.getId());
@@ -1180,7 +1169,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             }
             List<String> assigneeNames = addMultiBo.getAssigneeNames();
             String username = LoginHelper.getUsername();
-            TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
+            TaskEntity newTask = WorkFlowUtils.createNewTask(task);
             taskService.addComment(newTask.getId(), processInstanceId, username + "加签【" + String.join(",", assigneeNames) + "】");
             taskService.complete(newTask.getId());
             return true;
@@ -1234,7 +1223,7 @@ public class ActTaskServiceImpl extends WorkflowService implements IActTaskServi
             }
             List<String> assigneeNames = deleteMultiBo.getAssigneeNames();
             String username = LoginHelper.getUsername();
-            TaskEntity newTask = WorkFlowUtils.createNewTask(task, new Date());
+            TaskEntity newTask = WorkFlowUtils.createNewTask(task);
             taskService.addComment(newTask.getId(), processInstanceId, username + "减签【" + String.join(",", assigneeNames) + "】");
             taskService.complete(newTask.getId());
             return true;
