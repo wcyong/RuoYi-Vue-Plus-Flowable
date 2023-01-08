@@ -14,6 +14,7 @@ public interface IReportRegisterRoleService {
 
     /**
      * 新增
+     *
      * @param entity
      * @return
      */
@@ -21,6 +22,7 @@ public interface IReportRegisterRoleService {
 
     /**
      * 批量新增
+     *
      * @param list
      * @return
      */
@@ -28,22 +30,43 @@ public interface IReportRegisterRoleService {
 
     /**
      * 批量删除
+     *
      * @param ids
      * @return
      */
     Boolean deleteBatch(List<Long> ids);
 
     /**
+     * 按照注册id与角色id删除
+     *
+     * @param reportRegisterId
+     * @param roleId
+     * @return
+     */
+    void deleteByReportRegisterIdAndRoleId(Long reportRegisterId, Long roleId);
+
+    /**
      * 报表授权
+     *
      * @param reportRegisterRole
      * @return
      */
     Boolean reportAuth(ReportRegisterRole reportRegisterRole);
 
     /**
-     * 按照注册id与角色id查询角色
-     * @param reportRegisterRole
+     * 按照注册id查询角色
+     *
+     * @param reportRegisterId
      * @return
      */
-    List<ReportRegisterRole> getByReportRegisterId(ReportRegisterRole reportRegisterRole);
+    List<ReportRegisterRole> getByReportRegisterId(Long reportRegisterId);
+
+    /**
+     * 按照注册id与角色id查询
+     *
+     * @param reportRegisterId
+     * @param roleIds
+     * @return
+     */
+    List<ReportRegisterRole> getByReportRegisterIdAndRoleIds(Long reportRegisterId, List<Long> roleIds);
 }

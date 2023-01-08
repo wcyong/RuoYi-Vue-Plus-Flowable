@@ -41,7 +41,7 @@
                 <right-toolbar :showSearch.sync="showSearch" @queryTable="getList"></right-toolbar>
             </el-row>
         
-            <el-table v-loading="loading" border max-height="250px" ref="roleRef" :row-key="(row) => {return row.roleId}" :data="roleList" @selection-change="handleSelectionChange">
+            <el-table v-loading="loading" @select="selectCheckBox" border max-height="250px" ref="roleRef" :row-key="(row) => {return row.roleId}" :data="roleList" @selection-change="handleSelectionChange">
                 <el-table-column type="selection" :reserve-selection="true" width="55" align="center" />
                 <el-table-column label="角色编号" prop="roleId" width="120" />
                 <el-table-column label="角色名称" prop="roleName" :show-overflow-tooltip="true" width="150" />
@@ -74,7 +74,7 @@
   
   <script>
   import { listRole } from "@/api/system/role";
-  import { getRoleListByReportRegisterIdAndRoleIds,reportAuth } from "@/api/report/reportRegister";
+  import { getRoleListByReportRegisterIdAndRoleIds,reportAuth,deleteByReportRegisterIdAndRoleId } from "@/api/report/reportRegister";
 
   export default {
     props: {
@@ -133,9 +133,8 @@
                 roleIds: this.ids
             }
             getRoleListByReportRegisterIdAndRoleIds(param).then(response => {
-                this.chooseRoleList = response.data
-                if(this.chooseRoleList.length > 0){
-                    this.chooseRoleList.forEach(row => {
+                if(response.data.length > 0){
+                    response.data.forEach(row => {
                         this.roleList.forEach(e => {
                             if(row.roleId === e.roleId){
                                 this.$refs.roleRef.toggleRowSelection(e,true);
@@ -143,6 +142,7 @@
                         })
                     })
                 }
+                this.chooseRoleList = response.data
             })
           }
         );
@@ -180,11 +180,12 @@
         })
         if(this.ids && this.ids.length > 0){
             this.ids.forEach((roleId,i)=>{
-            if(roleId === role.roleId){
-                this.ids.splice(i, 1);
-            }
+                if(roleId === role.roleId){
+                    this.ids.splice(i, 1);
+                }
             })
         }
+        deleteByReportRegisterIdAndRoleId(this.reportRegisterId,role.roleId)
       },
       // 确认
       submit(){
@@ -197,6 +198,12 @@
             this.$modal.msgSuccess("授权成功");
             this.visible = false
         })
+      },
+      selectCheckBox(selection, row){
+        let roleIds = this.chooseRoleList.map(item => item.roleId)
+        if(roleIds.includes(row.roleId)){
+            deleteByReportRegisterIdAndRoleId(this.reportRegisterId,row.roleId)
+        }
       }
     }
   };

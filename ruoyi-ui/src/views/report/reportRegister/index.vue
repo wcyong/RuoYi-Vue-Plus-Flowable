@@ -94,7 +94,7 @@
           <el-button
             size="mini"
             type="text"
-            icon="el-icon-setting"
+            icon="el-icon-postcard"
             @click="handleAuth(scope.row)"
           >授权</el-button>
         </template>
@@ -132,8 +132,30 @@
 
     <el-dialog title="报表列表" :visible.sync="openDb" v-if="openDb" width="800px" append-to-body>
       <div style="height:450px">
+        <el-form :model="queryDbParams" ref="queryDbForm" size="small" :inline="true" v-show="showSearch" label-width="68px">
+          <el-form-item label="报表编码" prop="dbCode">
+            <el-input
+              v-model="queryDbParams.dbCode"
+              placeholder="请输入报表编码"
+              clearable
+              @keyup.enter.native="getDbList"
+            />
+          </el-form-item>
+          <el-form-item label="报表名称" prop="name">
+            <el-input
+              v-model="queryDbParams.name"
+              placeholder="请输入报表名称"
+              clearable
+              @keyup.enter.native="getDbList"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="el-icon-search" size="mini" @click="getDbList">搜索</el-button>
+            <el-button icon="el-icon-refresh" size="mini" @click="resetDbQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
         <el-table
-          height="400px"
+          height="350px"
           :data="dbLiist"
           border
           :highlight-current-row="true"
@@ -275,6 +297,11 @@ export default {
         this.dbLiist = response.rows;
         this.dbTotal = response.total;
       });
+    },
+    /** 重置按钮操作 */
+    resetDbQuery() {
+      this.resetForm("queryDbForm");
+      this.getDbList();
     },
     /** 查询报表注册列表 */
     getList() {

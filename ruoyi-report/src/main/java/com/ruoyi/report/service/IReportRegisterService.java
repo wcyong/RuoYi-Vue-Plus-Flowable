@@ -20,6 +20,7 @@ public interface IReportRegisterService {
 
     /**
      * 分页查询
+     *
      * @param reportDbVo
      * @param pageQuery
      * @return
@@ -54,5 +55,20 @@ public interface IReportRegisterService {
     /**
      * 校验并批量删除报表注册信息
      */
-    Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid);
+    Boolean deleteByIds(Collection<Long> ids);
+
+    /**
+     * 获取当前登录人员拥有的报表
+     *
+     * @return
+     */
+    List<ReportRegister> getReportListByCurrentRole();
+
+    /**
+     * 校验是否有权限
+     *
+     * @param reportCode
+     * @return
+     */
+    Boolean checkReportAuth(String reportCode);
 }

@@ -1,9 +1,9 @@
 package com.ruoyi.report.service.impl;
 
 
-import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.ruoyi.common.utils.spring.SpringUtils;
 import com.ruoyi.report.domain.ReportRegisterRole;
 import com.ruoyi.report.mapper.ReportRegisterRoleMapper;
 import com.ruoyi.report.service.IReportRegisterRoleService;
@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 报表注册角色关联Service业务层处理
@@ -63,6 +65,22 @@ public class ReportRegisterRoleServiceImpl implements IReportRegisterRoleService
     }
 
     /**
+     * 按照注册id与角色id删除
+     *
+     * @param reportRegisterId
+     * @param roleId
+     * @return
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteByReportRegisterIdAndRoleId(Long reportRegisterId, Long roleId) {
+        LambdaQueryWrapper<ReportRegisterRole> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(ReportRegisterRole::getReportRegisterId, reportRegisterId);
+        wrapper.eq(ReportRegisterRole::getRoleId, roleId);
+        baseMapper.delete(wrapper);
+    }
+
+    /**
      * 报表授权
      *
      * @param reportRegisterRole
@@ -71,8 +89,11 @@ public class ReportRegisterRoleServiceImpl implements IReportRegisterRoleService
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean reportAuth(ReportRegisterRole reportRegisterRole) {
+        LambdaQueryWrapper<ReportRegisterRole> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(ReportRegisterRole::getReportRegisterId, reportRegisterRole.getReportRegisterId());
+        baseMapper.delete(wrapper);
         List<ReportRegisterRole> registerRoles = new ArrayList<>();
-        List<Long> roleIds = reportRegisterRole.getRoleIds();
+        List<Long> roleIds = reportRegisterRole.getRoleIds().stream().distinct().collect(Collectors.toList());
         for (Long roleId : roleIds) {
             ReportRegisterRole registerRole = new ReportRegisterRole();
             registerRole.setReportRegisterId(reportRegisterRole.getReportRegisterId());
@@ -83,15 +104,30 @@ public class ReportRegisterRoleServiceImpl implements IReportRegisterRoleService
     }
 
     /**
-     * 按照注册id与角色id查询角色
+     * 按照注册id查询角色
      *
-     * @param reportRegisterRole
+     * @param reportRegisterId
      * @return
      */
     @Override
-    public List<ReportRegisterRole> getByReportRegisterId(ReportRegisterRole reportRegisterRole) {
+    public List<ReportRegisterRole> getByReportRegisterId(Long reportRegisterId) {
         LambdaQueryWrapper<ReportRegisterRole> wrapper = Wrappers.lambdaQuery();
-        wrapper.eq(ReportRegisterRole::getReportRegisterId, reportRegisterRole.getReportRegisterId());
+        wrapper.eq(ReportRegisterRole::getReportRegisterId, reportRegisterId);
+        return baseMapper.selectList(wrapper);
+    }
+
+    /**
+     * 按照注册id与角色id查询
+     *
+     * @param reportRegisterId
+     * @param roleIds
+     * @return
+     */
+    @Override
+    public List<ReportRegisterRole> getByReportRegisterIdAndRoleIds(Long reportRegisterId, List<Long> roleIds) {
+        LambdaQueryWrapper<ReportRegisterRole> wrapper = Wrappers.lambdaQuery();
+        wrapper.eq(ReportRegisterRole::getReportRegisterId, reportRegisterId);
+        wrapper.in(ReportRegisterRole::getRoleId, roleIds);
         return baseMapper.selectList(wrapper);
     }
 }

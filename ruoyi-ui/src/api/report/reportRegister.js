@@ -68,3 +68,11 @@ export function reportAuth(data) {
     data: data
   })
 }
+
+//按照注册id与角色id删除
+export function deleteByReportRegisterIdAndRoleId(registerId,roleId) {
+  return request({
+    url: `/report/reportRegister/deleteByReportRegisterIdAndRoleId/${registerId}/${roleId}`,
+    method: 'delete'
+  })
+}

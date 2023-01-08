@@ -10,6 +10,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ruoyi.common.core.domain.entity.SysRole;
+import com.ruoyi.report.domain.ReportRegister;
 import com.ruoyi.report.domain.ReportRegisterRole;
 import com.ruoyi.report.domain.vo.ReportDbVo;
 import com.ruoyi.report.service.IReportRegisterRoleService;
@@ -130,7 +131,7 @@ public class ReportRegisterController extends BaseController {
     @DeleteMapping("/{ids}")
     public R<Void> remove(@NotEmpty(message = "主键不能为空")
                           @PathVariable Long[] ids) {
-        return toAjax(iReportRegisterService.deleteWithValidByIds(Arrays.asList(ids), true));
+        return toAjax(iReportRegisterService.deleteByIds(Arrays.asList(ids)));
     }
 
     /**
@@ -148,7 +149,7 @@ public class ReportRegisterController extends BaseController {
     }
 
     /**
-     * 报表授权
+     * 按照注册id与角色id查询角色
      *
      * @param: reportRegisterRole
      * @return: com.ruoyi.common.core.domain.R<java.util.List < com.ruoyi.common.core.domain.entity.SysRole>>
@@ -157,7 +158,7 @@ public class ReportRegisterController extends BaseController {
      */
     @PostMapping("/getRoleListByReportRegisterIdAndRoleIds")
     public R<List<SysRole>> getRoleListByReportRegisterIdAndRoleIds(@RequestBody ReportRegisterRole reportRegisterRole) {
-        List<ReportRegisterRole> registerRoles = iReportRegisterRoleService.getByReportRegisterId(reportRegisterRole);
+        List<ReportRegisterRole> registerRoles = iReportRegisterRoleService.getByReportRegisterId(reportRegisterRole.getReportRegisterId());
         if (CollUtil.isNotEmpty(registerRoles)) {
             List<Long> roleIds = new ArrayList<>();
             if (CollUtil.isNotEmpty(reportRegisterRole.getRoleIds())) {
@@ -169,5 +170,45 @@ public class ReportRegisterController extends BaseController {
             return R.ok(sysRoleMapper.selectList(wrapper));
         }
         return R.ok(Collections.emptyList());
+    }
+
+    /**
+     * 按照注册id与角色id删除
+     *
+     * @param: reportRegisterId
+     * @param: roleId
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Void>
+     * @author: gssong
+     * @date: 2023/1/8 12:25
+     */
+    @DeleteMapping("/deleteByReportRegisterIdAndRoleId/{reportRegisterId}/{roleId}")
+    public R<Void> deleteByReportRegisterIdAndRoleId(@PathVariable Long reportRegisterId, @PathVariable Long roleId) {
+        iReportRegisterRoleService.deleteByReportRegisterIdAndRoleId(reportRegisterId, roleId);
+        return R.ok();
+    }
+
+    /**
+     * 获取当前登录人员拥有的报表
+     *
+     * @return: com.ruoyi.common.core.domain.R<java.util.List < com.ruoyi.report.domain.ReportRegister>>
+     * @author: gssong
+     * @date: 2023/1/8 15:26
+     */
+    @GetMapping("/getReportListByCurrentRole")
+    public R<List<ReportRegister>> getReportListByCurrentRole() {
+        return R.ok(iReportRegisterService.getReportListByCurrentRole());
+    }
+
+    /**
+     * 校验是否有权限
+     *
+     * @param: reportCode
+     * @return: com.ruoyi.common.core.domain.R<java.lang.Void>
+     * @author: gssong
+     * @date: 2023/1/8 16:25
+     */
+    @GetMapping("/checkReportAuth/{reportCode}")
+    public R<Void> checkReportAuth(@PathVariable String reportCode) {
+        return toAjax(iReportRegisterService.checkReportAuth(reportCode));
     }
 }

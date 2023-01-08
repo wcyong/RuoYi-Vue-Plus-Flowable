@@ -2,6 +2,9 @@ package com.ruoyi.report.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import com.ruoyi.common.core.domain.dto.RoleDTO;
+import com.ruoyi.common.exception.ServiceException;
+import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.core.domain.PageQuery;
@@ -10,6 +13,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ruoyi.report.domain.ReportRegisterRole;
 import com.ruoyi.report.domain.vo.ReportDbVo;
+import com.ruoyi.report.mapper.ReportRegisterRoleMapper;
+import com.ruoyi.report.service.IReportRegisterRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.ruoyi.report.domain.bo.ReportRegisterBo;
@@ -19,10 +24,11 @@ import com.ruoyi.report.mapper.ReportRegisterMapper;
 import com.ruoyi.report.service.IReportRegisterService;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * 报表注册Service业务层处理
@@ -36,8 +42,13 @@ public class ReportRegisterServiceImpl implements IReportRegisterService {
 
     private final ReportRegisterMapper baseMapper;
 
+    private final ReportRegisterRoleMapper reportRegisterRoleMapper;
+
+    private final IReportRegisterRoleService iReportRegisterRoleService;
+
     /**
      * 分页查询
+     *
      * @param reportDbVo
      * @param pageQuery
      * @return
@@ -46,14 +57,14 @@ public class ReportRegisterServiceImpl implements IReportRegisterService {
     public TableDataInfo<ReportDbVo> selectReportDbPage(ReportDbVo reportDbVo, PageQuery pageQuery) {
         List<ReportDbVo> list = baseMapper.selectReportDbPage(reportDbVo.getDbCode(), reportDbVo.getName(), pageQuery.getPageNum(), pageQuery.getPageSize());
         Integer total = baseMapper.selectReportDbCount(reportDbVo.getDbCode(), reportDbVo.getName(), pageQuery.getPageNum(), pageQuery.getPageSize());
-        return new TableDataInfo<>(list,total);
+        return new TableDataInfo<>(list, total);
     }
 
     /**
      * 查询报表注册
      */
     @Override
-    public ReportRegisterVo queryById(Long id){
+    public ReportRegisterVo queryById(Long id) {
         return baseMapper.selectVoById(id);
     }
 
@@ -90,7 +101,6 @@ public class ReportRegisterServiceImpl implements IReportRegisterService {
     @Override
     public Boolean insertByBo(ReportRegisterBo bo) {
         ReportRegister add = BeanUtil.toBean(bo, ReportRegister.class);
-        validEntityBeforeSave(add);
         boolean flag = baseMapper.insert(add) > 0;
         if (flag) {
             bo.setId(add.getId());
@@ -102,27 +112,61 @@ public class ReportRegisterServiceImpl implements IReportRegisterService {
      * 修改报表注册
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean updateByBo(ReportRegisterBo bo) {
         ReportRegister update = BeanUtil.toBean(bo, ReportRegister.class);
-        validEntityBeforeSave(update);
         return baseMapper.updateById(update) > 0;
-    }
-
-    /**
-     * 保存前的数据校验
-     */
-    private void validEntityBeforeSave(ReportRegister entity){
-        //TODO 做一些数据校验,如唯一约束
     }
 
     /**
      * 批量删除报表注册
      */
     @Override
-    public Boolean deleteWithValidByIds(Collection<Long> ids, Boolean isValid) {
-        if(isValid){
-            //TODO 做一些业务上的校验,判断是否需要校验
-        }
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean deleteByIds(Collection<Long> ids) {
+        LambdaQueryWrapper<ReportRegisterRole> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(ReportRegisterRole::getReportRegisterId, ids);
+        reportRegisterRoleMapper.delete(wrapper);
         return baseMapper.deleteBatchIds(ids) > 0;
+    }
+
+    /**
+     * 获取当前登录人员拥有的报表
+     *
+     * @return
+     */
+    @Override
+    public List<ReportRegister> getReportListByCurrentRole() {
+        List<RoleDTO> roles = LoginHelper.getLoginUser().getRoles();
+        List<Long> roleIds = roles.stream().map(RoleDTO::getRoleId).collect(Collectors.toList());
+        LambdaQueryWrapper<ReportRegisterRole> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(ReportRegisterRole::getRoleId, roleIds);
+        List<ReportRegisterRole> registerRoles = reportRegisterRoleMapper.selectList(wrapper);
+        if (CollUtil.isNotEmpty(registerRoles)) {
+            List<Long> reportRegisterIds = registerRoles.stream().map(ReportRegisterRole::getReportRegisterId).collect(Collectors.toList());
+            return baseMapper.selectBatchIds(reportRegisterIds);
+        }
+        return Collections.emptyList();
+    }
+
+    /**
+     * 校验是否有权限
+     *
+     * @param reportCode
+     * @return
+     */
+    @Override
+    public Boolean checkReportAuth(String reportCode) {
+        List<RoleDTO> roles = LoginHelper.getLoginUser().getRoles();
+        List<Long> roleIds = roles.stream().map(RoleDTO::getRoleId).collect(Collectors.toList());
+        ReportRegister reportRegister = baseMapper.selectOne(new LambdaQueryWrapper<ReportRegister>().eq(ReportRegister::getReportCode, reportCode));
+        if (reportRegister == null) {
+            throw new ServiceException("报表不存在");
+        }
+        List<ReportRegisterRole> reportRegisterRoles = iReportRegisterRoleService.getByReportRegisterIdAndRoleIds(reportRegister.getId(), roleIds);
+        if (CollUtil.isNotEmpty(reportRegisterRoles)) {
+            return true;
+        }
+        throw new ServiceException("没有权限，请联系管理员！");
     }
 }
