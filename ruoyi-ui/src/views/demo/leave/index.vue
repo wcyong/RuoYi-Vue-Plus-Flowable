@@ -182,7 +182,7 @@
     <div class="form-container" v-if="formVisible">
         <div class="form-container-header"><i class="el-dialog__close el-icon el-icon-close" @click="closeForm"></i></div>
         <div style="height: 45px;margin-top: -30px;">
-          <el-button :loading="buttonLoading" size="small" type="primary" @click="submitForm()">提交</el-button>
+          <el-button :loading="buttonLoading" size="small" v-if="flag!=='view'" type="primary" @click="submitForm()">提交</el-button>
           <el-button @click="bpmnProcess" size="small" v-if="processInstanceId">流程进度</el-button>
           <el-button @click="bpmnRecord" size="small" v-if="processInstanceId">审批意见</el-button>
           <el-button @click="closeForm" size="small">关闭</el-button>
@@ -338,7 +338,8 @@ export default {
       // 消息提醒
       sendMessage: {},
       processKey: 'leave',
-      bpmnProcessInstanceId: undefined
+      bpmnProcessInstanceId: undefined,
+      flag:''
     };
   },
   created() {
@@ -402,12 +403,14 @@ export default {
     },
     /** 新增按钮操作 */
     handleAdd() {
+      this.flag = 'add'
       this.reset();
       this.dataVisible = false;
       this.formVisible = true
     },
     /** 修改按钮操作 */
     handleUpdate(row) {
+      this.flag = 'update'
       this.loading = true;
       this.reset();
       const id = row.id || this.ids
@@ -427,6 +430,7 @@ export default {
     },
     //查看
     handleView(row){
+      this.flag = 'view'
       this.loading = true;
       this.reset();
       const id = row.id || this.ids

@@ -83,11 +83,17 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-	
-	<!-- 工作流模块  -->
+
+	    <!-- 工作流模块  -->
         <dependency>
             <groupId>com.ruoyi</groupId>
             <artifactId>ruoyi-workflow</artifactId>
+        </dependency>
+
+        <!-- 报表模块  -->
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>ruoyi-report</artifactId>
         </dependency>
 
         <!-- skywalking 整合 logback -->

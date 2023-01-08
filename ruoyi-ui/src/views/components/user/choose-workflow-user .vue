@@ -310,7 +310,7 @@ export default {
 </script>
 <style scoped>
   .app-container{
-    height: 500px;
+    height: 550px;
     overflow: auto;
   }
   .item{
