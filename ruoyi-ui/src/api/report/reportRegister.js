@@ -76,3 +76,11 @@ export function deleteByReportRegisterIdAndRoleId(registerId,roleId) {
     method: 'delete'
   })
 }
+
+//校验是否有权限
+export function checkReportAuth(reportCode) {
+  return request({
+    url: `/report/reportRegister/checkReportAuth/${reportCode}`,
+    method: 'get'
+  })
+}

@@ -70,5 +70,5 @@ public interface IReportRegisterService {
      * @param reportCode
      * @return
      */
-    Boolean checkReportAuth(String reportCode);
+    String checkReportAuth(String reportCode);
 }

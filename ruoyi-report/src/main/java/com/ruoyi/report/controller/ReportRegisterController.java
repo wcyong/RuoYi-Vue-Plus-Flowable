@@ -203,12 +203,12 @@ public class ReportRegisterController extends BaseController {
      * 校验是否有权限
      *
      * @param: reportCode
-     * @return: com.ruoyi.common.core.domain.R<java.lang.Void>
+     * @return: com.ruoyi.common.core.domain.R<java.lang.String>
      * @author: gssong
      * @date: 2023/1/8 16:25
      */
     @GetMapping("/checkReportAuth/{reportCode}")
-    public R<Void> checkReportAuth(@PathVariable String reportCode) {
-        return toAjax(iReportRegisterService.checkReportAuth(reportCode));
+    public R<String> checkReportAuth(@PathVariable String reportCode) {
+        return R.ok("查询成功",iReportRegisterService.checkReportAuth(reportCode));
     }
 }

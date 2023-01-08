@@ -156,7 +156,7 @@ public class ReportRegisterServiceImpl implements IReportRegisterService {
      * @return
      */
     @Override
-    public Boolean checkReportAuth(String reportCode) {
+    public String checkReportAuth(String reportCode) {
         List<RoleDTO> roles = LoginHelper.getLoginUser().getRoles();
         List<Long> roleIds = roles.stream().map(RoleDTO::getRoleId).collect(Collectors.toList());
         ReportRegister reportRegister = baseMapper.selectOne(new LambdaQueryWrapper<ReportRegister>().eq(ReportRegister::getReportCode, reportCode));
@@ -165,7 +165,7 @@ public class ReportRegisterServiceImpl implements IReportRegisterService {
         }
         List<ReportRegisterRole> reportRegisterRoles = iReportRegisterRoleService.getByReportRegisterIdAndRoleIds(reportRegister.getId(), roleIds);
         if (CollUtil.isNotEmpty(reportRegisterRoles)) {
-            return true;
+            return reportRegister.getReportId();
         }
         throw new ServiceException("没有权限，请联系管理员！");
     }

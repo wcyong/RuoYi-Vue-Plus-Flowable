@@ -185,6 +185,7 @@
           <el-button :loading="buttonLoading" size="small" v-if="flag!=='view'" type="primary" @click="submitForm()">提交</el-button>
           <el-button @click="bpmnProcess" size="small" v-if="processInstanceId">流程进度</el-button>
           <el-button @click="bpmnRecord" size="small" v-if="processInstanceId">审批意见</el-button>
+          <el-button @click="viewReport('leave_code')" v-if="flag!=='add'" size="small">查看报表</el-button>
           <el-button @click="closeForm" size="small">关闭</el-button>
         </div>
         <el-tabs  type="border-card" class="container-tab">
@@ -245,6 +246,9 @@
     <HistoryBpmnDialog ref="historyBpmnRef"/>
     <!-- 审批意见 -->
     <HistoryRecordDialog ref="historyRecordRef"/>
+    <!-- 报表 -->
+    <JimuReport ref="jimuReportRef" :reportCode="reportCode" :params="params"/>
+    
   </div>
 </template>
 
@@ -254,13 +258,15 @@ import processApi from "@/api/workflow/processInst";
 import verify from "@/components/Process/Verify";
 import HistoryBpmnDialog from "@/components/Process/HistoryBpmnDialog";
 import HistoryRecordDialog from "@/components/Process/HistoryRecordDialog";
+import JimuReport from "@/components/JimuReport/index";
 export default {
   name: "Leave",
   dicts: ['bs_leave_type','act_status'],
   components: {
     HistoryBpmnDialog,
     HistoryRecordDialog,
-    verify
+    verify,
+    JimuReport
   },
   data() {
     return {
@@ -339,13 +345,24 @@ export default {
       sendMessage: {},
       processKey: 'leave',
       bpmnProcessInstanceId: undefined,
-      flag:''
+      flag:'',
+      //报表code
+      reportCode: '',
+      //参数
+      params: ''
     };
   },
   created() {
     this.getList();
   },
-  methods: {//流程进度
+  methods: {
+    //查看报表
+    viewReport(reportCode){
+      this.reportCode = reportCode
+      this.$refs.jimuReportRef.visible = true
+      this.params = '&paramId='+this.form.id
+    },
+    //流程进度
     bpmnProcess(){
       this.$refs.historyBpmnRef.init(this.processInstanceId)
     },
