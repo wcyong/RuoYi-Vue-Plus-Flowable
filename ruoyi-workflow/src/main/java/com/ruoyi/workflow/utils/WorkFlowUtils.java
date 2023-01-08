@@ -838,6 +838,10 @@ public class WorkFlowUtils {
             if (!nodeAssignee.getAutoComplete()) {
                 return false;
             }
+            if(StringUtils.isBlank(task.getAssignee())){
+                PROCESS_ENGINE.getTaskService().claim(task.getId(),LoginHelper.getUserId().toString());
+                task.setAssignee(LoginHelper.getUserId().toString());
+            }
             PROCESS_ENGINE.getTaskService().addComment(task.getId(), task.getProcessInstanceId(), "流程引擎满足条件自动办理");
             PROCESS_ENGINE.getTaskService().complete(task.getId());
             recordExecuteNode(task, actNodeAssignees);
@@ -903,6 +907,10 @@ public class WorkFlowUtils {
             return false;
         }
         for (Task task : list) {
+            if(StringUtils.isBlank(task.getAssignee())){
+                PROCESS_ENGINE.getTaskService().claim(task.getId(),LoginHelper.getUserId().toString());
+                task.setAssignee(LoginHelper.getUserId().toString());
+            }
             PROCESS_ENGINE.getTaskService().addComment(task.getId(), task.getProcessInstanceId(), "流程引擎满足条件自动办理");
             PROCESS_ENGINE.getTaskService().complete(task.getId());
             recordExecuteNode(task, actNodeAssignees);
