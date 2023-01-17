@@ -142,8 +142,9 @@ public class ReportRegisterController extends BaseController {
      * @author: gssong
      * @date: 2023/1/7 19:27
      */
+    @SaCheckPermission("report:reportRegister:auth")
     @PostMapping("/reportAuth")
-    @Log(title = "报表授权", businessType = BusinessType.UPDATE)
+    @Log(title = "报表注册", businessType = BusinessType.UPDATE)
     public R<Void> reportAuth(@RequestBody ReportRegisterRole reportRegisterRole) {
         return toAjax(iReportRegisterRoleService.reportAuth(reportRegisterRole));
     }
@@ -209,6 +210,6 @@ public class ReportRegisterController extends BaseController {
      */
     @GetMapping("/checkReportAuth/{reportCode}")
     public R<String> checkReportAuth(@PathVariable String reportCode) {
-        return R.ok("查询成功",iReportRegisterService.checkReportAuth(reportCode));
+        return R.ok("查询成功", iReportRegisterService.checkReportAuth(reportCode));
     }
 }
