@@ -96,6 +96,7 @@
             type="text"
             icon="el-icon-postcard"
             @click="handleAuth(scope.row)"
+            v-hasPermi="['report:reportRegister:auth']"
           >授权</el-button>
         </template>
       </el-table-column>
