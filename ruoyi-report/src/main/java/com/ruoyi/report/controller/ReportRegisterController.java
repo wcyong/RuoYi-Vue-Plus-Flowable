@@ -210,6 +210,6 @@ public class ReportRegisterController extends BaseController {
      */
     @GetMapping("/checkReportAuth/{reportCode}")
     public R<String> checkReportAuth(@PathVariable String reportCode) {
-        return R.ok("查询成功", iReportRegisterService.checkReportAuth(reportCode));
+        return iReportRegisterService.checkReportAuth(reportCode);
     }
 }

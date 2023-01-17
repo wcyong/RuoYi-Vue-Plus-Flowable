@@ -1,7 +1,9 @@
 <template>
     <el-dialog :title="title" :visible.sync="visible" @close="visible = false"  :width="width" append-to-body v-dialogDrag :close-on-click-modal="false">
       <div :style="[{height:`${height}px`}]" class="styleObj">
-        <i-frame :src="url" />
+        <template v-if="isShow">
+          <i-frame :src="url" />
+        </template>
       </div>
     </el-dialog>
   </template>
@@ -37,18 +39,26 @@
     data() {
       return {
         url: "",
-        visible: false
+        visible: false,
+        isShow: false
       };
     },
     watch: {
         visible(val) {
             if(val){
+                this.isShow = false
                 checkReportAuth(this.reportCode).then(response => {
+                  if(response.code === 200){
                     if(this.paramId === null || this.paramId === ''){
                       this.url = process.env.VUE_APP_JMREPORT_URL + "/view/"+response.data+"/?token=" + getToken();
                     }else{
                       this.url = process.env.VUE_APP_JMREPORT_URL + "/view/"+response.data+"/?token=" + getToken()+this.params;
                     }
+                    this.isShow = true
+                  }else{
+                    this.isShow = false
+                    this.$modal.msgError(response.msg);
+                  }  
                 })
             }
         },

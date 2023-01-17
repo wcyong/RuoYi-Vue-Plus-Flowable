@@ -1,5 +1,6 @@
 package com.ruoyi.report.service;
 
+import com.ruoyi.common.core.domain.R;
 import com.ruoyi.report.domain.ReportRegister;
 import com.ruoyi.report.domain.vo.ReportDbVo;
 import com.ruoyi.report.domain.vo.ReportRegisterVo;
@@ -70,5 +71,5 @@ public interface IReportRegisterService {
      * @param reportCode
      * @return
      */
-    String checkReportAuth(String reportCode);
+    R<String> checkReportAuth(String reportCode);
 }

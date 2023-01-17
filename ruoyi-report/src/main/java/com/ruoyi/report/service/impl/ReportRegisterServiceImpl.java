@@ -2,6 +2,7 @@ package com.ruoyi.report.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import com.ruoyi.common.core.domain.R;
 import com.ruoyi.common.core.domain.dto.RoleDTO;
 import com.ruoyi.common.core.service.ReportRegisterService;
 import com.ruoyi.common.exception.ServiceException;
@@ -157,21 +158,21 @@ public class ReportRegisterServiceImpl implements IReportRegisterService, Report
      * @return
      */
     @Override
-    public String checkReportAuth(String reportCode) {
+    public R<String> checkReportAuth(String reportCode) {
         List<RoleDTO> roles = LoginHelper.getLoginUser().getRoles();
         List<Long> roleIds = roles.stream().map(RoleDTO::getRoleId).collect(Collectors.toList());
         ReportRegister reportRegister = baseMapper.selectOne(new LambdaQueryWrapper<ReportRegister>().eq(ReportRegister::getReportCode, reportCode));
         if (reportRegister == null) {
-            throw new ServiceException("报表不存在");
+            return R.fail("报表不存在");
         }
         if (LoginHelper.isAdmin()) {
-            return reportRegister.getReportId();
+            return R.ok("操作成功", reportRegister.getReportId());
         }
         List<ReportRegisterRole> reportRegisterRoles = iReportRegisterRoleService.getByReportRegisterIdAndRoleIds(reportRegister.getId(), roleIds);
         if (CollUtil.isNotEmpty(reportRegisterRoles)) {
-            return reportRegister.getReportId();
+            return R.ok("操作成功", reportRegister.getReportId());
         }
-        throw new ServiceException("没有权限，请联系管理员！");
+        return R.fail("没有权限，请联系管理员！");
     }
 
     /**
