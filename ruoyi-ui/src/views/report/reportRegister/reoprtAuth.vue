@@ -194,14 +194,10 @@
             reportRegisterId: this.reportRegisterId,
             roleIds: roleIds
         }
-        if(roleIds.length > 0){
-            reportAuth(param).then(response => {
-                this.$modal.msgSuccess("授权成功");
-                this.visible = false
-            })
-        }else{
+        reportAuth(param).then(response => {
+            this.$modal.msgSuccess("授权成功");
             this.visible = false
-        }
+        })
       },
       selectCheckBox(selection, row){
         let roleIds = this.chooseRoleList.map(item => item.roleId)

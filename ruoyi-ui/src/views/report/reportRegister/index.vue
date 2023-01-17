@@ -71,7 +71,7 @@
 
     <el-table v-loading="loading" :data="reportRegisterList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="主键" align="center" prop="id" v-if="true"/>
+      <el-table-column label="主键" align="center" prop="id" v-if="false"/>
       <el-table-column label="报表编码" align="center" prop="reportCode" />
       <el-table-column label="报表名称" align="center" prop="reportName" />
       <el-table-column label="备注" align="center" prop="remark" />

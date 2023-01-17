@@ -1,6 +1,7 @@
 package com.ruoyi.report.service.impl;
 
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.ruoyi.common.utils.spring.SpringUtils;
@@ -94,13 +95,16 @@ public class ReportRegisterRoleServiceImpl implements IReportRegisterRoleService
         baseMapper.delete(wrapper);
         List<ReportRegisterRole> registerRoles = new ArrayList<>();
         List<Long> roleIds = reportRegisterRole.getRoleIds().stream().distinct().collect(Collectors.toList());
-        for (Long roleId : roleIds) {
-            ReportRegisterRole registerRole = new ReportRegisterRole();
-            registerRole.setReportRegisterId(reportRegisterRole.getReportRegisterId());
-            registerRole.setRoleId(roleId);
-            registerRoles.add(registerRole);
+        if (CollUtil.isNotEmpty(reportRegisterRole.getRoleIds())) {
+            for (Long roleId : roleIds) {
+                ReportRegisterRole registerRole = new ReportRegisterRole();
+                registerRole.setReportRegisterId(reportRegisterRole.getReportRegisterId());
+                registerRole.setRoleId(roleId);
+                registerRoles.add(registerRole);
+            }
+            return baseMapper.insertBatch(registerRoles);
         }
-        return baseMapper.insertBatch(registerRoles);
+        return true;
     }
 
     /**
