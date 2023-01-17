@@ -12,6 +12,7 @@ import com.ruoyi.common.constant.UserConstants;
 import com.ruoyi.common.core.domain.PageQuery;
 import com.ruoyi.common.core.domain.entity.SysRole;
 import com.ruoyi.common.core.page.TableDataInfo;
+import com.ruoyi.common.core.service.ReportRegisterService;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.system.domain.SysRoleDept;
@@ -41,6 +42,7 @@ public class SysRoleServiceImpl implements ISysRoleService {
     private final SysRoleMenuMapper roleMenuMapper;
     private final SysUserRoleMapper userRoleMapper;
     private final SysRoleDeptMapper roleDeptMapper;
+    private final ReportRegisterService reportRegisterService;
 
     @Override
     public TableDataInfo<SysRole> selectPageRoleList(SysRole role, PageQuery pageQuery) {
@@ -356,6 +358,8 @@ public class SysRoleServiceImpl implements ISysRoleService {
         roleMenuMapper.delete(new LambdaQueryWrapper<SysRoleMenu>().in(SysRoleMenu::getRoleId, ids));
         // 删除角色与部门关联
         roleDeptMapper.delete(new LambdaQueryWrapper<SysRoleDept>().in(SysRoleDept::getRoleId, ids));
+        // 删除角色与报表关联
+        reportRegisterService.deleteByRoleIds(ids);
         return baseMapper.deleteBatchIds(ids);
     }
 

@@ -3,6 +3,7 @@ package com.ruoyi.report.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.ruoyi.common.core.domain.dto.RoleDTO;
+import com.ruoyi.common.core.service.ReportRegisterService;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.helper.LoginHelper;
 import com.ruoyi.common.utils.StringUtils;
@@ -38,7 +39,7 @@ import java.util.stream.Collectors;
  */
 @RequiredArgsConstructor
 @Service
-public class ReportRegisterServiceImpl implements IReportRegisterService {
+public class ReportRegisterServiceImpl implements IReportRegisterService, ReportRegisterService {
 
     private final ReportRegisterMapper baseMapper;
 
