@@ -164,6 +164,9 @@ public class ReportRegisterServiceImpl implements IReportRegisterService, Report
         if (reportRegister == null) {
             throw new ServiceException("报表不存在");
         }
+        if (LoginHelper.isAdmin()) {
+            return reportRegister.getReportId();
+        }
         List<ReportRegisterRole> reportRegisterRoles = iReportRegisterRoleService.getByReportRegisterIdAndRoleIds(reportRegister.getId(), roleIds);
         if (CollUtil.isNotEmpty(reportRegisterRoles)) {
             return reportRegister.getReportId();
