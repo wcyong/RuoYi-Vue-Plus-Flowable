@@ -29,11 +29,11 @@ public class ReportController extends BaseController {
      */
     @GetMapping("/token/{token}")
     @SaIgnore
-    public R<Void> token(@PathVariable String token) {
+    public R<String> token(@PathVariable String token) {
         String result = StpUtil.stpLogic.getLoginIdNotHandle(token);
         if (result == null) {
             return R.fail();
         }
-        return R.ok();
+        return R.ok("操作成功",result);
     }
 }
