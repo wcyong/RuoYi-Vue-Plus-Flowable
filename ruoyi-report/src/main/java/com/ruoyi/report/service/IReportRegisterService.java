@@ -71,4 +71,12 @@ public interface IReportRegisterService {
      * @return
      */
     String checkReportAuth(String reportCode);
+
+    /**
+     * 按照角色id删除报表权限
+     *
+     * @param roleIds
+     * @return
+     */
+    Boolean deleteByRoleIds(List<Long> roleIds);
 }

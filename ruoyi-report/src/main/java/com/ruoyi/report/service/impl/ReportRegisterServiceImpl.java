@@ -15,13 +15,13 @@ import com.ruoyi.report.domain.ReportRegisterRole;
 import com.ruoyi.report.domain.vo.ReportDbVo;
 import com.ruoyi.report.mapper.ReportRegisterRoleMapper;
 import com.ruoyi.report.service.IReportRegisterRoleService;
+import com.ruoyi.report.service.IReportRegisterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.ruoyi.report.domain.bo.ReportRegisterBo;
 import com.ruoyi.report.domain.vo.ReportRegisterVo;
 import com.ruoyi.report.domain.ReportRegister;
 import com.ruoyi.report.mapper.ReportRegisterMapper;
-import com.ruoyi.report.service.IReportRegisterService;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
@@ -168,5 +168,18 @@ public class ReportRegisterServiceImpl implements IReportRegisterService {
             return reportRegister.getReportId();
         }
         throw new ServiceException("没有权限，请联系管理员！");
+    }
+
+    /**
+     * 按照角色id删除报表权限
+     *
+     * @param roleIds
+     * @return
+     */
+    @Override
+    public Boolean deleteByRoleIds(List<Long> roleIds) {
+        LambdaQueryWrapper<ReportRegisterRole> wrapper = Wrappers.lambdaQuery();
+        wrapper.in(ReportRegisterRole::getRoleId, roleIds);
+        return reportRegisterRoleMapper.delete(wrapper) > 0;
     }
 }
