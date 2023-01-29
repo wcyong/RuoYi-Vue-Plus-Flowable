@@ -4,7 +4,6 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ruoyi.common.exception.ServiceException;
@@ -70,8 +69,6 @@ public class WorkFlowUtils {
     private static final ProcessEngine PROCESS_ENGINE = SpringUtils.getBean(ProcessEngine.class);
 
     private static final ISysMessageService iSysMessageService = SpringUtils.getBean(ISysMessageService.class);
-
-    private static final IActHiTaskInstService iActHiTaskInstService = SpringUtils.getBean(IActHiTaskInstService.class);
 
     private static final IActBusinessRuleService iActBusinessRuleService = SpringUtils.getBean(IActBusinessRuleService.class);
 
@@ -697,17 +694,8 @@ public class WorkFlowUtils {
             String processInstanceId = parentTaskList.get(0).getProcessInstanceId();
             String processDefinitionId = parentTaskList.get(0).getProcessDefinitionId();
             List<String> taskIds = list.stream().map(Task::getId).collect(Collectors.toList());
-            LambdaQueryWrapper<ActHiTaskInst> wrapper = new LambdaQueryWrapper<>();
-            wrapper.in(ActHiTaskInst::getId, taskIds);
-            List<ActHiTaskInst> taskInstList = iActHiTaskInstService.list(wrapper);
-            if (CollectionUtil.isNotEmpty(taskInstList)) {
-                for (ActHiTaskInst hiTaskInst : taskInstList) {
-                    hiTaskInst.setProcDefId(processDefinitionId);
-                    hiTaskInst.setProcInstId(processInstanceId);
-                    hiTaskInst.setStartTime(new Date());
-                }
-                iActHiTaskInstService.updateBatchById(taskInstList);
-            }
+            UpdateHiTaskInstCmd updateHiTaskInstCmd = new UpdateHiTaskInstCmd(taskIds, processDefinitionId, processInstanceId);
+            PROCESS_ENGINE.getManagementService().executeCommand(updateHiTaskInstCmd);
         }
         return list;
     }
@@ -720,7 +708,7 @@ public class WorkFlowUtils {
      * @author: gssong
      * @date: 2022/3/13
      */
-    public static TaskEntity createNewTask(Task currentTask, Date createTime) {
+    public static TaskEntity createNewTask(Task currentTask) {
         TaskEntity task = null;
         if (ObjectUtil.isNotEmpty(currentTask)) {
             task = (TaskEntity) PROCESS_ENGINE.getTaskService().newTask();
@@ -733,18 +721,12 @@ public class WorkFlowUtils {
             task.setProcessInstanceId(currentTask.getProcessInstanceId());
             task.setTaskDefinitionKey(currentTask.getTaskDefinitionKey());
             task.setPriority(currentTask.getPriority());
-            task.setCreateTime(createTime);
+            task.setCreateTime(new Date());
             PROCESS_ENGINE.getTaskService().saveTask(task);
         }
         if (ObjectUtil.isNotNull(task)) {
-            ActHiTaskInst hiTaskInst = iActHiTaskInstService.getById(task.getId());
-            if (ObjectUtil.isNotEmpty(hiTaskInst)) {
-                hiTaskInst.setProcDefId(task.getProcessDefinitionId());
-                hiTaskInst.setProcInstId(task.getProcessInstanceId());
-                hiTaskInst.setTaskDefKey(task.getTaskDefinitionKey());
-                hiTaskInst.setStartTime(createTime);
-                iActHiTaskInstService.updateById(hiTaskInst);
-            }
+            UpdateHiTaskInstCmd updateHiTaskInstCmd = new UpdateHiTaskInstCmd(Collections.singletonList(task.getId()),task.getProcessDefinitionId(),task.getProcessInstanceId());
+            PROCESS_ENGINE.getManagementService().executeCommand(updateHiTaskInstCmd);
         }
         return task;
     }
@@ -856,6 +838,10 @@ public class WorkFlowUtils {
             if (!nodeAssignee.getAutoComplete()) {
                 return false;
             }
+            if(StringUtils.isBlank(task.getAssignee())){
+                PROCESS_ENGINE.getTaskService().claim(task.getId(),LoginHelper.getUserId().toString());
+                task.setAssignee(LoginHelper.getUserId().toString());
+            }
             PROCESS_ENGINE.getTaskService().addComment(task.getId(), task.getProcessInstanceId(), "流程引擎满足条件自动办理");
             PROCESS_ENGINE.getTaskService().complete(task.getId());
             recordExecuteNode(task, actNodeAssignees);
@@ -921,6 +907,10 @@ public class WorkFlowUtils {
             return false;
         }
         for (Task task : list) {
+            if(StringUtils.isBlank(task.getAssignee())){
+                PROCESS_ENGINE.getTaskService().claim(task.getId(),LoginHelper.getUserId().toString());
+                task.setAssignee(LoginHelper.getUserId().toString());
+            }
             PROCESS_ENGINE.getTaskService().addComment(task.getId(), task.getProcessInstanceId(), "流程引擎满足条件自动办理");
             PROCESS_ENGINE.getTaskService().complete(task.getId());
             recordExecuteNode(task, actNodeAssignees);

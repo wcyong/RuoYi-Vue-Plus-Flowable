@@ -217,6 +217,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
 
     /**
      * 添加缓存
+     *
      * @param processDefinitionId
      * @param nodeId
      * @param nodeAssignee
@@ -249,6 +250,10 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
      */
     @Override
     public Boolean del(String id) {
+        ActNodeAssignee actNodeAssignee = baseMapper.selectById(id);
+        if (actNodeAssignee != null) {
+            RedisUtils.deleteObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + actNodeAssignee.getProcessDefinitionId() + "-" + actNodeAssignee.getNodeId());
+        }
         int i = baseMapper.deleteById(id);
         return i == 1;
     }
@@ -355,7 +360,7 @@ public class ActNodeAssigneeServiceImpl extends ServiceImpl<ActNodeAssigneeMappe
             }
         }
         if (CollectionUtil.isNotEmpty(actNodeAssigneeList)) {
-            actNodeAssigneeList.forEach(e->{
+            actNodeAssigneeList.forEach(e -> {
                 RedisUtils.deleteObject(FlowConstant.CACHE_ACT_NODE_ASSIGNEE_KEY + e.getProcessDefinitionId() + "-" + e.getNodeId());
             });
             return saveBatch(actNodeAssigneeList);

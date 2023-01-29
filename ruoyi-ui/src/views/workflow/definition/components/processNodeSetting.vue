@@ -266,12 +266,11 @@ export default {
              del(this.form.id).then(response => {
               if(response.code === 200){
                 this.$modal.msgSuccess("重置成功")
-                this.reset()
+                this.form.id = null
               }
              })
           }else{
               this.$modal.msgSuccess("重置成功")
-              this.reset()
           }
         },
         // 重置

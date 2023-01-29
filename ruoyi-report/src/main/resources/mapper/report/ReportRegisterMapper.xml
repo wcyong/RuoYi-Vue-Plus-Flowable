@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.report.mapper.ReportRegisterMapper">
+
+    <resultMap type="com.ruoyi.report.domain.ReportRegister" id="ReportRegisterResult">
+        <result property="id" column="id"/>
+        <result property="reportCode" column="report_code"/>
+        <result property="reportName" column="report_name"/>
+        <result property="reportId" column="report_id"/>
+        <result property="remark" column="remark"/>
+        <result property="createBy" column="create_by"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap type="com.ruoyi.report.domain.vo.ReportDbVo" id="ReportDbResult">
+        <result property="id" column="id"/>
+        <result property="dbCode" column="db_code"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectReportDbPage" resultMap="ReportDbResult">
+        select a.id,name, db_code,a.type,a.create_time,a.update_time from jimu_report a left join jimu_report_db b
+        on a.id = b.jimu_report_id where 1 = 1
+        <if test="dbCode!=null &amp; dbCode!=''">
+            and db_code LIKE concat('%',#{dbCode},'%')
+        </if>
+        <if test="name!=null &amp; name!=''">
+            and name LIKE concat('%',#{name},'%')
+        </if>
+        LIMIT ${(pageNum-1)*pageSize},${pageSize};
+    </select>
+
+    <select id="selectReportDbCount" resultType="Integer">
+        select count(1) from jimu_report a left join jimu_report_db b
+        on a.id = b.jimu_report_id where 1 = 1
+        <if test="dbCode!=null &amp; dbCode!=''">
+            and db_code LIKE concat('%',#{dbCode},'%')
+        </if>
+        <if test="name!=null &amp; name!=''">
+            and name LIKE concat('%',#{name},'%')
+        </if>
+    </select>
+
+</mapper>
